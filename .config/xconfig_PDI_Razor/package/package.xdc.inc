@@ -1,0 +1,12 @@
+package.xdc
+package.xs
+package/xconfig_PDI_Razor.sch
+package/.vers_g180
+package/.vers_r170
+package/.vers_b160
+package/.xdc-A65
+package/xconfig_PDI_Razor.java
+package/xconfig_PDI_Razor.class
+package/package_xconfig_PDI_Razor.c
+package/package.defs.h
+package/xconfig_PDI_Razor.ccs

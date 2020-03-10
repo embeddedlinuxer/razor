@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<!--  This file conforms to the DTD xdc/bld/build.dtd -->
+<package name="xconfig_PDI_Razor" version="" producerId="undefined">
+    <units>
+    </units>
+    <sources>
+        <srcFile name="package/cfg/PDI_Razor_pe674.c"/>
+    </sources>
+    <configscripts>
+        <srcFile name="G:/workspace/PDI_Razor/PDI_Razor.cfg"/>
+    </configscripts>
+    <makefiles>
+        <srcFile name="package.mak" src="package.bld"/>
+        <srcFile name="package/package.xdc.dep" src="package.xdc"/>
+        <srcFile name="package/cfg/PDI_Razor_pe674.mak" src="package.bld"/>
+        <srcFile name="package/cfg/PDI_Razor_pe674.oe674.dep" src="package/cfg/PDI_Razor_pe674.c"/>
+        <srcFile name="package/cfg/PDI_Razor_pe674.dep" src="package/cfg/PDI_Razor_pe674.cfg"/>
+        <srcFile name="package/cfg/PDI_Razor.xe674.mak" src="package.bld"/>
+        <srcFile name="package/rel/xconfig_PDI_Razor.tar.dep" src="package/rel/xconfig_PDI_Razor.xdc.inc"/>
+    </makefiles>
+    <targets>
+        <target name="ti.targets.elf.C674"
+            version="ti.targets.elf.C674{1,0,8.1,0"
+            rawVersion="8.1.0"
+            platform="ti.platforms.evmDA830"
+            isa="674"
+            suffix="e674"
+            rootDir="C:/ti/ccsv6/tools/compiler/ti-cgt-c6000_8.1.0"
+            os="undefined"
+            rts="ti.targets.rts6000">
+            <model endian="little"
+                codeModel="undefined"
+                dataModel="undefined"/>
+        </target>
+    </targets>
+    <libraries>
+    </libraries>
+    <configurations>
+    <configuration name="PDI_Razor"
+        pname="PDI_Razor.pe674"
+        target="ti.targets.elf.C674"
+        platform="PDI.evm6748custom"
+        profile="release"
+        isPartial="false"
+        xCfgScript="package/cfg/PDI_Razor_pe674.cfg"
+        xCfgPrefix="package/cfg/PDI_Razor_pe674"
+        cfgScript="G:/workspace/PDI_Razor/PDI_Razor.cfg"
+        cfgArgs="null"
+        />
+    </configurations>
+    <executables>
+    <executable name="PDI_Razor"
+        pname="PDI_Razor.xe674"
+        target="ti.targets.elf.C674"
+        platform="PDI.evm6748custom"
+        profile="release"
+        xCfgScript="package/cfg/PDI_Razor_pe674.cfg"
+        xCfgPrefix="package/cfg/PDI_Razor_pe674"
+        cfgScript="G:/workspace/PDI_Razor/PDI_Razor.cfg"
+        cfgArgs="null"
+        />
+    </executables>
+    <tests>
+    <test exeName="PDI_Razor.xe674"
+        args=""
+        groupName="PDI_Razor.xe674"
+        refOutput="undefined"
+        refExitCode="0"
+        execArgs=""
+        />
+    </tests>
+    <releases relDir="package/rel/">
+    <release name="xconfig_PDI_Razor"
+        pname="xconfig_PDI_Razor.tar"
+        label="default"
+    >
+        <file name="package/package.bld.xml"/>
+        <file name="package/build.cfg"/>
+        <file name="package/package.xdc.inc"/>
+    </release>
+    </releases>
+    <repositories>
+    </repositories>
+</package>

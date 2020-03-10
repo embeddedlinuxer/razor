@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<!--  This file conforms to the DTD xdc/bld/build.dtd -->
+<package name="xconfig_ModbusRTU" version="" producerId="undefined">
+    <units>
+    </units>
+    <sources>
+        <srcFile name="package/cfg/ModbusRTU_pe674.c"/>
+    </sources>
+    <configscripts>
+        <srcFile name="C:/Users/daskew/CCS_Workspace/PDI_Modbus/ModbusRTU.cfg"/>
+    </configscripts>
+    <makefiles>
+        <srcFile name="package.mak" src="package.bld"/>
+        <srcFile name="package/package.xdc.dep" src="package.xdc"/>
+        <srcFile name="package/cfg/ModbusRTU_pe674.mak" src="package.bld"/>
+        <srcFile name="package/cfg/ModbusRTU_pe674.oe674.dep" src="package/cfg/ModbusRTU_pe674.c"/>
+        <srcFile name="package/cfg/ModbusRTU_pe674.dep" src="package/cfg/ModbusRTU_pe674.cfg"/>
+        <srcFile name="package/cfg/ModbusRTU.xe674.mak" src="package.bld"/>
+        <srcFile name="package/rel/xconfig_ModbusRTU.tar.dep" src="package/rel/xconfig_ModbusRTU.xdc.inc"/>
+    </makefiles>
+    <targets>
+        <target name="ti.targets.elf.C674"
+            version="ti.targets.elf.C674{1,0,7.4,17"
+            rawVersion="7.4.17"
+            platform="ti.platforms.evmDA830"
+            isa="674"
+            suffix="e674"
+            rootDir="C:/ti/ccsv6/tools/compiler/c6000_7.4.17"
+            os="undefined"
+            rts="ti.targets.rts6000">
+            <model endian="little"
+                codeModel="undefined"
+                dataModel="undefined"/>
+        </target>
+    </targets>
+    <libraries>
+    </libraries>
+    <configurations>
+    <configuration name="ModbusRTU"
+        pname="ModbusRTU.pe674"
+        target="ti.targets.elf.C674"
+        platform="ti.platforms.evm6748"
+        profile="release"
+        isPartial="false"
+        xCfgScript="package/cfg/ModbusRTU_pe674.cfg"
+        xCfgPrefix="package/cfg/ModbusRTU_pe674"
+        cfgScript="C:/Users/daskew/CCS_Workspace/PDI_Modbus/ModbusRTU.cfg"
+        cfgArgs="null"
+        />
+    </configurations>
+    <executables>
+    <executable name="ModbusRTU"
+        pname="ModbusRTU.xe674"
+        target="ti.targets.elf.C674"
+        platform="ti.platforms.evm6748"
+        profile="release"
+        xCfgScript="package/cfg/ModbusRTU_pe674.cfg"
+        xCfgPrefix="package/cfg/ModbusRTU_pe674"
+        cfgScript="C:/Users/daskew/CCS_Workspace/PDI_Modbus/ModbusRTU.cfg"
+        cfgArgs="null"
+        />
+    </executables>
+    <tests>
+    <test exeName="ModbusRTU.xe674"
+        args=""
+        groupName="ModbusRTU.xe674"
+        refOutput="undefined"
+        refExitCode="0"
+        execArgs=""
+        />
+    </tests>
+    <releases relDir="package/rel/">
+    <release name="xconfig_ModbusRTU"
+        pname="xconfig_ModbusRTU.tar"
+        label="default"
+    >
+        <file name="package/package.bld.xml"/>
+        <file name="package/build.cfg"/>
+        <file name="package/package.xdc.inc"/>
+    </release>
+    </releases>
+    <repositories>
+    </repositories>
+</package>

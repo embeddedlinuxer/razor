@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?ccsproject version="1.0"?>
+<projectOptions>
+	<deviceVariant value="com.ti.ccstudio.deviceModel.C6000.GenericC674xDevice"/>
+	<deviceFamily value="C6000"/>
+	<deviceEndianness value="little"/>
+	<codegenToolVersion value="7.4.2"/>
+	<isElfFormat value="true"/>
+	<rts value="libc.a"/>
+	<origin value="G:/x2"/>
+	<isTargetManual value="false"/>
+	<connection value="common/targetdb/connections/TIXDS2XXUSB_Connection.xml"/>
+</projectOptions>

@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/CWD/delimiter=;
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/CWD/operation=replace
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/CWD/value=g\:\\workspace\\razor\\win\\Debug
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/PWD/delimiter=;
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/PWD/operation=replace
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/PWD/value=g\:\\workspace\\razor\\win\\Debug
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/append=true
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Debug.656841751/appendContributed=true
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Release.1124526920/append=true
+environment/project/com.ti.ccstudio.buildDefinitions.C6000.Release.1124526920/appendContributed=true
