@@ -947,8 +947,7 @@ Modbus_RX(void)
 				register_type = NULL;
 
 			//create MB packet info
-			Create_MB_Pkt(&MB_PKT_LIST, slave, fxn, start_reg, num_regs, 0, register_type,
-							MB_READ_QRY, vtune, is_broadcast, is_long_addr, reg_offset);
+			Create_MB_Pkt(&MB_PKT_LIST, slave, fxn, start_reg, num_regs, 0, register_type, MB_READ_QRY, vtune, is_broadcast, is_long_addr, reg_offset);
 
 			key2 = Hwi_disableInterrupt(5);	////////
 			//remove data from RX buffer

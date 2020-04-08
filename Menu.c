@@ -619,7 +619,7 @@ Uint16
 mnuHomescreenFrequency(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_HOMESCREEN_FREQ;
-	sprintf(lcdLine1, "%13.2fMHz", Round_N(REG_FREQ.calc_val,2));
+	sprintf(lcdLine1, "%12.3f Mhz", Round_N(REG_FREQ.calc_val,3));
 	updateDisplay(FREQUENCY, lcdLine1);
 
 	switch (input)  {
@@ -1295,7 +1295,7 @@ mnuConfig_Analyzer_OilIndex(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_ANALYZER_OILINDEX;
 
-    sprintf(lcdLine1, "%13.2fMHz", REG_OIL_INDEX.calc_val);
+    sprintf(lcdLine1, "%12.3f Mhz", Round_N(REG_OIL_INDEX.calc_val,3));
 
 	if (isUpdateDisplay) updateDisplay(CFG_ANALYZER_OILINDEX, lcdLine1);
 
@@ -1317,11 +1317,11 @@ fxnConfig_Analyzer_OilIndex(const Uint16 input)
 
     if (isMessage) { return notifyMessageAndExit(FXN_CFG_ANALYZER_OILINDEX, MNU_CFG_ANALYZER_OILINDEX); }
 
-    displayFxn(CFG_ANALYZER_OILINDEX, REG_OIL_INDEX.calc_val, 2);
+    displayFxn(CFG_ANALYZER_OILINDEX, REG_OIL_INDEX.calc_val, 3);
 
     switch (input)  {
-        case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_ANALYZER_OILINDEX,TRUE, 2);
-        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_ANALYZER_OILINDEX,9); // -1000.00'\0'
+        case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_ANALYZER_OILINDEX,TRUE, 3);
+        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_ANALYZER_OILINDEX,10); // -1000.900'\0'
         case BTN_ENTER  : return onFxnEnterPressed(FXN_CFG_ANALYZER_OILINDEX, 1000.0, -1000.0, &REG_OIL_INDEX, NULL_DBL, NULL_INT);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_ANALYZER_OILINDEX);
         default         : return FXN_CFG_ANALYZER_OILINDEX;
@@ -1335,7 +1335,7 @@ mnuConfig_Analyzer_OilFreqLow(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_ANALYZER_OILFREQLOW;
 
-    sprintf(lcdLine1, "%13.2fMHz", REG_OIL_FREQ_LOW.calc_val);
+    sprintf(lcdLine1, "%12.3f Mhz", Round_N(REG_OIL_FREQ_LOW.calc_val,3));
 
     if (isUpdateDisplay) updateDisplay(CFG_ANALYZER_OILFREQLOW, lcdLine1);
 	
@@ -1357,11 +1357,11 @@ fxnConfig_Analyzer_OilFreqLow(const Uint16 input)
 
     if (isMessage) { return notifyMessageAndExit(FXN_CFG_ANALYZER_OILFREQLOW, MNU_CFG_ANALYZER_OILFREQLOW); }
 
-    displayFxn(CFG_ANALYZER_OILFREQLOW, REG_OIL_FREQ_LOW.calc_val, 2);
+    displayFxn(CFG_ANALYZER_OILFREQLOW, REG_OIL_FREQ_LOW.calc_val, 3);
 
     switch (input)  {
-        case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_ANALYZER_OILFREQLOW, FALSE, 2);
-        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_ANALYZER_OILFREQLOW,8); // 1000.00'\0'
+        case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_ANALYZER_OILFREQLOW, FALSE, 3);
+        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_ANALYZER_OILFREQLOW,9); // 1000.000'\0'
         case BTN_ENTER  : return onFxnEnterPressed(FXN_CFG_ANALYZER_OILFREQLOW,1000.0, 0, &REG_OIL_FREQ_LOW, NULL_DBL, NULL_INT);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_ANALYZER_OILFREQLOW);
         default         : return FXN_CFG_ANALYZER_OILFREQLOW;
@@ -1375,7 +1375,7 @@ mnuConfig_Analyzer_OilFreqHi(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_ANALYZER_OILFREQHI;
 
-	sprintf(lcdLine1, "%13.2fMHz", REG_OIL_FREQ_HIGH.calc_val);
+	sprintf(lcdLine1, "%12.3f Mhz", Round_N(REG_OIL_FREQ_HIGH.calc_val,3));
 
     if (isUpdateDisplay) updateDisplay(CFG_ANALYZER_OILFREQHI, lcdLine1);
 	
@@ -1397,11 +1397,11 @@ fxnConfig_Analyzer_OilFreqHi(const Uint16 input)
 
     if (isMessage) { return notifyMessageAndExit(FXN_CFG_ANALYZER_OILFREQHI, MNU_CFG_ANALYZER_OILFREQHI); }
 
-    displayFxn(CFG_ANALYZER_OILFREQHI, REG_OIL_FREQ_HIGH.calc_val, 2);
+    displayFxn(CFG_ANALYZER_OILFREQHI, REG_OIL_FREQ_HIGH.calc_val, 3);
 
     switch (input)  {
-        case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_ANALYZER_OILFREQHI, FALSE, 2);
-        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_ANALYZER_OILFREQHI,8); // 1000.00'\0'
+        case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_ANALYZER_OILFREQHI, FALSE, 3);
+        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_ANALYZER_OILFREQHI,9); // 1000.000'\0'
         case BTN_ENTER  : return onFxnEnterPressed(FXN_CFG_ANALYZER_OILFREQHI, 1000.0, 0, &REG_OIL_FREQ_HIGH, NULL_DBL, NULL_INT);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_ANALYZER_OILFREQHI);
         default         : return FXN_CFG_ANALYZER_OILFREQHI;
