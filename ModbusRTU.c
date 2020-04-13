@@ -1402,7 +1402,11 @@ void MB_SendPacket_Int16(void)
 		BfrPut(&UART_TXBUF,(Uint8)(((Uint32)REG_SN_PIPE >> 8)  & 0xFF));
 		BfrPut(&UART_TXBUF,(Uint8)( (Uint32)REG_SN_PIPE  	   & 0xFF));// LSB
 	}
-	BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    else
+    {
+        BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS); 
+    }
+	//BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS); // DKOH
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->fxn);
 
 	////////////////////////////////////////////
@@ -1705,7 +1709,11 @@ MB_SendPacket_Coil(void)
 		BfrPut(&UART_TXBUF,(Uint8)(((Uint32)REG_SN_PIPE >> 8)  & 0xFF));
 		BfrPut(&UART_TXBUF,(Uint8)( (Uint32)REG_SN_PIPE  	   & 0xFF));// LSB
 	}
-	BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    else
+    {
+        BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    }
+	//BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS); // DKOH
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->fxn);
 
     /////////////////////////////////////////////////
@@ -1906,7 +1914,11 @@ MB_SendPacket_LongInt(void)
 		BfrPut(&UART_TXBUF,(Uint8)(((Uint32)REG_SN_PIPE >> 8)  & 0xFF));
 		BfrPut(&UART_TXBUF,(Uint8)( (Uint32)REG_SN_PIPE  	   & 0xFF));// LSB
 	}
-	BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    else
+    {
+	    BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    }
+	//BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS); // DKOH
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->fxn);
 
 	////////////////////////////////////////////
@@ -2103,7 +2115,11 @@ MB_SendPacket_Float(void)
 		BfrPut(&UART_TXBUF,(Uint8)(((Uint32)REG_SN_PIPE >> 8)  & 0xFF));
 		BfrPut(&UART_TXBUF,(Uint8)( (Uint32)REG_SN_PIPE  	   & 0xFF));// LSB
 	}
-	BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    else
+    {
+	    BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    }
+	//BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS); // DKOH
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->fxn);
 
 	////////////////////////////////////////////
@@ -2413,7 +2429,11 @@ MB_SendPacket_Sample(void)
 		BfrPut(&UART_TXBUF,(Uint8)(((Uint32)REG_SN_PIPE >> 16) & 0xFF));
 		BfrPut(&UART_TXBUF,(Uint8)(((Uint32)REG_SN_PIPE >> 24) & 0xFF));	// MSB
 	}
-	BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    else
+    {
+	    BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
+    }
+	//BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS); // DKOH
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->fxn);
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->vtune);
 
