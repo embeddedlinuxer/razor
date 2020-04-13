@@ -704,6 +704,11 @@ mnuHomescreenDensity(const Uint16 input)
 			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
         else if (REG_OIL_DENS_CORR_MODE == 3)
 			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+
+        for (dDisplayIndex = 0; dDisplayIndex < sizeof(densityIndex)/sizeof(densityIndex[0]); dDisplayIndex++)
+        {
+            if (REG_OIL_DENSITY.unit == densityUnit[dDisplayIndex]) break;
+        }
     }
 	sprintf(lcdLine1,"%10.1f%s",REG_OIL_DENSITY.val,densityIndex[dDisplayIndex]);
 	(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
@@ -2644,6 +2649,11 @@ mnuConfig_DnsCorr_DispUnit(const Uint16 input)
 
     if (isUpdateDisplay)
     {
+        for (dDisplayIndex = 0; dDisplayIndex < sizeof(densityIndex)/sizeof(densityIndex[0]); dDisplayIndex++)
+        {
+            if (REG_OIL_DENSITY.unit == densityUnit[dDisplayIndex]) break;
+        }
+
 	    sprintf(lcdLine1,"%16s",densityIndex[dDisplayIndex]);
 	    updateDisplay(CFG_DNSCORR_DISPUNIT, lcdLine1);
     }
