@@ -250,19 +250,15 @@ checkFreeSpace(void)
 void logUsbFxn(void)
 {
     if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) return;
+
     if (g_eState == STATE_DEVICE_ENUM)
     {   
-        if (USBHMSCDriveReady(g_ulMSCInstance) != 0) usb_osalDelayMs(300);
+        if (USBHMSCDriveReady(g_ulMSCInstance) != 0) return;
 
-        if (!g_fsHasOpened)
+        if (!g_fsHasOpened) 
         {
-            if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) 
-                g_fsHasOpened = 1;
-            else 
-            {
-                g_fsHasOpened = 0;
-                return;
-            }
+            if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) g_fsHasOpened = 1;
+            else return;
         }
     }
     else return;
