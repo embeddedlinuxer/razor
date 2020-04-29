@@ -33,11 +33,7 @@
 #define MIN_DISK_SPACE  10240 // 10MB
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
-//#define MAX_DATA_SIZE   2048
 #define MAX_DATA_SIZE   8192
-//#define RZR_MAX_NUM_ADDR_BLOCKS 220
-//#define FBASE           0x62000000
-//#define SIZE_CFG        52244
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -403,7 +399,7 @@ void logUsbFxn(void)
     }
    
     /// TIME TO SYNC (f_sync() is extremely slow) 
-    //usb_osalDelayMs(1000); /// 1 SEC
+    usb_osalDelayMs(1000); /// 1 SEC
 
     /// CLOSE 
     f_close(&fileWriteObject); 
