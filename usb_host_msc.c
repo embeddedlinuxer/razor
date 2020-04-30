@@ -250,15 +250,19 @@ checkFreeSpace(void)
 void logUsbFxn(void)
 {
     if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) return;
-
     if (g_eState == STATE_DEVICE_ENUM)
     {   
-        if (USBHMSCDriveReady(g_ulMSCInstance) != 0) return;
+        if (USBHMSCDriveReady(g_ulMSCInstance) != 0) usb_osalDelayMs(300);
 
-        if (!g_fsHasOpened) 
+        if (!g_fsHasOpened)
         {
-            if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) g_fsHasOpened = 1;
-            else return;
+            if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) 
+                g_fsHasOpened = 1;
+            else 
+            {
+                g_fsHasOpened = 0;
+                return;
+            }
         }
     }
     else return;
@@ -394,8 +398,8 @@ void logUsbFxn(void)
         return;
     }
    
-    /// TIME TO SYNC (f_sync() is extremely slow) 
-    usb_osalDelayMs(1000); /// 1 SEC
+    /// Needs time to sync because f_sync() is extremely slow) 
+    usb_osalDelayMs(500); 
 
     /// CLOSE 
     f_close(&fileWriteObject); 
