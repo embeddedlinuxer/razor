@@ -286,7 +286,6 @@ void reloadFactoryDefault(void)
 
 	VAR_Initialize(&REG_WATERCUT_AVG, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
 	VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, -100.0, 105.0, -3.0);
-	//VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, 0.0, 105.0, -3.0);
 	VAR_Update(&REG_WATERCUT_AVG, 0.0, CALC_UNIT);
 
 	//////////////////////////////////////
@@ -960,7 +959,6 @@ void initializeAllRegisters(void)
 
 	VAR_Initialize(&REG_WATERCUT_AVG, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
 	VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, -100.0, 105.0, -3.0);
-	//VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, 0.0, 105.0, -3.0);
 	VAR_Update(&REG_WATERCUT_AVG, 0.0, CALC_UNIT);
 
 	//////////////////////////////////////

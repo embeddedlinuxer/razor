@@ -469,7 +469,8 @@ void Capture_Sample(void)
         else
             sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i];
     }   
-    VAR_Update(&REG_WATERCUT_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
+    REG_WATERCUT_AVG.calc_val = sum/(double)num_samples;
+    //VAR_Update(&REG_WATERCUT_AVG, sum/(double)num_samples, CALC_UNIT);   //update average
 
 	if (COIL_BEGIN_OIL_CAP.val)
     {
@@ -500,7 +501,7 @@ void Capture_Sample(void)
             DATALOG.T_BUFFER.buff[0] = 0;
             COIL_AVGTEMP_RESET.val = FALSE;
         }
-    }   
+    }
     VAR_Update(&REG_TEMP_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
 
     //Average Frequency//

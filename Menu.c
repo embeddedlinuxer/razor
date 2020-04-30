@@ -602,7 +602,7 @@ mnuHomescreenWaterCut(const Uint16 input)
         return MNU_HOMESCREEN_WTC;
     }
 
-	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT.calc_val,2));
+	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT_AVG.calc_val,2));
 
 	(REG_TEMPERATURE.unit == u_temp_C) ? sprintf(lcdLine1,"Temp%10.1f%cC", REG_TEMP_USER.val, LCD_DEGREE) : sprintf(lcdLine1,"Temp%10.1f%cF", REG_TEMP_USER.val, LCD_DEGREE);
 	updateDisplay(lcdLine0, lcdLine1);
