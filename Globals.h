@@ -33,13 +33,14 @@
 *    V1.0.2 : Dec-18-2019 : Daniel Koh : Added DS1340 RTC
 *    V1.0.3 : Jan-27-2020 : Daniel Koh : SPECIAL VERSION FOR OLD RTC. NO DS1340 AT ALL 
 *    V1.0.4 : Jan-27-2020 : Daniel Koh : Bring back the latest version for runnig DS1340 
+*    V1.0.7 : May-01-2020 : Daniel Koh : REG_WATERCUT_AVG, mnuStepPressed with multiple times of displayLCD 
 *------------------------------------------------------------------------*/
 
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION "1.0.0"
-#define FIRMWARE_VERSION "1.0.6"
+#define FIRMWARE_VERSION "1.0.7"
 
 #define BOOL Uint8
 #define DEMO_MODE

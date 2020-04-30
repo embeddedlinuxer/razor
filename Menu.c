@@ -397,8 +397,15 @@ int onMnuStepPressed(const int nextId, const int currentId, const char * label)
     isUpdateDisplay = TRUE;
     isMessage = FALSE;
     counter = 0;
+
+    //
+    // DO THIS MULTIPLE TIMES TO ENSURE DISPLAY GETS UPDATED CORRECTLY
+    // C6748 I2C IS **EXTREMLY** SLOW
     displayLcd(label, LCD0);
     displayLcd(label, LCD0);
+    displayLcd(label, LCD0);
+    displayLcd(label, LCD0);
+    displayLcd(BLANK, LCD1);
     displayLcd(BLANK, LCD1);
     displayLcd(BLANK, LCD1);
 
