@@ -444,19 +444,28 @@ displayMnu(const char * mnu, const double fvalue, const int fdigit)
     else if (fdigit == 4) sprintf(lcdLine1,"%16.4f", fvalue); // 0.0000
     else if (fdigit == 5) sprintf(lcdLine1,"%16.5f", fvalue); // 0.00000
 
-    (isUpdateDisplay) ? updateDisplay(mnu, lcdLine1) : displayLcd(lcdLine1, LCD1);                      // display menu title and clean display line1
+    if (isUpdateDisplay) 
+    {
+        displayLcd(mnu, LCD0);                                // display menu and line1
+        displayLcd(mnu, LCD0);                                // display menu and line1
+        displayLcd(mnu, LCD0);                                // display menu and line1
+        displayLcd(lcdLine1, LCD1);                 
+        displayLcd(lcdLine1, LCD1);                 
+        isUpdateDisplay = FALSE;                              // disable init
+    }
+    else
+    {
+        displayLcd(lcdLine1, LCD1);                           // display line1 
+        displayLcd(lcdLine1, LCD1);                      
+    }
 }
 
 
 void
 displayFxn(const char * fxn, const double fvalue, const int fdigit)
 {
-    char val;
-
     if (isUpdateDisplay)
-    {
-        for (y=0; y<MAX_LCD_WIDTH; y++) lcdLine1[y] = 0x20;
- 
+    {    
         // decide display format
              if (fdigit == 0) sprintf(lcdLine1,"%16.0f", fvalue);   // 0 (integer)
         else if (fdigit == 1) sprintf(lcdLine1,"%16.1f", fvalue);   // 0.0
@@ -465,14 +474,18 @@ displayFxn(const char * fxn, const double fvalue, const int fdigit)
         else if (fdigit == 4) sprintf(lcdLine1,"%16.4f", fvalue);   // 0.0000
         else if (fdigit == 5) sprintf(lcdLine1,"%16.5f", fvalue);   // 0.00000
 
-        updateDisplay(fxn, lcdLine1);                               // display menu title and clean display line1
+        displayLcd(fxn,LCD0);
+        displayLcd(fxn,LCD0);
+        displayLcd(lcdLine1,LCD1);
+        displayLcd(lcdLine1,LCD1);
+        displayLcd(lcdLine1,LCD1);
+        displayLcd(lcdLine1,LCD1);
         MENU.col = MAX_LCD_WIDTH-1;                                 // set cursor right alignment 
         MENU.row = 1;                                               // set line1 
         isUpdateDisplay = FALSE;                                    // disable init
-    }
+    }    
 
-    val = lcdLine1[MENU.col];
-    LCD_printch(val, MENU.col, MENU.row);                           // display last char
+    LCD_printch(lcdLine1[MENU.col], MENU.col, MENU.row);            // display last char
     LCD_setBlinking(MENU.col,MENU.row);                             // start blinking
 }
 
@@ -3248,7 +3261,6 @@ mnuSecurityInfo_TimeAndDate(const Uint16 input)
     static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
     Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
     sprintf(lcdLine1,"%02d:%02d %02d/%02d/20%02d",tmp_hr,tmp_min,tmp_mon,tmp_day,tmp_yr);
-    //sprintf(lcdLine1,"%02d:%02d %02d/%02d/20%02d",REG_RTC_HR,REG_RTC_MIN,REG_RTC_MON,REG_RTC_DAY,REG_RTC_YR);
 
     (isUpdateDisplay) ? updateDisplay(SECURITYINFO_TIMEANDDATE,lcdLine1) : displayLcd(lcdLine1, LCD1);
 
@@ -3269,17 +3281,17 @@ fxnSecurityInfo_TimeAndDate(const Uint16 input)
 	if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_TIMEANDDATE;
     if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_TIMEANDDATE, MNU_SECURITYINFO_TIMEANDDATE); }
 
-    char hh[2];
-    char mn[2];
-    char mm[2];
-    char dd[2];
-    char yy[2];
+    char hh[2], mn[2], mm[2], dd[2], yy[2];
 
     if (isUpdateDisplay)
     {
 		isUpdateDisplay = FALSE;
 		displayLcd(SECURITYINFO_TIMEANDDATE,LCD0);
         sprintf(lcdLine1,"%02d:%02d %02d/%02d/20%02d",REG_RTC_HR,REG_RTC_MIN,REG_RTC_MON,REG_RTC_DAY,REG_RTC_YR);
+        sprintf(lcdLine1,"%02d:%02d %02d/%02d/20%02d",REG_RTC_HR,REG_RTC_MIN,REG_RTC_MON,REG_RTC_DAY,REG_RTC_YR);
+		displayLcd(lcdLine1,LCD1);
+		displayLcd(lcdLine1,LCD1);
+		displayLcd(lcdLine1,LCD1);
 		displayLcd(lcdLine1,LCD1);
         MENU.col = 0; 
         MENU.row = 1; 
