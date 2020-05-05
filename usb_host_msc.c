@@ -395,7 +395,7 @@ void logUsbFxn(void)
     }
    
     /// Needs time to sync because f_sync() is extremely slow) 
-    usb_osalDelayMs(500); 
+    usb_osalDelayMs(1000); 
 
     /// CLOSE 
     f_close(&fileWriteObject); 
