@@ -33,7 +33,8 @@
 #define MIN_DISK_SPACE  10240 // 10MB
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
-#define MAX_DATA_SIZE   8192
+//#define MAX_DATA_SIZE   8192
+#define MAX_DATA_SIZE   12288 
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -324,7 +325,7 @@ void logUsbFxn(void)
             return;
         } 
 	    f_sync(&fileWriteObject);
-        usb_osalDelayMs(500);
+        usb_osalDelayMs(1000);
 
         // write header2
         sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
@@ -334,7 +335,7 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
-        usb_osalDelayMs(500);
+        usb_osalDelayMs(1000);
 
         // write header3
         sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
@@ -344,13 +345,16 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
-        usb_osalDelayMs(500);
+        usb_osalDelayMs(1000);
 
         // close file
         f_close(&fileWriteObject);
 
         // check remaining disk space
         checkFreeSpace();
+
+        // flush LOG_BUF 
+        LOG_BUF[0] = '\0';
 
         return;
     }   
@@ -395,7 +399,7 @@ void logUsbFxn(void)
     }
    
     /// Needs time to sync because f_sync() is extremely slow) 
-    usb_osalDelayMs(1000); 
+    usb_osalDelayMs(2000); 
 
     /// CLOSE 
     f_close(&fileWriteObject); 
