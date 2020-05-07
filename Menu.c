@@ -449,15 +449,12 @@ displayMnu(const char * mnu, const double fvalue, const int fdigit)
         displayLcd(mnu, LCD0);                                // display menu and line1
         displayLcd(mnu, LCD0);                                // display menu and line1
         displayLcd(mnu, LCD0);                                // display menu and line1
-        displayLcd(lcdLine1, LCD1);                 
-        displayLcd(lcdLine1, LCD1);                 
-        isUpdateDisplay = FALSE;                              // disable init
+        displayLcd(BLANK, LCD1);                 
+        displayLcd(BLANK, LCD1);                 
+        isUpdateDisplay = FALSE;                              // disable line0 display 
     }
-    else
-    {
-        displayLcd(lcdLine1, LCD1);                           // display line1 
-        displayLcd(lcdLine1, LCD1);                      
-    }
+
+    displayLcd(lcdLine1, LCD1);                 
 }
 
 
@@ -476,9 +473,8 @@ displayFxn(const char * fxn, const double fvalue, const int fdigit)
 
         displayLcd(fxn,LCD0);
         displayLcd(fxn,LCD0);
-        displayLcd(BLANK,LCD1);
-        displayLcd(BLANK,LCD1);
-        displayLcd(BLANK,LCD1);
+        displayLcd(fxn,LCD0);
+        displayLcd(lcdLine1,LCD1);
         displayLcd(lcdLine1,LCD1);
         displayLcd(lcdLine1,LCD1);
         displayLcd(lcdLine1,LCD1);
@@ -487,6 +483,7 @@ displayFxn(const char * fxn, const double fvalue, const int fdigit)
         isUpdateDisplay = FALSE;                                    // disable init
     }    
 
+    /// Blink value in edit mode
     LCD_printch(lcdLine1[MENU.col], MENU.col, MENU.row);            // display last char
     LCD_setBlinking(MENU.col,MENU.row);                             // start blinking
 }
@@ -624,7 +621,7 @@ mnuHomescreenWaterCut(const Uint16 input)
         return MNU_HOMESCREEN_WTC;
     }
 
-	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT_AVG.calc_val,2));
+	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT.calc_val,2));
 
 	(REG_TEMPERATURE.unit == u_temp_C) ? sprintf(lcdLine1,"Temp%10.1f%cC", REG_TEMP_USER.val, LCD_DEGREE) : sprintf(lcdLine1,"Temp%10.1f%cF", REG_TEMP_USER.val, LCD_DEGREE);
 	updateDisplay(lcdLine0, lcdLine1);

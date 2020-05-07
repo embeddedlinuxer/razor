@@ -73,6 +73,8 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 
 void Poll(void)
 {
+    static float WC_AVG = 0;
+    static int WC_PROC_AVGING = 1;
 	float WC; 			// temp watercut value
 	BOOL err_f = FALSE;	// frequency calculation error
 	BOOL err_w = FALSE;	// watercut calculation error
@@ -127,7 +129,30 @@ void Poll(void)
 	if((err_f | err_w | err_d) == FALSE)
 	{
 		COIL_AO_ALARM.val = FALSE;
-		VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
+
+        ///////// WATERCUT AVERAGING ///////////////////
+
+        /*********************************************** 
+            [Previous Average] * (n-1) + [Next Value]
+            -----------------------------------------
+                                n
+        ************************************************/
+
+        if (WC_PROC_AVGING > REG_PROC_AVGING.calc_val)
+        {
+            WC_PROC_AVGING = 1;
+            WC_AVG= 0;
+        }
+        
+        WC_AVG *= (WC_PROC_AVGING-1);
+        WC_AVG += WC;
+        WC_AVG /= WC_PROC_AVGING;
+        WC_PROC_AVGING++;
+
+        VAR_Update(&REG_WATERCUT,WC_AVG,CALC_UNIT);
+
+        /////////////////////////////////////////////////
+
 		VAR_Update(&REG_WATERCUT_RAW,NEW_WATERCUT_RAW,CALC_UNIT);
 
 		// [MENU 2.4] calculate analog output value
