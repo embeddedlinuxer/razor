@@ -474,7 +474,9 @@ displayFxn(const char * fxn, const double fvalue, const int fdigit)
         displayLcd(fxn,LCD0);
         displayLcd(fxn,LCD0);
         displayLcd(fxn,LCD0);
-        displayLcd(lcdLine1,LCD1);
+        displayLcd(BLANK, LCD1);                 
+        displayLcd(BLANK, LCD1);                 
+        displayLcd(BLANK, LCD1);                 
         displayLcd(lcdLine1,LCD1);
         displayLcd(lcdLine1,LCD1);
         displayLcd(lcdLine1,LCD1);
