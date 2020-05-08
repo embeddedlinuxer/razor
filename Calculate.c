@@ -46,28 +46,28 @@ static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_R
 // Currently, it's called once every 0.5 seconds.
 void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 {
-    // disable counter
+    /// disable counter
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,DISABLE); 
 
-    //stop counter timer
+    /// stop counter timer
     Timer_stop(counterTimerHandle); 
 
-    //Update global variables
+    /// Update global variables
     FREQ_PULSE_COUNT_LO = tmr3Regs->TIM12; //store counter value to global var (lower)
     FREQ_PULSE_COUNT_HI = tmr3Regs->TIM34; //store counter value to global var (upper)
     FREQ_U_SEC_ELAPSED = u_sec_elapsed;
 
-    //reset counter value to zero (upper & lower)
+    /// reset counter value to zero (upper & lower)
     tmr3Regs->TIM12 = 0;
     tmr3Regs->TIM34 = 0;
 
-    //re-enable counter
+    /// re-enable counter
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,EN_ONCE); 
 
-    //start counter timer
+    /// start counter timer
     Timer_start(counterTimerHandle);
 
-    // Post Swi_Poll below
+    /// Post Swi_Poll below
     Swi_post(Swi_Poll);
 }
 
@@ -130,36 +130,32 @@ void Poll(void)
 	{
 		COIL_AO_ALARM.val = FALSE;
 
-        ///////// WATERCUT AVERAGING ///////////////////
+        ///////// WATERCUT AVERAGING [NOISE REDUCTION PROCESS] /////////////
 
-        /*********************************************** 
-            [Previous Average] * (n-1) + [Next Value]
-            -----------------------------------------
-                                n
-        ************************************************/
+        /******************************************************************** 
+            [Previous Average] * (REG_PROC_AVGING.calc_val-1) + [Next Value]
+           ------------------------------------------------------------------
+                           REG_PROC_AVGING.calc_val
+        *********************************************************************/
 
-        if (WC_PROC_AVGING > REG_PROC_AVGING.calc_val)
-        {
-            WC_PROC_AVGING = 1;
-            WC_AVG= 0;
-        }
-        
-        WC_AVG *= (WC_PROC_AVGING-1);
+        WC_AVG *= (REG_PROC_AVGING.calc_val-1);
         WC_AVG += WC;
-        WC_AVG /= WC_PROC_AVGING;
+        WC_AVG /= REG_PROC_AVGING.calc_val;
         WC_PROC_AVGING++;
-
-        VAR_Update(&REG_WATERCUT,WC_AVG,CALC_UNIT);
-
+        
+        if (WC_PROC_AVGING >= REG_PROC_AVGING.calc_val) 
+        {
+            VAR_Update(&REG_WATERCUT,WC_AVG,CALC_UNIT);
+            WC_PROC_AVGING = 1;
+        }
+    
         /////////////////////////////////////////////////
 
 		VAR_Update(&REG_WATERCUT_RAW,NEW_WATERCUT_RAW,CALC_UNIT);
 
 		// [MENU 2.4] calculate analog output value
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
-	} 
-	else
-	{
+	} else {
 		COIL_AO_ALARM.val = TRUE;
 		if ((!COIL_AO_MANUAL.val) && (REG_AO_ALARM_MODE != 0))
 			(REG_AO_ALARM_MODE == 1) ? (REG_AO_MANUAL_VAL = 20.5) : (REG_AO_MANUAL_VAL = 3.6);
