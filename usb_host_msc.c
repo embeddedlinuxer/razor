@@ -34,7 +34,8 @@
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 //#define MAX_DATA_SIZE   8192
-#define MAX_DATA_SIZE   12288 
+//#define MAX_DATA_SIZE   12288 
+#define MAX_DATA_SIZE   4096 
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -273,7 +274,7 @@ void logUsbFxn(void)
    	}
 
     /// READ RTC
-    Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
+    readRTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
     /// TAKES TIME TO RELOAD USB DRIVER
     if ((tmp_min == 59) && (tmp_sec < 30) && (isResetUsbDriver == FALSE)) return;
@@ -325,7 +326,7 @@ void logUsbFxn(void)
             return;
         } 
 	    f_sync(&fileWriteObject);
-        usb_osalDelayMs(1000);
+        //usb_osalDelayMs(1000);
 
         // write header2
         sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
@@ -335,7 +336,7 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
-        usb_osalDelayMs(1000);
+        //usb_osalDelayMs(1000);
 
         // write header3
         sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
@@ -345,7 +346,7 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
-        usb_osalDelayMs(1000);
+        //usb_osalDelayMs(1000);
 
         // close file
         f_close(&fileWriteObject);
@@ -399,7 +400,7 @@ void logUsbFxn(void)
     }
    
     /// Needs time to sync because f_sync() is extremely slow) 
-    usb_osalDelayMs(2000); 
+    //usb_osalDelayMs(2000); 
 
     /// CLOSE 
     f_close(&fileWriteObject); 
@@ -408,7 +409,7 @@ void logUsbFxn(void)
     LOG_BUF[0] = '\0';
 
     /// RESET USB DRIVER EVERY HOUR 
-    if (tmp_min == 58) isResetUsbDriver = TRUE;
+    //if (tmp_min == 58) isResetUsbDriver = TRUE;
     if (isResetUsbDriver)
     {
         if (tmp_min == 59)

@@ -160,65 +160,74 @@ ISR_Process_Menu (void)
 void 
 Process_Menu(void)
 {
-	char 	prevButtons[4];
-	Uint32	buttons[4];
-	Uint32	key;
-	Uint16 	btnIndex = NULL;
-	Uint16 	nextState = MENU.state;
-	Uint8	needRelayClick;
-	static 	Uint16 (*stateFxn)(Uint16);
-    Uint8   isValidInput = TRUE;
+    static Uint16 (*stateFxn)(Uint16);
+    char prevButtons[4];
+    Uint32 buttons[4], key;
+    Uint16 btnIndex = NULL, nextState = MENU.state;
+    Uint8 needRelayClick, isValidInput = TRUE;
 
-    // Enable USB device
+    ///
+    /// Enable USB device
+    ///
+
     loadUsbDriver();
 
-	// function pointer
-	stateFxn = MENU_TABLE[0].fxnPtr;
+    ///
+    /// function pointer
+    ///
 
-	// Initialize menu
-	setupMenu();						 
+    stateFxn = MENU_TABLE[0].fxnPtr;
+
+    ///
+    /// Initialize menu
+    ///
+   
+    setupMenu();						 
     
-    // Initialize buttons
-	int i;
-	for (i=0; i<4; i++) buttons[i] = 0;
+    ///
+    /// Initialize buttons
+    ///
 
-	// Start RTOS clock to begin counting frequency pulses
-	Timer_start(counterTimerHandle);	
+    int i;
+    for (i=0; i<4; i++) buttons[i] = 0;
 
-	// Start main loop
-	while (1)
-	{
+    ///
+    /// Start main loop
+    ///
+  
+    while (1)
+    {
         if (COIL_SAVE_CONFIG_TO_DEFAULT.val) storeUserDataToFactoryDefault();
 
-		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post
-		needRelayClick 	= FALSE; 							// this is a great place for a breakpoint!
-		nextState 		= MENU.state;						// check next state
-		btnIndex 		= BTN_NONE;							// check button selected
-		key 			= Swi_disable();
-        isValidInput    = TRUE;
+        Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 	// wait until next Menu_sem post
+        needRelayClick = FALSE; 			// this is a great place for a breakpoint!
+        nextState      = MENU.state;		        // check next state
+	btnIndex       = BTN_NONE;		        // check button selected
+	key            = Swi_disable();
+        isValidInput   = TRUE;
 
-		////////////////////////////////////////////////////////////////////////////
-		//// BLINK CONTROLLER
-		////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////
+        //// BLINK CONTROLLER
+        ////////////////////////////////////////////////////////////////////////////
         
         (blinker < 5) ? (isOn = TRUE) : (isOn = FALSE);
         (blinker > 8) ? (blinker = 0) : (blinker++);
 
-		////////////////////////////////////////////////////////////////////////////
-		/// Note: I2C_BUTTON_STATUS_X is updated regularly with I2C_Pulse_MBVE_Clock
-		/// Update buttons[] with button status
-		////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	/// Note: I2C_BUTTON_STATUS_X is updated regularly with I2C_Pulse_MBVE_Clock
+        /// Update buttons[] with button status
+        ////////////////////////////////////////////////////////////////////////////
 
-		buttons[0] = I2C_BUTTON_STEP;					
-		buttons[1] = I2C_BUTTON_VALUE;					 
-		buttons[2] = I2C_BUTTON_ENTER;					
-		buttons[3] = I2C_BUTTON_BACK;					
+        buttons[0] = I2C_BUTTON_STEP;					
+	buttons[1] = I2C_BUTTON_VALUE;					 
+	buttons[2] = I2C_BUTTON_ENTER;					
+	buttons[3] = I2C_BUTTON_BACK;					
 
         if ((buttons[0] + buttons[1] + buttons[2] + buttons[3]) > 1) isValidInput = FALSE;
 
-		////////////////////////////////////////////////////////////////////////////
-		/// HANDLE BUTTONS PRESSED
-		////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////
+        /// HANDLE BUTTONS PRESSED
+        ////////////////////////////////////////////////////////////////////////////
 
         if (isValidInput)        
         {
@@ -283,7 +292,7 @@ Process_Menu(void)
 		else nextState = stateFxn(btnIndex); 				// next state
            
 	
-		////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
         // UPDATE STATE	
         ////////////////////////////////////////////////////////////////////////////	
 
@@ -753,7 +762,7 @@ mnuHomescreenDiagnostics(const Uint16 input)
 	static Uint8 errorCount = 0;
 	static int DIAGNOSTICS_PREV = -1;
 
-	if (isUpdateDisplay || (DIAGNOSTICS != DIAGNOSTICS_PREV))
+	if (isUpdateDisplay || (REG_DIAGNOSTICS != DIAGNOSTICS_PREV))
 	{
 		diagnose(&i, &index, &errorCount, errors, &DIAGNOSTICS_PREV);
 
@@ -791,7 +800,7 @@ fxnHomescreenDiagnostics(const Uint16 input)
 	static Uint8 errorCount = 0;
 	static int DIAGNOSTICS_PREV = -1;
 
-	if (DIAGNOSTICS != DIAGNOSTICS_PREV) diagnose(&i, &index, &errorCount, errors, &DIAGNOSTICS_PREV);
+	if (REG_DIAGNOSTICS != DIAGNOSTICS_PREV) diagnose(&i, &index, &errorCount, errors, &DIAGNOSTICS_PREV);
 	sprintf(lcdLine0,"Diagnostics: %d", errorCount);
 	displayLcd(lcdLine0,LCD0);
 	index = errors[i];	// Get error index
@@ -3260,7 +3269,7 @@ mnuSecurityInfo_TimeAndDate(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_SECURITYINFO_TIMEANDDATE;
     static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
-    Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
+    readRTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
     sprintf(lcdLine1,"%02d:%02d %02d/%02d/20%02d",tmp_hr,tmp_min,tmp_mon,tmp_day,tmp_yr);
 
     (isUpdateDisplay) ? updateDisplay(SECURITYINFO_TIMEANDDATE,lcdLine1) : displayLcd(lcdLine1, LCD1);

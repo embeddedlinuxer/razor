@@ -151,59 +151,6 @@ void API_VCF(float* VCFw, float* VCFo)
 /****************************************************************************/
 void API_STATUS(const BOOL type)
 {
-//	unsigned int r;
-//	unsigned int f;	/* fail code */
-//	unsigned int e; /* extrapolate code */
-//
-//	switch (fcidx)
-//	{/* clear bits - fail and extrapolate codes */
-//		case 2:
-//		{
-//			f = ERROR2_FC3_FAIL;
-//			e = ERROR2_FC3_EXTRAPOLATE;
-//			break;
-//		}
-//		case 1:
-//		{
-//			f = ERROR2_FC2_FAIL;
-//			e = ERROR2_FC2_EXTRAPOLATE;
-//			break;
-//		}
-//		case 0:
-//		{
-//			f = ERROR2_FC1_FAIL;
-//			e = ERROR2_FC1_EXTRAPOLATE;
-//			break;
-//		}
-//		default:
-//		{
-//			return;
-//		}
-//	}
-//
-//	r 				= e|f;
-////	DIAGNOSTICS[1] &= (0xFFFFFFFF & r);
-//	r 				= 0;
-//
-//	switch (type)
-//	{
-//		case 1:
-//		{/* extrapolate */
-//			r = e;
-//			break;
-//		}
-//		case 2:
-//		{/* fail */
-//			r = f;
-//			break;
-//		}
-//		default:
-//		{/* leave cleared */
-//			break;
-//		}
-//	}
-
-//	DIAGNOSTICS[1] |= r;
 }
 
 /****************************************************************************/

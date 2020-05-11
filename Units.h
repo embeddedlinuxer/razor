@@ -1,9 +1,31 @@
-/*
- * Units.h
- *
- *     <<This file was lifted wholesale from the EEA code>>
- */
+/* This Information is proprietary to Phase Dynamics Inc, Richardson, Texas
+* and MAY NOT be copied by any method or incorporated into another program
+* without the express written consent of Phase Dynamics Inc. This information
+* or any portion thereof remains the property of Phase Dynamics Inc.
+* The information contained herein is believed to be accurate and Phase
+* Dynamics Inc assumes no responsibility or liability for its use in any way
+* and conveys no license or title under any patent or copyright and makes
+* no representation or warranty that this Information is free from patent
+* or copyright infringement.
+*------------------------------------------------------------------------
 
+*------------------------------------------------------------------------
+* Units.h 
+*-------------------------------------------------------------------------
+* Contains all the code relevant to the LCD menu system. The menu system
+* uses a state-machine architecture, which is defined in Menu.h by a state
+* table and a state transition table. This is the only Razor code that is
+* run in the context of a Task (SYS-BIOS module) ?everything else is
+* interrupt-based.
+* Most "end-node" states of the menu tree have a function associated with
+* them. Each MNU_xxxx menu calls the corresponding FXN_xxxx function.
+* Currently, we cycle through the mnu
+* code with a maximum frequency of about 6.67 times per second
+* (minimum period = 0.15 seconds).
+*-------------------------------------------------------------------------
+* HISTORY:
+*       Aug-20-2019 : Daniel Koh : Created Ver 1.0.0
+*------------------------------------------------------------------------*/
 
 #ifndef _UNITS_H
 #define _UNITS_H
@@ -36,220 +58,220 @@
 #define u_alt_percent						57		/* more compatible with HART 5.2 */
 
 /* temperature unit codes */
-#define c_temperature					64
-#define u_temp_C						32
-#define u_temp_F						33
-#define u_temp_R						34
-#define u_temp_K						35
+#define c_temperature						64
+#define u_temp_C							32
+#define u_temp_F							33
+#define u_temp_R							34
+#define u_temp_K							35
 
 /* pressure unit codes */
-#define c_pressure						65
-#define u_p_in_H2O_68F					1
-#define u_p_in_Hg_0C					2
-#define u_p_ft_H2O_68F					3
-#define u_p_mm_H2O_68F					4
-#define u_p_mm_Hg_0C					5
-#define u_p_psi							6
-#define u_p_lbs_si						6
-#define u_p_bar							7
-#define u_p_mbar						8
-#define u_p_g_scm						9
-#define u_p_kg_scm						10
-#define u_p_Pa							11
-#define u_p_kPa							12
-#define u_p_torr						13
-#define u_p_atm							14
-#define u_p_in_H2O_60F					145
-#define u_p_cm_H2O_4C					170
-#define u_p_m_H2O_4C					171
-#define u_p_cm_Hg_0C					172
-#define u_p_lbs_sf						173
-#define u_p_hectoPa						174
-#define u_p_psia						175
-#define u_p_kg_sm						176
-#define u_p_ft_H2O_4C					177
-#define u_p_ft_H2O_60F					178
-#define u_p_m_Hg_0C						179
-#define u_p_MPa							237
-#define u_p_in_H2O_4C					238
-#define u_p_mm_H2O_4C					239
+#define c_pressure							65
+#define u_p_in_H2O_68F						1
+#define u_p_in_Hg_0C						2
+#define u_p_ft_H2O_68F						3
+#define u_p_mm_H2O_68F						4
+#define u_p_mm_Hg_0C						5
+#define u_p_psi								6
+#define u_p_lbs_si							6
+#define u_p_bar								7
+#define u_p_mbar							8
+#define u_p_g_scm							9
+#define u_p_kg_scm							10
+#define u_p_Pa								11
+#define u_p_kPa								12
+#define u_p_torr							13
+#define u_p_atm								14
+#define u_p_in_H2O_60F						145
+#define u_p_cm_H2O_4C						170
+#define u_p_m_H2O_4C						171
+#define u_p_cm_Hg_0C						172
+#define u_p_lbs_sf							173
+#define u_p_hectoPa							174
+#define u_p_psia							175
+#define u_p_kg_sm							176
+#define u_p_ft_H2O_4C						177
+#define u_p_ft_H2O_60F						178
+#define u_p_m_Hg_0C							179
+#define u_p_MPa								237
+#define u_p_in_H2O_4C						238
+#define u_p_mm_H2O_4C						239
 
 /* velocity unit codes */
-#define c_velocity						67
-#define u_vel_feet_sec					20
-#define u_vel_meter_sec					21
-#define u_vel_in_sec					114
-#define u_vel_in_min					115
-#define u_vel_feet_min					116
-#define u_vel_meter_hr					120
+#define c_velocity							67
+#define u_vel_feet_sec						20
+#define u_vel_meter_sec						21
+#define u_vel_in_sec						114
+#define u_vel_in_min						115
+#define u_vel_feet_min						116
+#define u_vel_meter_hr						120
 
 /* volume totalizer/inventory unit codes */
-#define c_volume						68
-#define u_v_gal							40
-#define u_v_L							41
-#define u_v_imp_gal						42
-#define u_v_cm							43
-#define u_v_barrel						46
-#define u_v_bushel						110
-#define u_v_cyard						111
-#define u_v_cf							112
-#define u_v_ci							113
-#define u_v_bbl_liq						124
-#define u_v_hectoliter					236
+#define c_volume							68
+#define u_v_gal								40
+#define u_v_L								41
+#define u_v_imp_gal							42
+#define u_v_cm								43
+#define u_v_barrel							46
+#define u_v_bushel							110
+#define u_v_cyard							111
+#define u_v_cf								112
+#define u_v_ci								113
+#define u_v_bbl_liq							124
+#define u_v_hectoliter						236
 
 /*STP*/
-#define u_v_N_cm						166
-#define u_v_N_L							167
-#define u_v_scf							168
-#define u_v_mscf						u_mfgr_specific_u_v_mscf
+#define u_v_N_cm							166
+#define u_v_N_L								167
+#define u_v_scf								168
+#define u_v_mscf							u_mfgr_specific_u_v_mscf
 
 /* length unit codes */
-#define c_length						69
-#define u_l_ft							44
-#define u_l_m							45
-#define u_l_in							47
-#define u_l_cm							48
-#define u_l_mm							49
-#define u_l_ft16						151
+#define c_length							69
+#define u_l_ft								44
+#define u_l_m								45
+#define u_l_in								47
+#define u_l_cm								48
+#define u_l_mm								49
+#define u_l_ft16							151
 
 /* time unit codes */
-#define c_time							70
-#define u_time_min						50
-#define u_time_sec						51
-#define u_time_hr						52
-#define u_time_day						53
+#define c_time								70
+#define u_time_min							50
+#define u_time_sec							51
+#define u_time_hr							52
+#define u_time_day							53
 
 /* mass totalizer/inventory unit codes */
-#define c_mass							71
-#define u_m_g							60
-#define u_m_kg							61
-#define u_m_metric_tons					62
-#define u_m_lbs							63
-#define u_m_short_tons					64
-#define u_m_long_tons					65
-#define u_m_ounce						125
+#define c_mass								71
+#define u_m_g								60
+#define u_m_kg								61
+#define u_m_metric_tons						62
+#define u_m_lbs								63
+#define u_m_short_tons						64
+#define u_m_long_tons						65
+#define u_m_ounce							125
 
 /* volume flow rate unit codes */
-#define c_volumetric_flow				66
-#define u_vfr_cf_min					15
-#define u_vfr_gal_min					16
-#define u_vfr_L_min						17
-#define u_vfr_imp_gal_min		    	18
-#define u_vfr_cm_hr						19
-#define u_vfr_gal_sec					22
-#define u_vfr_Mgal_day					23
-#define u_vfr_L_sec						24
-#define u_vfr_ML_day					25
-#define u_vfr_cf_sec					26
-#define u_vfr_cf_day					27
-#define u_vfr_cm_sec					28
-#define u_vfr_cm_day					29
-#define u_vfr_imp_gal_hr				30
-#define u_vfr_imp_gal_day		   		31
-#define u_vfr_cf_hr						130
-#define u_vfr_cm_min					131
-#define u_vfr_barrel_sec				132
-#define u_vfr_barrel_min				133
-#define u_vfr_barrel_hr			       	134
-#define u_vfr_barrel_day				135
-#define u_vfr_gal_hr					136
-#define u_vfr_imp_gal_sec		    	137
-#define u_vfr_L_hr						138
-#define u_vfr_gal_day					235
+#define c_volumetric_flow					66
+#define u_vfr_cf_min						15
+#define u_vfr_gal_min						16
+#define u_vfr_L_min							17
+#define u_vfr_imp_gal_min		    		18
+#define u_vfr_cm_hr							19
+#define u_vfr_gal_sec						22
+#define u_vfr_Mgal_day						23
+#define u_vfr_L_sec							24
+#define u_vfr_ML_day						25
+#define u_vfr_cf_sec						26
+#define u_vfr_cf_day						27
+#define u_vfr_cm_sec						28
+#define u_vfr_cm_day						29
+#define u_vfr_imp_gal_hr					30
+#define u_vfr_imp_gal_day		   			31
+#define u_vfr_cf_hr							130
+#define u_vfr_cm_min						131
+#define u_vfr_barrel_sec					132
+#define u_vfr_barrel_min					133
+#define u_vfr_barrel_hr			       		134
+#define u_vfr_barrel_day					135
+#define u_vfr_gal_hr						136
+#define u_vfr_imp_gal_sec		    		137
+#define u_vfr_L_hr							138
+#define u_vfr_gal_day						235
 
 /*STP*/
-#define u_vfr_N_cm_hr					121
-#define u_vfr_N_L_hr					122
-#define u_vfr_scf_min					123
-#define u_vfr_mscf_day					u_mfgr_specific_u_vfr_mscf_day
-#define u_vfr_scf_day					184
-#define u_vfr_scf_sec					186
-#define u_vfr_N_cm_sec					190
-#define u_vfr_N_cm_day					191
+#define u_vfr_N_cm_hr						121
+#define u_vfr_N_L_hr						122
+#define u_vfr_scf_min						123
+#define u_vfr_mscf_day						u_mfgr_specific_u_vfr_mscf_day
+#define u_vfr_scf_day						184
+#define u_vfr_scf_sec						186
+#define u_vfr_N_cm_sec						190
+#define u_vfr_N_cm_day						191
 
 /* mass flow rate unit codes */
-#define c_mass_flow						72
-#define u_mfr_g_sec						70
-#define u_mfr_g_min						71
-#define u_mfr_g_hr						72
-#define u_mfr_kg_sec					73
-#define u_mfr_kg_min			     	74
-#define u_mfr_kg_hr						75
-#define u_mfr_kg_day					76
-#define u_mfr_metric_tons_min			77
-#define u_mfr_metric_tons_hr			78
-#define u_mfr_metric_tons_day			79
-#define u_mfr_lbs_sec					80
-#define u_mfr_lbs_min					81
-#define u_mfr_lbs_hr					82
-#define u_mfr_lbs_day					83
-#define u_mfr_short_tons_min			84
-#define u_mfr_short_tons_hr				85
-#define u_mfr_short_tons_day			86
-#define u_mfr_long_tons_hr				87
-#define u_mfr_long_tons_day				88
+#define c_mass_flow							72
+#define u_mfr_g_sec							70
+#define u_mfr_g_min							71
+#define u_mfr_g_hr							72
+#define u_mfr_kg_sec						73
+#define u_mfr_kg_min			     		74
+#define u_mfr_kg_hr							75
+#define u_mfr_kg_day						76
+#define u_mfr_metric_tons_min				77
+#define u_mfr_metric_tons_hr				78
+#define u_mfr_metric_tons_day				79
+#define u_mfr_lbs_sec						80
+#define u_mfr_lbs_min						81
+#define u_mfr_lbs_hr						82
+#define u_mfr_lbs_day						83
+#define u_mfr_short_tons_min				84
+#define u_mfr_short_tons_hr					85
+#define u_mfr_short_tons_day				86
+#define u_mfr_long_tons_hr					87
+#define u_mfr_long_tons_day					88
 
 /* mass per volume unit codes */
-#define c_mass_per_volume				73
-#define u_mpv_sg						90
-#define u_mpv_g_cc						91
-#define u_mpv_kg_cm						92
-#define u_mpv_lbs_gal					93
-#define u_mpv_lbs_cf					94
-#define u_mpv_g_mL						95
-#define u_mpv_kg_L						96
-#define u_mpv_g_L						97
-#define u_mpv_lbs_ci					98
-#define u_mpv_short_tons_cyard			99
-#define u_mpv_deg_twaddell				100
-#define u_mpv_deg_baume_heavy			102
-#define u_mpv_deg_baume_light			103
-#define u_mpv_deg_API					104
-#define	u_mpv_deg_API_60F				105
-#define	u_mpv_deg_API_15C				106
-#define	u_mpv_kg_cm_15C					107
-#define	u_mpv_kg_cm_60F					108
-#define u_mpv_sg_60F					109
-#define u_mpv_sg_15C					110
-#define u_mpv_ug_L						146
-#define u_mpv_ug_cm						147
-#define u_mpv_percent_consistency		148
+#define c_mass_per_volume					73
+#define u_mpv_sg							90
+#define u_mpv_g_cc							91
+#define u_mpv_kg_cm							92
+#define u_mpv_lbs_gal						93
+#define u_mpv_lbs_cf						94
+#define u_mpv_g_mL							95
+#define u_mpv_kg_L							96
+#define u_mpv_g_L							97
+#define u_mpv_lbs_ci						98
+#define u_mpv_short_tons_cyard				99
+#define u_mpv_deg_twaddell					100
+#define u_mpv_deg_baume_heavy				102
+#define u_mpv_deg_baume_light				103
+#define u_mpv_deg_API						104
+#define	u_mpv_deg_API_60F					105
+#define	u_mpv_deg_API_15C					106
+#define	u_mpv_kg_cm_15C						107
+#define	u_mpv_kg_cm_60F						108
+#define u_mpv_sg_60F						109
+#define u_mpv_sg_15C						110
+#define u_mpv_ug_L							146
+#define u_mpv_ug_cm							147
+#define u_mpv_percent_consistency			148
 
 /* viscosity unit codes */
-#define c_viscosity						74
-#define u_visc_centistokes		       	54
-#define u_visc_centipoise				55
+#define c_viscosity							74
+#define u_visc_centistokes		       		54
+#define u_visc_centipoise					55
 
 /* angular velocity unit codes */
-#define c_angular_velocity				75
-#define u_ang_deg_sec					117
-#define u_ang_RPS						118
-#define u_ang_RPM						117
+#define c_angular_velocity					75
+#define u_ang_deg_sec						117
+#define u_ang_RPS							118
+#define u_ang_RPM							117
 
 /* area unit codes */
-#define c_area							76
+#define c_area								76
 
 /* work/energy unit codes */
-#define c_energy_work					77
-#define u_nrg_Nm					 	69
-#define u_nrg_deka_therm				89
-#define u_nrg_ft_lb						126
-#define u_nrg_kWh						128
-#define u_nrg_Mc						162
-#define u_nrg_MJ						164
-#define u_nrg_BTU						165
+#define c_energy_work						77
+#define u_nrg_Nm					 		69
+#define u_nrg_deka_therm					89
+#define u_nrg_ft_lb							126
+#define u_nrg_kWh							128
+#define u_nrg_Mc							162
+#define u_nrg_MJ							164
+#define u_nrg_BTU							165
 
 /* force unit codes */
-#define c_force							78
-#define u_force_newton					68
+#define c_force								78
+#define u_force_newton						68
 
 /* power unit codes */
-#define c_power							79
-#define u_pwr_kW						127
-#define u_pwr_HP						129
-#define u_pwr_Mc_hr						140
-#define u_pwr_MJ_hr						141
-#define u_pwr_BTU_hr					142
+#define c_power								79
+#define u_pwr_kW							127
+#define u_pwr_HP							129
+#define u_pwr_Mc_hr							140
+#define u_pwr_MJ_hr							141
+#define u_pwr_BTU_hr						142
 
 /* frequency unit codes */
 #define c_frequency						80

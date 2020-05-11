@@ -99,7 +99,7 @@ updateDisplay(const char * text0, const char * text1)
 void
 diagnose(Uint8 * ii, Uint8 * iindex, Uint8 * ierrorCount, Uint8 ierrors[], int * iDIAGNOSTICS_PREV)
 {
-    if (DIAGNOSTICS != *iDIAGNOSTICS_PREV)    // Keep updating DIAGNOSTICS
+    if (REG_DIAGNOSTICS != *iDIAGNOSTICS_PREV)    // Keep updating DIAGNOSTICS
     {
         *iDIAGNOSTICS_PREV = DIAGNOSTICS;
         memset(ierrors,0,sizeof(ierrors));    // Clear array
@@ -109,7 +109,7 @@ diagnose(Uint8 * ii, Uint8 * iindex, Uint8 * ierrorCount, Uint8 ierrors[], int *
 
         while (1)
         {
-            if (DIAGNOSTICS & (1 << *iindex))
+            if (REG_DIAGNOSTICS & (1 << *iindex))
             {
                 ierrors[*ierrorCount] = *iindex;
                 (*ierrorCount)++;

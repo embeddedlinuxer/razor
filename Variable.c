@@ -704,8 +704,7 @@ BOOL VAR_CheckSet_Bounds(VAR* v, double* t)
             v->STAT |= var_bound_hi;
             t[0]     = v->bound_hi_set;
 
-            if ((v->STAT & var_no_alarm)==0)
-                DIAGNOSTICS |= ERR_VAR_HI;
+            if ((v->STAT & var_no_alarm)==0) DIAGNOSTICS |= ERR_VAR_HI;
 
             r = FALSE;
         }
@@ -715,8 +714,7 @@ BOOL VAR_CheckSet_Bounds(VAR* v, double* t)
             v->STAT |= var_bound_lo;
             t[0]     = v->bound_lo_set;
 
-			if ((v->STAT & var_no_alarm)==0)
-                DIAGNOSTICS |= ERR_VAR_LO;
+			if ((v->STAT & var_no_alarm)==0) DIAGNOSTICS |= ERR_VAR_LO;
 
             r = FALSE;
         }

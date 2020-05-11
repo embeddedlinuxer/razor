@@ -38,7 +38,7 @@ _EXTERN Uint32 DIAGNOSTICS_MASK;
 ////////////// ERROR HANDLER ////////////////
 /////////////////////////////////////////////
 
-#define MAX_ERRORS 10
+#define MAX_ERRORS 12
 
 enum ERRORS {
 ERR_WAC_HI	= 1 << 0,
@@ -51,6 +51,9 @@ ERR_VAR_HI	= 1 << 6,
 ERR_VAR_LO	= 1 << 7,
 ERR_DNS_HI 	= 1 << 8,
 ERR_DNS_LO 	= 1 << 9,
+ERR_DNS_ADJ_HI 	= 1 << 10,
+ERR_DNS_ADJ_LO 	= 1 << 11,
+
 };
 
 static char *errorType[MAX_ERRORS] = 
@@ -65,6 +68,8 @@ static char *errorType[MAX_ERRORS] =
 "    Var Lo Bound",
 "      Hi Density",
 "      Lo Density",
+"     Hi Dens Adj",
+"     Lo Dens Adj",
 };
 
 /////////////////////////////////////////////

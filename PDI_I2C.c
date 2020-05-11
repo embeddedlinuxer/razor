@@ -45,9 +45,10 @@
 /*=======================================================================*/
 /*                         	FUNCTION PROTOTYPES                	         */
 /*=======================================================================*/
+
 static BOOL isOk = TRUE;
 extern void delayInt(Uint32 count);
-extern void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr);
+extern void readRTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr);
 static inline void Pulse_ePin(int read, int write, Uint8 lcd_data);
 static inline void Pulse_ePin_Manual(int read, int write, Uint8 lcd_data);
 static inline Uint8 I2C_Wait_For_TXRDY(void)
@@ -62,47 +63,28 @@ static inline Uint8 I2C_Wait_For_TXRDY(void)
 	return 0;
 }
 
-//******************************************************************************   
-//Function Name     : Bcd2Hex(unsigned char BCDValue)   
-//Type              : User defined   
-//Return Type       : unsigned char    
-//Arguments         : unsigned char BCDValue   
-//Details           : convert BCD to Hex    
-//Autor             : Nibu   
-//******************************************************************************   
    
 unsigned char Bcd2Hex(unsigned char BCDValue)   
 {   
-  unsigned char temp;   
-  unsigned char HexVal;   
-  temp = BCDValue;   
-  HexVal = 0;   
-  while(1)   
-  {   
-    // Get the tens digit by doing multiple subtraction   
-    // of 10 from the binary value.   
-    if(temp >= 10)   
-    {   
-      temp -= 10;   
-      HexVal += 0x10;   
-  }   
-    else // Get the ones digit by adding the remainder.   
-    {   
-      HexVal += temp;   
-      break;   
-    }   
-  }   
-  return(HexVal);   
+	unsigned char temp;   
+  	unsigned char HexVal;   
+  	temp = BCDValue;   
+  	HexVal = 0;   
+  	while(1)   
+  	{   
+    	if (temp >= 10)   
+    	{   
+      		temp -= 10;   
+      		HexVal += 0x10;   
+  		}   
+    	else 
+    	{   
+      		HexVal += temp;   
+      		break;   
+    	}   
+  	}   
+  	return(HexVal);   
 }   
-   
-//******************************************************************************   
-//Function Name     : Hex2Bcd(unsigned char HexVal)   
-//Type              : User defined   
-//Return Type       : unsigned char    
-//Arguments         : unsigned char HexVal   
-//Details           : convert hex to Bcd   
-//Autor             : Nibu   
-//******************************************************************************   
    
    
 // Input range - 00 to 99.   
@@ -129,7 +111,10 @@ void Init_I2C(void)
 	CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_IRS,DISABLE);  //put i2c module in reset
 	i2cRegs->ICSTR = CSL_I2C_ICSTR_RESETVAL;
 
-	// initialize I2C buffers
+	///
+	/// initialize I2C buffers
+	///
+
 	I2C_TXBUF.head = 0;
 	I2C_TXBUF.tail = 0;
 	I2C_RXBUF.head = 0;
@@ -137,13 +122,16 @@ void Init_I2C(void)
 	I2C_TXBUF.n = 0;
 	I2C_RXBUF.n = 0;
 
-	for(i=0;i<MAX_BFR_SIZE;i++)
+	for (i=0;i<MAX_BFR_SIZE;i++)
 	{
 		I2C_TXBUF.buff[i] = 0;
 		I2C_RXBUF.buff[i] = 0xFF;
 	}
 
-	// convince slave devices to let go
+	///
+	/// convince slave devices to let go
+	///
+
 	I2C_Recover(); 
 
 	// i2c mode register
@@ -172,7 +160,7 @@ void Init_I2C(void)
 	///	Each ADC takes: 1000 ticks + 600 for callback fxn =  0.24 seconds
 	/// Three ADCs mean that a sample is taken from each ADC every 0.24*3 ~= .72 seconds
 	//////////////////////////////////////////////////////////////////////////////////
-	/// TEMPERATURE -> VREF -> Read_RTC -> DENSITY -> (Write_RTC) -> AO
+	/// TEMPERATURE -> VREF -> readRTC -> DENSITY -> (Write_RTC) -> AO
 	//////////////////////////////////////////////////////////////////////////////////
 
     /// START 1ST I2C CLOCK
@@ -1415,10 +1403,10 @@ void I2C_ADC_Read_VREF(void)
 	I2C_START_SET; 
 }
 
+
 void I2C_ADC_Read_VREF_Callback(void)
 {
-
-    if(I2C_TXBUF.n > 0) 
+    if (I2C_TXBUF.n > 0) 
     {
         Clock_start(I2C_ADC_Read_VREF_Callback_Clock_Retry);
         return;
@@ -1509,12 +1497,12 @@ void I2C_ADC_Read_VREF_Callback(void)
 
     Swi_restore(key);
 
-	////////////////////////////////////////////////////
-    vref_dbl = (double)vref_val * 2.048/32768.0;// convert from ADC code to voltage
-    vref_dbl = vref_dbl * 2.5; 					// account for voltage divider 2.5
-    //REG_OIL_RP = vref_dbl // requested by Bently
+    ////////////////////////////////////////////////
+    vref_dbl = (double)vref_val * 2.048/32768.0;    // convert from ADC code to voltage
+    vref_dbl = vref_dbl * 2.5; 					    // account for voltage divider 2.5
+    //REG_OIL_RP = vref_dbl                         // requested by Bently
     REG_OIL_RP = vref_dbl + (REG_OIL_T1.calc_val * REG_TEMP_USER.calc_val) + REG_OIL_T0.calc_val;
-	////////////////////////////////////////////////////
+    ////////////////////////////////////////////////
 
 	// read ICIVR until it's cleared of all flags
     while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
@@ -2107,7 +2095,7 @@ void I2C_DS1340_Read_RTC(void)
 
    	Swi_restore(key);
 
-	/// TEMPERATURE -> VREF -> Read_RTC -> DENSITY -> (Write_RTC) -> AO
+	/// TEMPERATURE -> VREF -> readRTC -> DENSITY -> (Write_RTC) -> AO
 	Clock_start(I2C_ADC_Read_Density_Clock);
     
 	// CLEAR ALL FLAGS
@@ -2119,7 +2107,7 @@ void I2C_DS1340_Read_RTC(void)
 
 
 void 
-Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr)
+readRTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr)
 {
     if (isOk)
     {

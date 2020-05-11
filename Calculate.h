@@ -54,9 +54,9 @@ _EXTERN void getAverageRP(void);
 _EXTERN void getOilSamples(void);
 _EXTERN void Update_Demo_Values(void);
 _EXTERN void Bfr_Add(FP_BFR* bfr, double val);
-_EXTERN Uint8 Calculate_WC(float *WC);
+_EXTERN Uint8 readWaterCut(float *WC);
 _EXTERN Uint8 Apply_Density_Correction(void);
-_EXTERN Uint8 Update_Freq(void);
+_EXTERN Uint8 readFrequency(void);
 _EXTERN inline void Init_Data_Buffer(void);
 
 #undef _EXTERN
