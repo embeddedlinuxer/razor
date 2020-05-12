@@ -9,13 +9,14 @@
 * no representation or warranty that this Information is free from patent
 * or copyright infringement.
 *
-* Copyright (c) 2020 Phase Dynamics Inc. ALL RIGHTS RESERVED.
+* Copyright (c) 2018 Phase Dynamics Inc. ALL RIGHTS RESERVED.
 *------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------
 * Main.c
 *-------------------------------------------------------------------------
 * HISTORY:
-*       May-18-2020 : Daniel Koh : Re-write entire Razor project program 
+*       ?-?-?       : David Skew : Created
+*       Jul-18-2018 : Daniel Koh : Rewrote 90% of the entire projet
 *------------------------------------------------------------------------*/
 
 #undef MENU_H_
@@ -38,7 +39,6 @@
 extern void delayTimerSetup(void);
 extern void Init_Data_Buffer(void);
 extern void resetGlobalVars(void);
-
 static inline void Init_Counter_3(void);
 static inline void initHardwareObjects(void);
 static inline void initSoftwareObjects(void);
@@ -47,120 +47,77 @@ static inline void Init_All(void);
 
 int main (void)
 {
-    ///
-    /// SUSPEND SOURCE REGISTER (SUSPSRC)
-    ///
-
+    // SUSPEND SOURCE REGISTER (SUSPSRC)
     SYSTEM->SUSPSRC &= ((1 << 27) | (1 << 22) | (1 << 20) | (1 << 5) | (1 << 16));
 
-    ///
-    /// INITIALIZE EMIF FOR CS4 FLASH MEMORY REGION
-    ///
-
+    // INITIALIZE EMIF FOR CS4 FLASH MEMORY REGION
     CSL_FINST(emifaRegs->CE4CFG,EMIFA_CE4CFG_ASIZE,16BIT);
     CSL_FINST(emifaRegs->NANDFCR,EMIFA_NANDFCR_CS4NAND,NAND_ENABLE);
 
-    ///
-    /// INITIALIZE C6748 SPECIFIED IC BOARD CLOCKS
-    ///
-   
-     Init_BoardClocks();
+    // INITIALIZE C6748 SPECIFcd IC BOARD CLOCKS
+    Init_BoardClocks();
 
-    ///
-    /// INITIALIZE POWER AND SLEEP CONTROLLER
-    ///
-   
-    Init_PSC();
+    // INITIALIZE POWER AND SLEEP CONTROLLER
+	Init_PSC();
 
-    ///
-    /// INITIALIZE PIN MUXING
-    ///
+    // INITIALIZE PIN MUXING
+	Init_PinMux();
 
-    Init_PinMux();
+    // INITIALIZE EVERYTHING ELSE
+	Init_All();
 
-    ///
-    /// INITIALIZE EVERYTHING ELSE
-    ///
-
-    Init_All();
-
-    ///
-    /// USB OSAL DELAY TIMER 
-    ///
-
+    // USB OSAL DELAY TIMER 
     delayTimerSetup();
 
-    ///
-    /// START TI-RTOS KERNEL
-    ///
+    // START TI-RTOS KERNEL
+	BIOS_start();
 
-    BIOS_start();
-
-    return 0;
+	return 0;
 }
-
 
 static inline void Init_All(void)
 {
-    ///
-    /// RESTORE ALL VALUES FROM NAND FLASH MEMORY
-    ///
+    // RESTORE ALL VALUES FROM NAND FLASH MEMORY
+	Restore_Vars_From_NAND();
 
-    Restore_Vars_From_NAND();
+    // INITIAL FLASHING OR FACTORY RESET LEVEL
+	if (!COIL_LOCK_SOFT_FACTORY_RESET.val)
+	{	
+        if (!COIL_LOCK_HARD_FACTORY_RESET.val) 
+        {
+            initializeAllRegisters();
+        }
+		reloadFactoryDefault();
+		Store_Vars_in_NAND();
+	}
+	else
+		resetGlobalVars(); 
 
-    ///
-    /// INITIAL FLASHING OR FACTORY RESET LEVEL
-    ///
+	// INITIALIZE HARDWARES 
+	initHardwareObjects();
 
-    if (!COIL_LOCK_SOFT_FACTORY_RESET.val)
-    {	
-        if (!COIL_LOCK_HARD_FACTORY_RESET.val) initializeAllRegisters();
-        reloadFactoryDefault();
-	Store_Vars_in_NAND();
-    }
-    else
-        resetGlobalVars(); 
+	// INITIALIZE MENU SYSTEM
+	setupMenu();
 
-    ///	
-    /// INITIALIZE HARDWARES 
-    ///	
+	// INITIALIZE TIMER COUNTER
+	Init_Counter_3();
 
-    initHardwareObjects();
+    // CONFIGURE UART BAUDRATE & PARITY OPTIONS
+	Config_Uart(REG_BAUD_RATE.calc_val,UART_PARITY_NONE);
 
-    ///	
-    /// INITIALIZE MENU SYSTEM
-    ///	
-    
-    setupMenu();
+	// Initialize software objects
+	initSoftwareObjects();
 
-    ///	
-    /// INITIALIZE TIMER COUNTER
-    ///	
-
-    Init_Counter_3();
-
-    ///	
-    /// CONFIGURE UART BAUDRATE & PARITY OPTIONS
-    ///	
-
-    Config_Uart(REG_BAUD_RATE.calc_val,UART_PARITY_NONE);
-
-    ///	
-    /// Initialize software objects
-    ///	
-
-    initSoftwareObjects();
-
-    ///	
-    /// START VARIOUS CLOCKS 
-    ///	
-
-    startClocks();
+	// START VARIOUS CLOCKS 
+	startClocks();
 }
 
 
 void Init_BoardClocks(void)
 {
+    Uint32 i;
+    for (i=0; i < 5000000; i++);
+
     Board_moduleClockSyncReset(CSL_PSC_USB20);
     Board_moduleClockSyncReset(CSL_PSC_GPIO);
     Board_moduleClockSyncReset(CSL_PSC_I2C1);
@@ -173,52 +130,43 @@ void Init_BoardClocks(void)
 }
 
 
+/// NOTE //////////////////////////////////////////////////////
+/// A lot of the CSL macros were causing inexplicable problems
+/// writing to the RTC, as well as FINST(...,RUN) causing a freeze
+/// on power cycle. If it's a bug in CSL it's not immediately
+/// obvious... need to look into this when I have more time.
+/// Still waiting on a processor board with a working RTC battery.
+//////////////////////////////////////////////////////////////
+
 static inline void initSoftwareObjects(void)
 {
-    Init_Data_Buffer();
+	Init_Data_Buffer();
 }
 
 
 static inline void initHardwareObjects(void)
 {
-    ///
-    /// Setup i2c registers and start i2c running (PDI_I2C.c)
-    ///
-	
-    Init_I2C();
+	// Setup i2c registers and start i2c running (PDI_I2C.c)
+	Init_I2C();
 
-    ///
-    /// initialize lcd driver (PDI_I2C.c)
-    ///
+	// initialize lcd driver (PDI_I2C.c)
+	Init_LCD();
 
-    Init_LCD();
+	// Initialize buttons (PDI_I2C.c)
+	Init_MBVE();
 
-    ///
-    /// Initialize buttons (PDI_I2C.c)
-    ///
-    
-    Init_MBVE();
+	// Setup uart registers and start the uart running (ModbusRTU.c)
+	Init_Uart();
 
-    ///
-    /// Setup uart registers and start the uart running (ModbusRTU.c)
-    ///
-
-    Init_Uart();
-
-    ///
-    /// Initialize modbus buffers and counters (ModbusRTU.c)
-    ///
-
-    Init_Modbus();
+	// Initialize modbus buffers and counters (ModbusRTU.c)
+	Init_Modbus();
 }
-
 
 static inline void startClocks(void)
 {
-    Clock_start(Update_Relays_Clock);
-    Clock_start(Capture_Sample_Clock);
+	Clock_start(Update_Relays_Clock);
+	Clock_start(Capture_Sample_Clock);
 }
-
 
 static inline void Init_Counter_3(void)
 {
@@ -226,60 +174,35 @@ static inline void Init_Counter_3(void)
 
     key = Hwi_disable();
 
-    ///
-    /// reset timer tmr3Regs
-    ///
-
     CSL_FINST(tmr3Regs->TGCR,TMR_TGCR_TIM34RS,RESET);
     CSL_FINST(tmr3Regs->TGCR,TMR_TGCR_TIM12RS,RESET);
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,DISABLE);
 
-    ///
-    /// set timer mode to 64-bit
-    ///
-
+    //set timer mode to 64-bit
     CSL_FINST(tmr3Regs->TGCR,TMR_TGCR_TIMMODE,64BIT_GPT);
 
-    ///
-    /// set clock source to external
-    ///
-
+    //Set clock source to external
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_CLKSRC12,TIMER);
 
-    ///
-    /// take timer out of reset
-    ///
-
+    //take timer out of reset
     CSL_FINST(tmr3Regs->TGCR,TMR_TGCR_TIM34RS,NO_RESET);
     CSL_FINST(tmr3Regs->TGCR,TMR_TGCR_TIM12RS,NO_RESET);
 
-    ///
-    /// reset counter value to zero (upper & lower)
-    ///
-
+    //reset counter value to zero (upper & lower)
     tmr3Regs->TIM12 = 0;
     tmr3Regs->TIM34 = 0;
 
-    ///
-    /// timer period set to max
-    ///
-
+    // timer period set to max
     tmr3Regs->PRD12 = 0xFFFFFFFF;
     tmr3Regs->PRD34 = 0xFFFFFFFF;
 
     CSL_FINS(gpioRegs->BANK[GP6].OUT_DATA,GPIO_OUT_DATA_OUT1,TRUE);
 
-    ///
-    /// Enable counter
-    ///
-
+    // Enable counter
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,EN_ONCE);
 
     Hwi_restore(key);
 
-    ///
-    /// Start counter timer
-    ///
-
+    // Start counter timer
     Timer_start(counterTimerHandle);
 }

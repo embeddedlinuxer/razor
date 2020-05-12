@@ -33,7 +33,7 @@
 #define MIN_DISK_SPACE  10240 // 10MB
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
-#define MAX_DATA_SIZE   4096 
+#define MAX_DATA_SIZE   4096
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -357,7 +357,7 @@ void logUsbFxn(void)
 
     char DATA_BUF[160];
 
-    sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,REG_DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT_AVG.calc_val,REG_WATERCUT_RAW.calc_val,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+    sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT_AVG.calc_val,REG_WATERCUT_RAW.calc_val,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
     // FILL DATA UPTO MAX_DATA_SIZE 2048 BYTES
     strcat(LOG_BUF,DATA_BUF);
@@ -417,7 +417,7 @@ unloadUsbDriver(void)
     g_fsHasOpened = 0;
     if (g_fsHasOpened) FATFS_close(fatfsHandle);
 
-    usb_osalDelayMs(500);
+    usb_osalDelayMs(1000);
 }
 
 
@@ -439,5 +439,5 @@ void loadUsbDriver(void)
     // Open an instance of the mass storage class driver.
     g_ulMSCInstance = USBHMSCDriveOpen(usb_host_params.instanceNo, 0, MSCCallback);
 
-    usb_osalDelayMs(500);
+    usb_osalDelayMs(1000);
 }

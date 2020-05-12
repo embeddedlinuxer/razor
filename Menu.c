@@ -160,74 +160,62 @@ ISR_Process_Menu (void)
 void 
 Process_Menu(void)
 {
-    static Uint16 (*stateFxn)(Uint16);
-    char prevButtons[4];
-    Uint32 buttons[4], key;
-    Uint16 btnIndex = NULL, nextState = MENU.state;
-    Uint8 needRelayClick, isValidInput = TRUE;
+	char 	prevButtons[4];
+	Uint32	buttons[4];
+	Uint32	key;
+	Uint16 	btnIndex = NULL;
+	Uint16 	nextState = MENU.state;
+	Uint8	needRelayClick;
+	static 	Uint16 (*stateFxn)(Uint16);
+    Uint8   isValidInput = TRUE;
 
-    ///
-    /// Enable USB device
-    ///
-
+    // Enable USB device
     loadUsbDriver();
 
-    ///
-    /// function pointer
-    ///
+	// function pointer
+	stateFxn = MENU_TABLE[0].fxnPtr;
 
-    stateFxn = MENU_TABLE[0].fxnPtr;
-
-    ///
-    /// Initialize menu
-    ///
-   
-    setupMenu();						 
+	// Initialize menu
+	setupMenu();						 
     
-    ///
-    /// Initialize buttons
-    ///
+    // Initialize buttons
+	int i;
+	for (i=0; i<4; i++) buttons[i] = 0;
 
-    int i;
-    for (i=0; i<4; i++) buttons[i] = 0;
-
-    ///
-    /// Start main loop
-    ///
-  
-    while (1)
-    {
+	// Start main loop
+	while (1)
+	{
         if (COIL_SAVE_CONFIG_TO_DEFAULT.val) storeUserDataToFactoryDefault();
 
-        Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 	// wait until next Menu_sem post
-        needRelayClick = FALSE; 			// this is a great place for a breakpoint!
-        nextState      = MENU.state;		        // check next state
-	btnIndex       = BTN_NONE;		        // check button selected
-	key            = Swi_disable();
-        isValidInput   = TRUE;
+		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post
+		needRelayClick 	= FALSE; 							// this is a great place for a breakpoint!
+		nextState 		= MENU.state;						// check next state
+		btnIndex 		= BTN_NONE;							// check button selected
+		key 			= Swi_disable();
+        isValidInput    = TRUE;
 
-        ////////////////////////////////////////////////////////////////////////////
-        //// BLINK CONTROLLER
-        ////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////
+		//// BLINK CONTROLLER
+		////////////////////////////////////////////////////////////////////////////
         
         (blinker < 5) ? (isOn = TRUE) : (isOn = FALSE);
         (blinker > 8) ? (blinker = 0) : (blinker++);
 
-	////////////////////////////////////////////////////////////////////////////
-	/// Note: I2C_BUTTON_STATUS_X is updated regularly with I2C_Pulse_MBVE_Clock
-        /// Update buttons[] with button status
-        ////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////
+		/// Note: I2C_BUTTON_STATUS_X is updated regularly with I2C_Pulse_MBVE_Clock
+		/// Update buttons[] with button status
+		////////////////////////////////////////////////////////////////////////////
 
-        buttons[0] = I2C_BUTTON_STEP;					
-	buttons[1] = I2C_BUTTON_VALUE;					 
-	buttons[2] = I2C_BUTTON_ENTER;					
-	buttons[3] = I2C_BUTTON_BACK;					
+		buttons[0] = I2C_BUTTON_STEP;					
+		buttons[1] = I2C_BUTTON_VALUE;					 
+		buttons[2] = I2C_BUTTON_ENTER;					
+		buttons[3] = I2C_BUTTON_BACK;					
 
         if ((buttons[0] + buttons[1] + buttons[2] + buttons[3]) > 1) isValidInput = FALSE;
 
-        ////////////////////////////////////////////////////////////////////////////
-        /// HANDLE BUTTONS PRESSED
-        ////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////
+		/// HANDLE BUTTONS PRESSED
+		////////////////////////////////////////////////////////////////////////////
 
         if (isValidInput)        
         {
@@ -292,7 +280,7 @@ Process_Menu(void)
 		else nextState = stateFxn(btnIndex); 				// next state
            
 	
-	////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////
         // UPDATE STATE	
         ////////////////////////////////////////////////////////////////////////////	
 
@@ -458,12 +446,15 @@ displayMnu(const char * mnu, const double fvalue, const int fdigit)
         displayLcd(mnu, LCD0);                                // display menu and line1
         displayLcd(mnu, LCD0);                                // display menu and line1
         displayLcd(mnu, LCD0);                                // display menu and line1
-        displayLcd(BLANK, LCD1);                 
-        displayLcd(BLANK, LCD1);                 
-        isUpdateDisplay = FALSE;                              // disable line0 display 
+        displayLcd(lcdLine1, LCD1);                 
+        displayLcd(lcdLine1, LCD1);                 
+        isUpdateDisplay = FALSE;                              // disable init
     }
-
-    displayLcd(lcdLine1, LCD1);                 
+    else
+    {
+        displayLcd(lcdLine1, LCD1);                           // display line1 
+        displayLcd(lcdLine1, LCD1);                      
+    }
 }
 
 
@@ -482,10 +473,9 @@ displayFxn(const char * fxn, const double fvalue, const int fdigit)
 
         displayLcd(fxn,LCD0);
         displayLcd(fxn,LCD0);
-        displayLcd(fxn,LCD0);
-        displayLcd(BLANK, LCD1);                 
-        displayLcd(BLANK, LCD1);                 
-        displayLcd(BLANK, LCD1);                 
+        displayLcd(BLANK,LCD1);
+        displayLcd(BLANK,LCD1);
+        displayLcd(BLANK,LCD1);
         displayLcd(lcdLine1,LCD1);
         displayLcd(lcdLine1,LCD1);
         displayLcd(lcdLine1,LCD1);
@@ -494,7 +484,6 @@ displayFxn(const char * fxn, const double fvalue, const int fdigit)
         isUpdateDisplay = FALSE;                                    // disable init
     }    
 
-    /// Blink value in edit mode
     LCD_printch(lcdLine1[MENU.col], MENU.col, MENU.row);            // display last char
     LCD_setBlinking(MENU.col,MENU.row);                             // start blinking
 }
@@ -632,7 +621,7 @@ mnuHomescreenWaterCut(const Uint16 input)
         return MNU_HOMESCREEN_WTC;
     }
 
-	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT.calc_val,2));
+	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT_AVG.calc_val,2));
 
 	(REG_TEMPERATURE.unit == u_temp_C) ? sprintf(lcdLine1,"Temp%10.1f%cC", REG_TEMP_USER.val, LCD_DEGREE) : sprintf(lcdLine1,"Temp%10.1f%cF", REG_TEMP_USER.val, LCD_DEGREE);
 	updateDisplay(lcdLine0, lcdLine1);
@@ -762,7 +751,7 @@ mnuHomescreenDiagnostics(const Uint16 input)
 	static Uint8 errorCount = 0;
 	static int DIAGNOSTICS_PREV = -1;
 
-	if (isUpdateDisplay || (REG_DIAGNOSTICS != DIAGNOSTICS_PREV))
+	if (isUpdateDisplay || (DIAGNOSTICS != DIAGNOSTICS_PREV))
 	{
 		diagnose(&i, &index, &errorCount, errors, &DIAGNOSTICS_PREV);
 
@@ -800,7 +789,7 @@ fxnHomescreenDiagnostics(const Uint16 input)
 	static Uint8 errorCount = 0;
 	static int DIAGNOSTICS_PREV = -1;
 
-	if (REG_DIAGNOSTICS != DIAGNOSTICS_PREV) diagnose(&i, &index, &errorCount, errors, &DIAGNOSTICS_PREV);
+	if (DIAGNOSTICS != DIAGNOSTICS_PREV) diagnose(&i, &index, &errorCount, errors, &DIAGNOSTICS_PREV);
 	sprintf(lcdLine0,"Diagnostics: %d", errorCount);
 	displayLcd(lcdLine0,LCD0);
 	index = errors[i];	// Get error index

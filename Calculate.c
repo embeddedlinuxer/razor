@@ -40,119 +40,71 @@
 #include <limits.h>
 #include <time.h>
 
-#define SET_DIAG_THRESHOLD 20 // error threshold
-
 static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_RTC_YR;
 
-/// This is a __HWI__ called by Count_Freq_Pulses_Clock.
-/// Currently, it's called once every 0.5 seconds.
-
+// This is a __HWI__ called by Count_Freq_Pulses_Clock.
+// Currently, it's called once every 0.5 seconds.
 void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 {
-    ///
-    /// disable counter
-    ///
-
+    // disable counter
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,DISABLE); 
 
-    ///
-    /// stop counter timer
-    ///
-
+    //stop counter timer
     Timer_stop(counterTimerHandle); 
 
-    ///
-    /// Update global variables
-    ///
-
+    //Update global variables
     FREQ_PULSE_COUNT_LO = tmr3Regs->TIM12; //store counter value to global var (lower)
     FREQ_PULSE_COUNT_HI = tmr3Regs->TIM34; //store counter value to global var (upper)
     FREQ_U_SEC_ELAPSED = u_sec_elapsed;
 
-    ///
-    /// reset counter value to zero (upper & lower)
-    ///
-
+    //reset counter value to zero (upper & lower)
     tmr3Regs->TIM12 = 0;
     tmr3Regs->TIM34 = 0;
 
-    ///
-    /// re-enable counter
-    ///
-
+    //re-enable counter
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,EN_ONCE); 
 
-    ///
-    /// start counter timer
-    ///
-
+    //start counter timer
     Timer_start(counterTimerHandle);
 
-    ///
-    /// Post Swi_Poll below
-    ///
-
+    // Post Swi_Poll below
     Swi_post(Swi_Poll);
 }
 
-
 void Poll(void)
 {
-	static float WC_AVG = 0;
-    static int WC_PROC_AVGING = 1;
+	float WC; 			// temp watercut value
+	BOOL err_f = FALSE;	// frequency calculation error
+	BOOL err_w = FALSE;	// watercut calculation error
+	BOOL err_d = FALSE;	// density correction error
+
     static Uint8 sample_clk_started = FALSE;
 
-	float WC; 				// temp watercut value
-	BOOL err_f = FALSE;		// frequency calculation error
-	BOOL err_w = FALSE;		// watercut calculation error
-	BOOL err_d = FALSE;		// density correction error
-
-	///
-    /// read DIAGNOSTICS
-	///
-
+    // update REG_DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;
 
-	///
-    /// read RTC
-	///
-
+    // update RTC
     Read_RTC(&CAL_RTC_SEC, &CAL_RTC_MIN, &CAL_RTC_HR, &CAL_RTC_DAY, &CAL_RTC_MON, &CAL_RTC_YR);
 
-	///
-	/// read frequency
-	///
+	// get frequency
+	err_f = Update_Freq();	
 
-	err_f = readFrequency();	
+	// get watercut 
+	if (!err_f) err_w = Calculate_WC(&WC);
 
-	///
-	/// read watercut 
-	///
-
-	if (!err_f) err_w = readWaterCut(&WC);
-
-	///
-	/// read density
-	///
-
+	// get density
 	if ((REG_OIL_DENS_CORR_MODE != 0) && !(err_f | err_w) )
 	{
-		///
-		/// read density from various sources 
-		///
+		double dens;
 
+		// get density from various sources 
 		     if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
 
-		///
-		/// apply density adj
-		///
-
+		// apply density adj
 		if (REG_DENSITY_ADJ != 0.0)
 		{
-			double dens;
-
 			dens = REG_OIL_DENSITY.base_val;
 			dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, REG_OIL_DENSITY.unit, dens, 0, 0);
 			dens += REG_DENSITY_ADJ;
@@ -164,62 +116,24 @@ void Poll(void)
 
 		if (!err_d)
 		{
-			///
-			/// add adjustment from density correction (if any)
-			///
-
+			// add adjustment from density correction (if any)
 			WC += REG_WC_ADJ_DENS;
 
-			///
-			/// max oil-phase watercut
-			///
-
+			// max oil-phase watercut
 			if (WC > REG_OIL_CALC_MAX) WC = REG_OIL_CALC_MAX;	
 		}
 	}
 	
-	///
-	/// averaging watercut 
-	///
-
-	if ((err_f | err_w | err_d) == FALSE)
+	if((err_f | err_w | err_d) == FALSE)
 	{
 		COIL_AO_ALARM.val = FALSE;
-
-		///////////////////////////////////////////////////////////////////////
-		///////////////////////    [AVERAGING WATERCUT]    ////////////////////
-		///////////////////////////////////////////////////////////////////////
-
-        /******************************************************************** 
-            [Previous Average] * (REG_PROC_AVGING.calc_val-1) + [Next Value]
-           ------------------------------------------------------------------
-                           REG_PROC_AVGING.calc_val
-        *********************************************************************/
-
-        WC_AVG *= (REG_PROC_AVGING.calc_val-1);
-        WC_AVG += WC;
-        WC_AVG /= REG_PROC_AVGING.calc_val;
-        WC_PROC_AVGING++;
-        
-        if (WC_PROC_AVGING > REG_PROC_AVGING.calc_val) 
-        {
-            VAR_Update(&REG_WATERCUT,WC_AVG,CALC_UNIT);
-            WC_PROC_AVGING = 1;
-        }
-
-		///////////////////////////////////////////////////////////////////////
-		///////////////////////////////////////////////////////////////////////
-		///////////////////////////////////////////////////////////////////////
-
+		VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
 		VAR_Update(&REG_WATERCUT_RAW,NEW_WATERCUT_RAW,CALC_UNIT);
 
-		///
-		/// [MENU 2.4] calculate analog output value
-		///
-
+		// [MENU 2.4] calculate analog output value
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
 	} 
-	else 
+	else
 	{
 		COIL_AO_ALARM.val = TRUE;
 		if ((!COIL_AO_MANUAL.val) && (REG_AO_ALARM_MODE != 0))
@@ -229,7 +143,7 @@ void Poll(void)
 		VAR_NaN(&REG_WATERCUT_RAW);
 	}
 
-    if (sample_clk_started == FALSE)
+    if(sample_clk_started == FALSE)
     {
         Clock_start(Capture_Sample_Clock);
         sample_clk_started = TRUE;
@@ -237,89 +151,77 @@ void Poll(void)
 }
 
 
-Uint8 readFrequency(void)
+Uint8 Update_Freq(void)
 {
 	int key;
 	double freq;
-	static int freqLoFlag = 0;
-	static int freqHiFlag = 0;
+
+	if (FREQ_PULSE_COUNT_HI != 0) // this probably shouldn't happen
+	{
+		DIAGNOSTICS |= ERR_FRQ_HI;
+		return 1; // either freq too high or something went wrong in the counting
+	}
+	else DIAGNOSTICS &= ~ERR_FRQ_HI;
+		
+		
+	if (FREQ_U_SEC_ELAPSED == 0) // don't divide by zero
+	{
+		DIAGNOSTICS |= ERR_FRQ_LO;
+		return 1;
+	}
+	else DIAGNOSTICS &= ~ERR_FRQ_LO;
 
 	key = Swi_disable();
 
-	///	
-	/// pulses divided by #microseconds
-	///	
-
-	if (FREQ_U_SEC_ELAPSED == 0) return 0;
-
+	// #pulses divided by #microseconds
 	freq = ((double)FREQ_PULSE_COUNT_LO) / ((double)FREQ_U_SEC_ELAPSED); 
 
-	///	
-	/// oscillator board uses 80x divider
-	///	
-
+	// oscillator board uses 80x divider
 	freq *= 80;	
 
-	VAR_Update(&REG_FREQ, freq, CALC_UNIT); 	
+	//update frequency
+	VAR_Update(&REG_FREQ, freq + REG_OIL_INDEX.calc_val, CALC_UNIT); 	
+
 	Swi_restore(key);
 
-	///
-	/// ERROR CHECKING 
-	///
-
-	if ((REG_FREQ.calc_val == NAN) || (REG_FREQ.calc_val < 0))
+	// error checking routine
+	if (REG_FREQ.calc_val == NAN)
 	{
-		if (freqLoFlag > SET_DIAG_THRESHOLD) 
-		{
-			freqLoFlag = 0;
-			DIAGNOSTICS |= ERR_FRQ_LO;
-		}
-		else freqLoFlag++;
-
-		freqHiFlag = 0;
-		
+		DIAGNOSTICS |= ERR_FRQ_LO;
+		return 1;
+	}
+	else if ((REG_FREQ.calc_val < 0))
+	{
+		DIAGNOSTICS |= ERR_FRQ_LO;
 		return 1;
 	}
 	else if ((REG_FREQ.calc_val > 1000))
 	{
-		if (freqHiFlag > SET_DIAG_THRESHOLD) 
-		{
-			freqHiFlag = 0;
-			DIAGNOSTICS |= ERR_FRQ_HI;
-		}
-		else freqHiFlag++;
-		
-		freqLoFlag = 0;
-
+		DIAGNOSTICS |= ERR_FRQ_HI;
 		return 1;
 	}
 	else
-    {
-		freqLoFlag = 0;
-		freqHiFlag = 0;
 		DIAGNOSTICS &= ~(ERR_FRQ_HI | ERR_FRQ_LO);
-    }
-
-	Swi_restore(key);
 
 	return 0; //no errors
 }
 
 
-Uint8 readWaterCut(float *WC)
+Uint8 Calculate_WC(float *WC)
 {
 	float 	w;
 	float	ot[2];
 	Uint16	i,j;
 
-	///
-	/// initialize temporary raw watercut value
-	///
-
+	// initialize temporary raw watercut value
 	NEW_WATERCUT_RAW = REG_WATERCUT_RAW.calc_val;
 
-	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJUST.calc_val, CALC_UNIT);
+	// Convert temp_adj unit to Temp_extl calc_unit for calc_value
+	//t_adj_calc = Convert(REG_TEMPERATURE.class, REG_TEMP_ADJUST.unit, REG_TEMPERATURE.calc_unit, REG_TEMP_ADJUST.val, 1, REG_TEMP_ADJUST.aux);
+	//VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + t_adj_calc, CALC_UNIT);
 
+	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJUST.calc_val, CALC_UNIT);
+	//REG_OIL_PT = (REG_OIL_P1.calc_val * REG_FREQ.calc_val) + REG_OIL_P0.calc_val + (REG_OIL_T1.calc_val * REG_TEMP_USER.calc_val) + REG_OIL_T0.calc_val;
 	REG_OIL_PT = (REG_OIL_P1.calc_val * REG_FREQ.calc_val) + REG_OIL_P0.calc_val;
 
 	///////////////////////////////////////////////
@@ -425,43 +327,14 @@ Uint8 readWaterCut(float *WC)
 Uint8 Apply_Density_Correction(void)
 {
 	double dens = 0.0;
-    static int dnsLoFlag = 0;
-    static int dnsHiFlag = 0;
-	static int dnsAdjLoFlag = 0;
-    static int dnsAdjHiFlag = 0;
 	
 	// get current density in units of kg/m3 @ 15C
 	dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, u_mpv_kg_cm_15C, REG_OIL_DENSITY.calc_val, 0, 0);
 
 	// error checking
-	if (dens < 750.0) 
-    {
-        if (dnsLoFlag > SET_DIAG_THRESHOLD)
-        {
-            dnsLoFlag = 0;
-            DIAGNOSTICS |= ERR_DNS_LO;
-        }
-        else dnsLoFlag++;
-        
-        dnsHiFlag = 0;
-    }
-	else if (dens > 998.0) 
-    {
-        if (dnsHiFlag > SET_DIAG_THRESHOLD)
-        {
-            dnsHiFlag = 0;
-            DIAGNOSTICS |= ERR_DNS_HI;
-        }
-        else dnsHiFlag++;
-            
-        dnsLoFlag = 0;
-    }
-    else
-    {
-        dnsHiFlag = 0;
-        dnsLoFlag = 0;
-		DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
-    }
+	if (dens < 750.0) DIAGNOSTICS |= ERR_DNS_LO;
+	else if (dens > 998.0) DIAGNOSTICS |= ERR_DNS_HI;
+	else DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
 		
 	// get current density in same units as that of REG_DENSITY_CAL_VAL
 	//dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, REG_DENSITY_CAL_VAL.calc_unit, REG_OIL_DENSITY.calc_val, 0, 0);
@@ -477,44 +350,36 @@ Uint8 Apply_Density_Correction(void)
 	 // [05/09/2018] Bentley requested we REMOVE 3rd-order calculations and only allow 2nd-order 
 	}
 
-    ///
-    /// ERROR CHECKING
-    ///
-
 	if (REG_WC_ADJ_DENS > 10.0)
 	{
-        if (dnsAdjHiFlag > SET_DIAG_THRESHOLD)
-        {
-		    REG_WC_ADJ_DENS = 10.0;
-            dnsAdjHiFlag = 0;
-		    DIAGNOSTICS |= ERR_DNS_ADJ_HI;
-        }
-        else dnsAdjHiFlag++;
-
-        dnsAdjLoFlag = 0;
+		REG_WC_ADJ_DENS = 10.0;
+		DIAGNOSTICS |= ERR_DNS_HI;
 	}
 	else if (REG_WC_ADJ_DENS < -10.0)
 	{
-        if (dnsAdjLoFlag > SET_DIAG_THRESHOLD)
-        {
-		    REG_WC_ADJ_DENS = -10.0;
-            dnsAdjLoFlag = 0;
-		    DIAGNOSTICS |= ERR_DNS_ADJ_LO;
-        }
-        else dnsAdjLoFlag++;
-
-        dnsAdjHiFlag = 0;
+		REG_WC_ADJ_DENS = -10.0;
+		DIAGNOSTICS |= ERR_DNS_LO;
 	}
 	else
-    {
-        dnsAdjLoFlag = 0;
-        dnsAdjHiFlag = 0;
-		DIAGNOSTICS &= ~(ERR_DNS_ADJ_LO | ERR_DNS_ADJ_HI);
-    }
+		DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
+
+//	w = WC + REG_DENS_ADJ;
+//
+//	if (OIL_CALC_MODE==1)
+//	{
+//		if (w > REG_OIL_CALC_MAX[0])
+//			w = REG_OIL_CALC_MAX[0];
+//	}
+//	else if (OIL_CALC_MODE==2)
+//	{
+//		if (w > REG_OIL_CALC_MAX[1])
+//			w = REG_OIL_CALC_MAX[1];
+//	}
+//
+//	WC = w;
 
 	return 0; //success
 }
-
 
 inline float Interpolate(float w1, float t1, float w2, float t2, float t)
 {
@@ -590,12 +455,12 @@ void Capture_Sample(void)
 
     /// Update Value Averages
     // if we haven't yet captured enough samples to compute the [REG_PROC_AVGING.calc_val]-sample mean
-    if (REG_PROC_AVGING.calc_val > DATALOG.WC_BUFFER.n) num_samples = DATALOG.WC_BUFFER.n;
-    else num_samples = REG_PROC_AVGING.calc_val;
+    if  (REG_PROC_AVGING.calc_val > DATALOG.WC_BUFFER.n)
+        num_samples = DATALOG.WC_BUFFER.n;
+    else
+        num_samples = REG_PROC_AVGING.calc_val;
 
-    ///
-    /// Average Watercut
-    ///
+    // Average Watercut
     sum = 0;
     for (i=0;i<num_samples;i++)
     {   
@@ -616,9 +481,7 @@ void Capture_Sample(void)
         Swi_post(Swi_writeNand);
     }
 
-    ///
-    /// Average Temperature
-    ///
+    //Average Temperature//
     sum = 0;
     for (i=0;i<num_samples;i++)
     {   
@@ -641,9 +504,7 @@ void Capture_Sample(void)
     }
     VAR_Update(&REG_TEMP_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
 
-    ///
-    /// Average Frequency
-    ///
+    //Average Frequency//
     sum = 0;
     for (i=0;i<num_samples;i++)
     {   
@@ -654,9 +515,7 @@ void Capture_Sample(void)
     }
     VAR_Update(&REG_FREQ_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
 
-    ///
-    /// Average Reflected Power
-    ///
+    //Average Reflected Power//
     sum = 0;
     for (i=0;i<num_samples;i++)
     {
