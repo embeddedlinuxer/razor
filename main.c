@@ -34,11 +34,6 @@
 
 #define NANDWIDTH_16
 #define C6748_LCDK
-#define DEFAULT_MIN	0
-#define DEFAULT_HOUR	0
-#define DEFAULT_DAY	1
-#define DEFAULT_MONTH	1
-#define DEFAULT_YEAR	19
 
 extern void delayTimerSetup(void);
 extern void Init_Data_Buffer(void);

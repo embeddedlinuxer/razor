@@ -3269,7 +3269,7 @@ mnuSecurityInfo_TimeAndDate(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_SECURITYINFO_TIMEANDDATE;
     static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
-    readRTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
+    Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
     sprintf(lcdLine1,"%02d:%02d %02d/%02d/20%02d",tmp_hr,tmp_min,tmp_mon,tmp_day,tmp_yr);
 
     (isUpdateDisplay) ? updateDisplay(SECURITYINFO_TIMEANDDATE,lcdLine1) : displayLcd(lcdLine1, LCD1);
