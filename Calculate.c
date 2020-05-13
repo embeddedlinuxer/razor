@@ -77,7 +77,6 @@ void Poll(void)
 	BOOL err_f = FALSE;	// frequency calculation error
 	BOOL err_w = FALSE;	// watercut calculation error
 	BOOL err_d = FALSE;	// density correction error
-
     static Uint8 sample_clk_started = FALSE;
 
     // update REG_DIAGNOSTICS
@@ -127,6 +126,7 @@ void Poll(void)
 	if((err_f | err_w | err_d) == FALSE)
 	{
 		COIL_AO_ALARM.val = FALSE;
+       
 		VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
 		VAR_Update(&REG_WATERCUT_RAW,NEW_WATERCUT_RAW,CALC_UNIT);
 

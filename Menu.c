@@ -1313,27 +1313,27 @@ fxnConfig_Analyzer_OilP1(const Uint16 input)
 	}
 }
 
-// MENU 2.1.8
+// MENU 2.1.6
 Uint16
 mnuConfig_Analyzer_OilIndex(const Uint16 input)
 {
-	if (I2C_TXBUF.n > 0) return MNU_CFG_ANALYZER_OILINDEX;
+    if (I2C_TXBUF.n > 0) return MNU_CFG_ANALYZER_OILINDEX;
 
     sprintf(lcdLine1, "%12.3f Mhz", Round_N(REG_OIL_INDEX.calc_val,3));
 
-	if (isUpdateDisplay) updateDisplay(CFG_ANALYZER_OILINDEX, lcdLine1);
+    if (isUpdateDisplay) updateDisplay(CFG_ANALYZER_OILINDEX, lcdLine1);
 
-	switch (input)	
-	{
-        case BTN_VALUE 	: return onNextPressed(MNU_CFG_ANALYZER_OILFREQLOW);
-		case BTN_STEP 	: return onMnuStepPressed(FXN_CFG_ANALYZER_OILINDEX,MNU_CFG_ANALYZER_OILINDEX, CFG_ANALYZER_OILINDEX);
-		case BTN_BACK 	: return onNextPressed(MNU_CFG_ANALYZER);
-		default			: return MNU_CFG_ANALYZER_OILINDEX;
-	}
+    switch (input)  
+    {    
+        case BTN_VALUE  : return onNextPressed(MNU_CFG_ANALYZER_OILFREQLOW);
+        case BTN_STEP   : return onMnuStepPressed(FXN_CFG_ANALYZER_OILINDEX,MNU_CFG_ANALYZER_OILINDEX, CFG_ANALYZER_OILINDEX);
+        case BTN_BACK   : return onNextPressed(MNU_CFG_ANALYZER);
+        default         : return MNU_CFG_ANALYZER_OILINDEX;
+    } 
 }
 
 
-// FXN 2.1.8
+// FXN 2.1.6
 Uint16
 fxnConfig_Analyzer_OilIndex(const Uint16 input)
 {

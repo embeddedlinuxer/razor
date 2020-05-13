@@ -33,7 +33,7 @@
 #define MIN_DISK_SPACE  10240 // 10MB
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
-#define MAX_DATA_SIZE   4096
+#define MAX_DATA_SIZE   12288
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -324,6 +324,7 @@ void logUsbFxn(void)
             return;
         } 
 	    f_sync(&fileWriteObject);
+        usb_osalDelayMs(1000);
 
         // write header2
         sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
@@ -333,6 +334,7 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
+        usb_osalDelayMs(1000);
 
         // write header3
         sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
@@ -342,6 +344,7 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
+        usb_osalDelayMs(1000);
 
         // close file
         f_close(&fileWriteObject);
@@ -362,6 +365,7 @@ void logUsbFxn(void)
     // FILL DATA UPTO MAX_DATA_SIZE 2048 BYTES
     strcat(LOG_BUF,DATA_BUF);
     if (MAX_DATA_SIZE - strlen(LOG_BUF) > 160) return;
+    while (MAX_DATA_SIZE > strlen(LOG_BUF)) strcat (LOG_BUF,",");
 
     if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) != FR_OK) 
     {
@@ -393,6 +397,9 @@ void logUsbFxn(void)
         return;
     }
    
+    /// Needs time to sync because f_sync() is extremely slow) 
+    usb_osalDelayMs(1000); 
+
     /// CLOSE 
     f_close(&fileWriteObject); 
 
@@ -417,7 +424,7 @@ unloadUsbDriver(void)
     g_fsHasOpened = 0;
     if (g_fsHasOpened) FATFS_close(fatfsHandle);
 
-    usb_osalDelayMs(1000);
+    usb_osalDelayMs(500);
 }
 
 
@@ -439,5 +446,5 @@ void loadUsbDriver(void)
     // Open an instance of the mass storage class driver.
     g_ulMSCInstance = USBHMSCDriveOpen(usb_host_params.instanceNo, 0, MSCCallback);
 
-    usb_osalDelayMs(1000);
+    usb_osalDelayMs(500);
 }
