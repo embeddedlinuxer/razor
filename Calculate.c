@@ -456,13 +456,12 @@ void Capture_Sample(void)
         else
             sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i];
     }   
-    REG_WATERCUT_AVG.calc_val = sum/(double)num_samples;
-    //VAR_Update(&REG_WATERCUT_AVG, sum/(double)num_samples, CALC_UNIT);   //update average
+    REG_WATERCUT_AVG = sum/(double)num_samples;
 
 	if (COIL_BEGIN_OIL_CAP.val)
     {
         // UPDATE STREAM DATA WHILE CAPTURING OIL
-        STREAM_WATERCUT_AVG[(int)REG_STREAM.calc_val-1] = REG_WATERCUT_AVG.calc_val;
+        STREAM_WATERCUT_AVG[(int)REG_STREAM.calc_val-1] = REG_WATERCUT_AVG;
         STREAM_SAMPLES[(int)REG_STREAM.calc_val-1] = num_samples;
         sprintf(STREAM_TIMESTAMP[(int)REG_STREAM.calc_val-1],"%.2u:%.2u %.2u/%.2u/20%.2u",CAL_RTC_HR,CAL_RTC_MIN,CAL_RTC_MON,CAL_RTC_DAY,CAL_RTC_YR);
         Swi_post(Swi_writeNand);
@@ -541,7 +540,7 @@ void Calibrate_Oil(void)
         }
         else
         {
-            t = REG_OIL_SAMPLE.calc_val - (REG_WATERCUT_AVG.calc_val + REG_DENS_ADJ);
+            t = REG_OIL_SAMPLE.calc_val - (REG_WATERCUT_AVG + REG_DENS_ADJ);
             VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
         }
     }   

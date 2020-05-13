@@ -396,7 +396,7 @@ typedef struct
 
 	_EXTERN far VAR REG_FREQ_AVG;
 
-	_EXTERN far VAR REG_WATERCUT_AVG;
+	_EXTERN far double REG_WATERCUT_AVG;
 
 	_EXTERN far double REG_WATERCUT_RAW;
 
