@@ -77,21 +77,20 @@ void Poll(void)
 	BOOL err_f = FALSE;	// frequency calculation error
 	BOOL err_w = FALSE;	// watercut calculation error
 	BOOL err_d = FALSE;	// density correction error
-    static Uint8 sample_clk_started = FALSE;
 
-    // update REG_DIAGNOSTICS
+    // Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;
 
-    // update RTC
+    // Read RTC
     Read_RTC(&CAL_RTC_SEC, &CAL_RTC_MIN, &CAL_RTC_HR, &CAL_RTC_DAY, &CAL_RTC_MON, &CAL_RTC_YR);
 
-	// get frequency
-	err_f = Update_Freq();	
+	// Read Frequency
+	err_f = Read_Freq();	
 
-	// get watercut 
-	if (!err_f) err_w = Calculate_WC(&WC);
+	// Read Watercut 
+	if (!err_f) err_w = Read_WC(&WC);
 
-	// get density
+	// Read Density
 	if ((REG_OIL_DENS_CORR_MODE != 0) && !(err_f | err_w) )
 	{
 		double dens;
@@ -128,7 +127,6 @@ void Poll(void)
 		COIL_AO_ALARM.val = FALSE;
        
 		VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
-		VAR_Update(&REG_WATERCUT_RAW,NEW_WATERCUT_RAW,CALC_UNIT);
 
 		// [MENU 2.4] calculate analog output value
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
@@ -140,18 +138,11 @@ void Poll(void)
 			(REG_AO_ALARM_MODE == 1) ? (REG_AO_MANUAL_VAL = 20.5) : (REG_AO_MANUAL_VAL = 3.6);
 
 		VAR_NaN(&REG_WATERCUT);
-		VAR_NaN(&REG_WATERCUT_RAW);
 	}
-
-    if(sample_clk_started == FALSE)
-    {
-        Clock_start(Capture_Sample_Clock);
-        sample_clk_started = TRUE;
-    }
 }
 
 
-Uint8 Update_Freq(void)
+Uint8 Read_Freq(void)
 {
 	int key;
 	double freq;
@@ -207,14 +198,11 @@ Uint8 Update_Freq(void)
 }
 
 
-Uint8 Calculate_WC(float *WC)
+Uint8 Read_WC(float *WC)
 {
 	float 	w;
 	float	ot[2];
 	Uint16	i,j;
-
-	// initialize temporary raw watercut value
-	NEW_WATERCUT_RAW = REG_WATERCUT_RAW.calc_val;
 
 	// Convert temp_adj unit to Temp_extl calc_unit for calc_value
 	//t_adj_calc = Convert(REG_TEMPERATURE.class, REG_TEMP_ADJUST.unit, REG_TEMPERATURE.calc_unit, REG_TEMP_ADJUST.val, 1, REG_TEMP_ADJUST.aux);
@@ -296,7 +284,7 @@ Uint8 Calculate_WC(float *WC)
 
 			w 	  = Interpolate(ot[0], REG_TEMPS_OIL[i], ot[1], REG_TEMPS_OIL[j], REG_TEMP_USER.calc_val);
 
-            NEW_WATERCUT_RAW = w;
+		    REG_WATERCUT_RAW = w;
 
             // add oil adjust
             w += REG_OIL_ADJUST.calc_val;   
@@ -308,15 +296,14 @@ Uint8 Calculate_WC(float *WC)
 		}
 		else
 		{
-			NEW_WATERCUT_RAW = w;			//use this curve and add OIL_ADJ
+		    REG_WATERCUT_RAW = w;
 			w += REG_OIL_ADJUST.calc_val; 	//add oil adjust
 			*WC = w;
-			return 0; 						// success
 		}
 	}
 	else
 	{
-		NEW_WATERCUT_RAW = MAX_WATER_PHASE;
+		REG_WATERCUT_RAW = MAX_WATER_PHASE;
 		*WC = MAX_WATER_PHASE;
 	}
 
@@ -342,7 +329,7 @@ Uint8 Apply_Density_Correction(void)
     // Razor does not use REG_DENSITY_CAL_VAL
     REG_DENSITY_CAL_VAL.calc_val = 0.0; // DKOH Oct 22, 2019
 
-	if (REG_WATERCUT_RAW.calc_val <= 5.0)
+	if (REG_WATERCUT_RAW <= 5.0)
 	{// hold last value of Dadj if WC > 5.0%, otherwise calculate new Dadj
 		REG_WC_ADJ_DENS = (REG_DENSITY_D2.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val) * (dens - REG_DENSITY_CAL_VAL.calc_val)) +
 					      (REG_DENSITY_D1.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val)) + 
@@ -448,7 +435,7 @@ void Capture_Sample(void)
     int     num_samples,i;
 
     /// Add new samples to buffer
-    Bfr_Add(&DATALOG.WC_BUFFER, REG_WATERCUT_RAW.calc_val); // raw watercut samples
+    Bfr_Add(&DATALOG.WC_BUFFER, REG_WATERCUT_RAW); // raw watercut samples
     Bfr_Add(&DATALOG.T_BUFFER,  REG_TEMPERATURE.calc_val);  // temperature samples
     Bfr_Add(&DATALOG.F_BUFFER,  REG_FREQ.calc_val);         // oscillator frequency samples
     Bfr_Add(&DATALOG.RP_BUFFER, REG_OIL_RP);                // oscillator reflected power samples
@@ -548,7 +535,7 @@ void Calibrate_Oil(void)
         {
             if (COIL_OIL_PHASE.val)
             {
-                if ((REG_WATERCUT.STAT & var_aux)==0) t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW.calc_val + FC.Dadj);  // if not rollover 
+                if ((REG_WATERCUT.STAT & var_aux)==0) t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj);  // if not rollover 
                 VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
             }
         }
@@ -562,7 +549,7 @@ void Calibrate_Oil(void)
     {   
         if (REG_PROC_AVGING.calc_val < STREAM_SAMPLES[TEMP_STREAM-1])
         {
-            if ((REG_WATERCUT.STAT & var_aux)==0) STREAM_OIL_ADJUST[TEMP_STREAM-1] = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW.calc_val + FC.Dadj); // if not roll-over
+            if ((REG_WATERCUT.STAT & var_aux)==0) STREAM_OIL_ADJUST[TEMP_STREAM-1] = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj); // if not roll-over
         }
         else
         {

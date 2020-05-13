@@ -35,6 +35,7 @@ void resetGlobalVars(void)
     DIAGNOSTICS 	                    = 0;
     DIAGNOSTICS_MASK                    = 0xFFFFFFFF;
 	REG_ACTIVE_ERROR                    = 0;
+	REG_WATERCUT_RAW                    = 0;
 	STAT_SUCCESS 	                    = 0;
 	STAT_PKT 		                    = 0;
 	STAT_CMD 		                    = 0;
@@ -287,15 +288,6 @@ void reloadFactoryDefault(void)
 	VAR_Initialize(&REG_WATERCUT_AVG, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
 	VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, -100.0, 105.0, -3.0);
 	VAR_Update(&REG_WATERCUT_AVG, 0.0, CALC_UNIT);
-
-	//////////////////////////////////////
-   	/// Raw Watercut - 0.0
-	//////////////////////////////////////
-
-	VAR_Initialize(&REG_WATERCUT_RAW, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
-	//VAR_Setup_Unit(&REG_WATERCUT_RAW, u_ana_percent, 100.0, 0.0, 105.0, -3.0);
-	VAR_Setup_Unit(&REG_WATERCUT_RAW, u_ana_percent, 100.0, -100.0, 105.0, -3.0);
-	VAR_Update(&REG_WATERCUT_RAW, 0.0, CALC_UNIT);
 
 	//////////////////////////////////////
 	/// Average Temperature - N/A
@@ -960,15 +952,6 @@ void initializeAllRegisters(void)
 	VAR_Initialize(&REG_WATERCUT_AVG, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
 	VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, -100.0, 105.0, -3.0);
 	VAR_Update(&REG_WATERCUT_AVG, 0.0, CALC_UNIT);
-
-	//////////////////////////////////////
-   	/// Raw Watercut - 0.0
-	//////////////////////////////////////
-
-	VAR_Initialize(&REG_WATERCUT_RAW, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
-	//VAR_Setup_Unit(&REG_WATERCUT_RAW, u_ana_percent, 100.0, 0.0, 105.0, -3.0); // by DKOH OCT 9, 2019
-	VAR_Setup_Unit(&REG_WATERCUT_RAW, u_ana_percent, 100.0, -100.0, 105.0, -3.0); // by DKOH OCT 9, 2019
-	VAR_Update(&REG_WATERCUT_RAW, 0.0, CALC_UNIT);
 
 	//////////////////////////////////////
 	/// Average Temperature - N/A

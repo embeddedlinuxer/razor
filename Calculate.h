@@ -45,7 +45,6 @@
 //#define DEMO_MODE_TEMP
 
 // used before finally updating raw watercut value
-_EXTERN float NEW_WATERCUT_RAW;
 _EXTERN float Interpolate(float w1, float t1, float w2, float t2, float t);
 _EXTERN void Poll(void);
 _EXTERN void getAverageTemperature(void);

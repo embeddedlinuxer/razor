@@ -398,8 +398,7 @@ typedef struct
 
 	_EXTERN far VAR REG_WATERCUT_AVG;
 
-#pragma DATA_SECTION(REG_WATERCUT_RAW,"CFG")
-	_EXTERN far VAR REG_WATERCUT_RAW;
+	_EXTERN far double REG_WATERCUT_RAW;
 
 #pragma DATA_SECTION(REG_TEMP_AVG,"CFG")
 	_EXTERN far VAR REG_TEMP_AVG;
@@ -446,6 +445,7 @@ typedef struct
     _EXTERN far double REG_OIL_RP;
 
 	_EXTERN far double REG_WATER_RP;
+
 
 #pragma DATA_SECTION(REG_OIL_CALC_MAX,"CFG")
 	_EXTERN far double REG_OIL_CALC_MAX;
