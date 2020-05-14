@@ -73,6 +73,9 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 
 void Poll(void)
 {
+    static float WC_AVG = 0;
+    static int WC_AVG_SAMPLES = 0;
+
 	float WC; 			// temp watercut value
 	BOOL err_f = FALSE;	// frequency calculation error
 	BOOL err_w = FALSE;	// watercut calculation error
@@ -125,10 +128,33 @@ void Poll(void)
 	if((err_f | err_w | err_d) == FALSE)
 	{
 		COIL_AO_ALARM.val = FALSE;
-       
-		VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
 
-		// [MENU 2.4] calculate analog output value
+        ///////////////////////////////////////////////
+        ///////////////////////////////////////////////
+        /// AVERAGE FILTERING
+        ///////////////////////////////////////////////
+        ///////////////////////////////////////////////
+
+        /* 
+            [Previous Average] * (n-1) + [Next Value]
+            -----------------------------------------
+                                n
+        */
+
+        WC_AVG *= (REG_PROC_AVGING.calc_val-1);
+        WC_AVG += WC;
+        WC_AVG /= REG_PROC_AVGING.calc_val;
+        WC_AVG_SAMPLES++;
+
+        if (WC_AVG_SAMPLES >= REG_PROC_AVGING.calc_val)
+        {
+            WC_AVG_SAMPLES = 0;
+		    VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
+        }
+
+        ///////////////////////////////////////////////
+        ///////////////////////////////////////////////
+
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
 	} 
 	else
@@ -431,33 +457,41 @@ inline void Init_Data_Buffer(void)
 
 void Capture_Sample(void)
 {
-    double  sum;
-    int     num_samples,i;
+    double sum;
+    int    num_samples, i;
 
+    ///
     /// Add new samples to buffer
-    Bfr_Add(&DATALOG.WC_BUFFER, REG_WATERCUT_RAW); // raw watercut samples
+    ///
+    Bfr_Add(&DATALOG.WC_BUFFER, REG_WATERCUT_RAW);          // raw watercut samples
     Bfr_Add(&DATALOG.T_BUFFER,  REG_TEMPERATURE.calc_val);  // temperature samples
     Bfr_Add(&DATALOG.F_BUFFER,  REG_FREQ.calc_val);         // oscillator frequency samples
     Bfr_Add(&DATALOG.RP_BUFFER, REG_OIL_RP);                // oscillator reflected power samples
 
-    /// Update Value Averages
-    // if we haven't yet captured enough samples to compute the [REG_PROC_AVGING.calc_val]-sample mean
+    ///
+    /// Numbe of samples 
+    ///
     if  (REG_PROC_AVGING.calc_val > DATALOG.WC_BUFFER.n)
         num_samples = DATALOG.WC_BUFFER.n;
     else
         num_samples = REG_PROC_AVGING.calc_val;
 
-    // Average Watercut
+    /// 
+    /// Watercut averaging
+    /// 
     sum = 0;
     for (i=0;i<num_samples;i++)
     {   
         if ((DATALOG.WC_BUFFER.head-i) < 0) //wrap around
-            sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head - i + MAX_BFR_SIZE_F];
+            sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i + MAX_BFR_SIZE_F];
         else
             sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i];
     }   
     REG_WATERCUT_AVG = sum/(double)num_samples;
 
+    ///
+    /// Start OIL CALIBRATION
+    ///
 	if (COIL_BEGIN_OIL_CAP.val)
     {
         // UPDATE STREAM DATA WHILE CAPTURING OIL
@@ -467,7 +501,9 @@ void Capture_Sample(void)
         Swi_post(Swi_writeNand);
     }
 
-    //Average Temperature//
+    ///
+    /// Temperature averaging
+    ///
     sum = 0;
     for (i=0;i<num_samples;i++)
     {   
@@ -499,7 +535,7 @@ void Capture_Sample(void)
         else
             sum += DATALOG.F_BUFFER.buff[DATALOG.F_BUFFER.head-i];
     }
-    VAR_Update(&REG_FREQ_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
+    REG_FREQ_AVG = sum/(double)num_samples;   //update average
 
     //Average Reflected Power//
     sum = 0;
@@ -510,7 +546,7 @@ void Capture_Sample(void)
         else
             sum += DATALOG.RP_BUFFER.buff[DATALOG.RP_BUFFER.head-i];
     }
-    REG_OIL_RP_AVG =  sum / (double)num_samples;    //update average
+    REG_OIL_RP_AVG =  sum/(double)num_samples;    //update average
 
     Clock_start(Capture_Sample_Clock); // call this again in 1 sec
 }

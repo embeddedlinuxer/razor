@@ -37,6 +37,7 @@ void resetGlobalVars(void)
 	REG_ACTIVE_ERROR                    = 0;
 	REG_WATERCUT_RAW                    = 0;
 	REG_WATERCUT_AVG                    = 0;
+	REG_FREQ_AVG                        = 0;
 	STAT_SUCCESS 	                    = 0;
 	STAT_PKT 		                    = 0;
 	STAT_CMD 		                    = 0;
@@ -49,7 +50,7 @@ void resetGlobalVars(void)
 	COIL_LOG_ENABLE.val                 = FALSE;
 	COIL_LOCK_SOFT_FACTORY_RESET.val    = TRUE;
 	COIL_LOCK_HARD_FACTORY_RESET.val    = TRUE;
-    COIL_SAVE_CONFIG_TO_DEFAULT.val     = FALSE;
+    COIL_UPDATE_FACTORY_DEFAULT.val     = FALSE;
     COIL_UNLOCKED_FACTORY_DEFAULT.val   = FALSE;
 
     TEMP_STREAM                         = REG_STREAM.calc_val; // TEMP_STERAM == REG_STREAM.calc_val
@@ -123,7 +124,7 @@ void storeUserDataToFactoryDefault(void)
     VAR_Update(&FCT_OIL_T1, REG_OIL_T1.calc_val, CALC_UNIT);
 
     // dislable the trigger
-    COIL_SAVE_CONFIG_TO_DEFAULT.val = FALSE;
+    COIL_UPDATE_FACTORY_DEFAULT.val = FALSE;
     COIL_UNLOCKED_FACTORY_DEFAULT.val = FALSE;
 
     // save to nand flash
@@ -273,14 +274,6 @@ void reloadFactoryDefault(void)
 	VAR_Initialize(&REG_FREQ, c_frequency, u_mfgr_specific_MHz, 10.0, 1000.0, var_no_alarm);
 	VAR_Setup_Unit(&REG_FREQ, u_mfgr_specific_MHz, 1000.0, 0.0, 1001.0, -1.0);
 	VAR_Update(&REG_FREQ, 0.0, 0);
-
-	//////////////////////////////////////
-	/// Average Frequency - 0.0
-	//////////////////////////////////////
-
-	VAR_Initialize(&REG_FREQ_AVG, c_frequency, u_mfgr_specific_MHz, 10.0, 1000.0, var_no_alarm);
-	VAR_Setup_Unit(&REG_FREQ_AVG, u_mfgr_specific_MHz, 1000.0, 0.0, 1001.0, -1.0);
-	VAR_Update(&REG_FREQ_AVG, 0.0, 0);
 
 	//////////////////////////////////////
 	/// Average Temperature - N/A
@@ -536,7 +529,7 @@ void reloadFactoryDefault(void)
 	COIL_Initialize(&COIL_AI_TRIM_MODE, FALSE, 0);
     COIL_Initialize(&COIL_LOCK_SOFT_FACTORY_RESET, TRUE, 0);
 	COIL_Initialize(&COIL_LOCK_HARD_FACTORY_RESET, TRUE, 0);
-	COIL_Initialize(&COIL_SAVE_CONFIG_TO_DEFAULT, FALSE, 0);
+	COIL_Initialize(&COIL_UPDATE_FACTORY_DEFAULT, FALSE, 0);
 	COIL_Initialize(&COIL_UNLOCKED_FACTORY_DEFAULT, FALSE, 0);
 
 	CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
@@ -931,14 +924,6 @@ void initializeAllRegisters(void)
 	VAR_Update(&REG_FREQ, 0.0, 0);
 
 	//////////////////////////////////////
-	/// Average Frequency - 0.0
-	//////////////////////////////////////
-
-	VAR_Initialize(&REG_FREQ_AVG, c_frequency, u_mfgr_specific_MHz, 10.0, 1000.0, var_no_alarm);
-	VAR_Setup_Unit(&REG_FREQ_AVG, u_mfgr_specific_MHz, 1000.0, 0.0, 1001.0, -1.0);
-	VAR_Update(&REG_FREQ_AVG, 0.0, 0);
-
-	//////////////////////////////////////
 	/// Average Temperature - N/A
 	//////////////////////////////////////
 
@@ -1226,7 +1211,7 @@ void initializeAllRegisters(void)
 	COIL_Initialize(&COIL_AI_TRIM_MODE, FALSE, 0);
     COIL_Initialize(&COIL_LOCK_SOFT_FACTORY_RESET, TRUE, 0);
 	COIL_Initialize(&COIL_LOCK_HARD_FACTORY_RESET, TRUE, 0);
-	COIL_Initialize(&COIL_SAVE_CONFIG_TO_DEFAULT, FALSE, 0);
+	COIL_Initialize(&COIL_UPDATE_FACTORY_DEFAULT, FALSE, 0);
 	COIL_Initialize(&COIL_UNLOCKED_FACTORY_DEFAULT, FALSE, 0);
 
 	setDemoValues(); // from SN8563

@@ -52,7 +52,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
 	15	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_OIL_ADJUST,		// Oil Adjust
 	17	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_WATER_ADJUST,		// Water Adjust
 	19	, 	REGTYPE_VAR	,	REGPERM_READ_O	,	(Uint32)&REG_FREQ,				// oscillator frequency
-	21	, 	REGTYPE_VAR	,	REGPERM_READ_O	,	(Uint32)&REG_FREQ_AVG,			// average frequency
+	21	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_FREQ_AVG,			// average frequency
 	23	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_WATERCUT_AVG,		// average watercut
 	25	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_WATERCUT_RAW,		// average RAW watercut
 	27	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&RESERVED_27,		    // RESERVED 
@@ -329,7 +329,7 @@ const Uint32 MB_TBL_COIL[][4] = {
 	25	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_LOCK_SOFT_FACTORY_RESET,	// Factory Reset Trigger 
 	26	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_LOCK_HARD_FACTORY_RESET,	// DELETE *EVERYTHING* AND REINITIALIZE 
 	999	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UNLOCKED_FACTORY_DEFAULT,	// Unlock factory default to write
-	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_SAVE_CONFIG_TO_DEFAULT,	// Update factory default values
+	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPDATE_FACTORY_DEFAULT,	    // Update factory default values
 	0	, 	0			, 	0					,   0
 };
 

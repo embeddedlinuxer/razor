@@ -51,8 +51,6 @@ static Uint8 dInputIndex = 0;	    // density input index
 static Uint8 dDisplayIndex = 0;	    // density display index			
 static Uint8 isPowerCycled = TRUE;  // loadUsbDriver only 1 time after power cycle
 
-BOOL isHardFactoryReset = FALSE;    // WARNING!! HARD RESET trigger 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ///	
@@ -185,7 +183,7 @@ Process_Menu(void)
 	// Start main loop
 	while (1)
 	{
-        if (COIL_SAVE_CONFIG_TO_DEFAULT.val) storeUserDataToFactoryDefault();
+        if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
 
 		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post
 		needRelayClick 	= FALSE; 							// this is a great place for a breakpoint!
@@ -621,7 +619,7 @@ mnuHomescreenWaterCut(const Uint16 input)
         return MNU_HOMESCREEN_WTC;
     }
 
-	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT_AVG,2));
+	sprintf(lcdLine0, "Watercut %6.2f%%", Round_N(REG_WATERCUT.calc_val,2));
 
 	(REG_TEMPERATURE.unit == u_temp_C) ? sprintf(lcdLine1,"Temp%10.1f%cC", REG_TEMP_USER.val, LCD_DEGREE) : sprintf(lcdLine1,"Temp%10.1f%cF", REG_TEMP_USER.val, LCD_DEGREE);
 	updateDisplay(lcdLine0, lcdLine1);
@@ -981,6 +979,7 @@ fxnOperation_OilCapture(const Uint16 input)
         updateDisplay(OILCAPTURE,BLANK);
         blinks = 0;
         COIL_BEGIN_OIL_CAP.val = TRUE;
+        Init_Data_Buffer(); // clear buffer before sampling
     }
 
          if (blinks < 3)  blinks += countBlinkTimes(prg0,prg1);
@@ -3398,18 +3397,8 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
 			{
 				COIL_UNLOCKED.val = TRUE;
                 Swi_post(Swi_writeNand);
-                isHardFactoryReset = FALSE; 
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
 			}
-            else if (atoi(lcdLine1) == HARD_FACTORY_RESET_PASSWORD)
-			{
-				COIL_UNLOCKED.val = TRUE;
-                Swi_post(Swi_writeNand);
-                // WARNING !!!! HARD FACTORY RESET 
-                isHardFactoryReset = TRUE;  
-                // WARNING !!!! HARD FACTORY RESET 
-				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
-			}   
 			else
 			{
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
@@ -3552,6 +3541,7 @@ fxnSecurityInfo_Restart(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_RESTART;
 
+    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_RESTART, MNU_SECURITYINFO_RESTART); }
 	static BOOL isEntered = FALSE;
 
  	if (isUpdateDisplay) updateDisplay(SECURITYINFO_RESTART, ENTER_RESTART);
@@ -3601,29 +3591,20 @@ fxnSecurityInfo_FactReset(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_FACTRESET;
 
+    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_FACTRESET, MNU_SECURITYINFO_FACTRESET); }
+
 	static BOOL isEntered = FALSE;
 
 	if (isUpdateDisplay) updateDisplay(SECURITYINFO_FACTRESET, ENTER_RESET);
 
-    if (isHardFactoryReset) (isEntered) ? blinkLcdLine1(STEP_CONFIRM, BLANK) : blinkLcdLine1(STOP, HARD_RESET);
-    else (isEntered) ? blinkLcdLine1(STEP_CONFIRM, BLANK) : blinkLcdLine1(ENTER_RESET, BLANK);
+    (isEntered) ? blinkLcdLine1(STEP_CONFIRM, BLANK) : blinkLcdLine1(ENTER_RESET, BLANK);
 
 	switch (input)	
 	{
 		case BTN_STEP 	:
 			if (!isEntered) return FXN_SECURITYINFO_FACTRESET;
-			if (isHardFactoryReset) 
-            {
-			    COIL_LOCK_SOFT_FACTORY_RESET.val = FALSE;   // Unlock SOFT_RESET in reloadFactoryDefault()
-                COIL_LOCK_HARD_FACTORY_RESET.val = FALSE;	// Unlock HARD_RESET in reloadFactoryDefault()
-                isHardFactoryReset = FALSE;
-            }
-            else
-            {
-                COIL_LOCK_SOFT_FACTORY_RESET.val = FALSE;   // Unlock SOFT_RESET in reloadFactoryDefault()
-                COIL_LOCK_HARD_FACTORY_RESET.val = TRUE;    // lock HARD_RESET in reloadFactoryDefault()
-                isHardFactoryReset = FALSE;
-            }
+            COIL_LOCK_SOFT_FACTORY_RESET.val = FALSE;   // Unlock SOFT_RESET in reloadFactoryDefault()
+            COIL_LOCK_HARD_FACTORY_RESET.val = TRUE;    // lock HARD_RESET in reloadFactoryDefault()
             Swi_post(Swi_writeNand);
             unloadUsbDriver();
 			_c_int00();			
@@ -3664,7 +3645,9 @@ fxnSecurityInfo_UpdateFirmware(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_UPDATEFIRMWARE;
 
-	if (isUpdateDisplay) updateDisplay(SECURITYINFO_FACTRESET, ENTER_START);
+    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_UPDATEFIRMWARE, MNU_SECURITYINFO_UPDATEFIRMWARE); }
+
+	if (isUpdateDisplay) updateDisplay(SECURITYINFO_UPDATEFIRMWARE, ENTER_START);
 
 	switch (input)	
 	{
@@ -3672,7 +3655,7 @@ fxnSecurityInfo_UpdateFirmware(const Uint16 input)
             unloadUsbDriver();
 			_c_int00();			
 			return FXN_SECURITYINFO_UPDATEFIRMWARE;
-		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO_FACTRESET);
+		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
 		default			: return FXN_SECURITYINFO_UPDATEFIRMWARE;
 	}
 }

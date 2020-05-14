@@ -44,7 +44,6 @@
 #define _EXTERN extern
 #endif
 
-#define HARD_FACTORY_RESET_PASSWORD     1343
 #define MNU_NRML_MODE					0x1
 #define MNU_TECH_MODE					0x2
 #define MNU_DIR_RIGHT					0x1
