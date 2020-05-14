@@ -1061,7 +1061,8 @@ fxnOperation_Sample_Timestamp(const Uint16 input)
 
     if (isMessage) { return notifyMessageAndExit(FXN_OPERATION_SAMPLE_TIMESTAMP, MNU_OPERATION_SAMPLE); }
 
-    if (isUpdateDisplay) updateDisplay(ISTIMECORRECT, STREAM_TIMESTAMP[TEMP_STREAM-1]);
+    displayLcd(ISTIMECORRECT,LCD0); 
+    displayLcd(STREAM_TIMESTAMP[TEMP_STREAM-1],LCD1);
 
     switch (input)  {
         case BTN_ENTER  : return onNextPressed(FXN_OPERATION_SAMPLE_VALUE);
