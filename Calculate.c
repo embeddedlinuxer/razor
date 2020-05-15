@@ -74,7 +74,7 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 void Poll(void)
 {
     static float WC_AVG = 0;
-    static int WC_AVG_SAMPLES = 0;
+    static int WC_AVG_SAMPLES = 1;
 
 	float WC; 			// temp watercut value
 	BOOL err_f = FALSE;	// frequency calculation error
@@ -148,8 +148,8 @@ void Poll(void)
 
         if (WC_AVG_SAMPLES >= REG_PROC_AVGING.calc_val)
         {
-            WC_AVG_SAMPLES = 0;
-		    VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
+            WC_AVG_SAMPLES = 1;
+		    VAR_Update(&REG_WATERCUT,WC_AVG,CALC_UNIT);
         }
 
         ///////////////////////////////////////////////

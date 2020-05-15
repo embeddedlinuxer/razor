@@ -29,11 +29,12 @@
 #include "Menu.h"
 #include "nandwriter.h"
 
-#define USB_INSTANCE    0
-#define MIN_DISK_SPACE  10240 // 10MB
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
-#define MAX_DATA_SIZE   12288
+
+#define USB_INSTANCE    0
+#define MAX_DATA_SIZE   4096 
+#define MIN_DISK_SPACE  10240 // 10MB
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -43,8 +44,6 @@ static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static Uint8 current_day = 99;
 static char LOG_BUF[MAX_DATA_SIZE];
 static char LOG_HEADER[110];
-static BOOL isWriteFile = TRUE;
-static BOOL isResetUsbDriver = TRUE;
 
 // TIME VARS
 static int USB_RTC_SEC = 0;
@@ -274,9 +273,6 @@ void logUsbFxn(void)
     /// READ RTC
     Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
-    /// TAKES TIME TO RELOAD USB DRIVER
-    if ((tmp_min == 59) && (tmp_sec < 30) && (isResetUsbDriver == FALSE)) return;
-
 	/// VALIDATE PERIOD
     if ((tmp_sec % REG_LOGGING_PERIOD != 0) || (tmp_sec == USB_RTC_SEC)) return;
 
@@ -324,7 +320,6 @@ void logUsbFxn(void)
             return;
         } 
 	    f_sync(&fileWriteObject);
-        usb_osalDelayMs(1000);
 
         // write header2
         sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
@@ -334,7 +329,6 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
-        usb_osalDelayMs(1000);
 
         // write header3
         sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
@@ -344,7 +338,6 @@ void logUsbFxn(void)
             return;
         } 
         f_sync(&fileWriteObject);
-        usb_osalDelayMs(1000);
 
         // close file
         f_close(&fileWriteObject);
@@ -360,9 +353,9 @@ void logUsbFxn(void)
 
     char DATA_BUF[160];
 
-    sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT_AVG,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+    sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-    // FILL DATA UPTO MAX_DATA_SIZE 2048 BYTES
+    // FILL DATA UPTO MAX_DATA_SIZE
     strcat(LOG_BUF,DATA_BUF);
     if (MAX_DATA_SIZE - strlen(LOG_BUF) > 160) return;
     while (MAX_DATA_SIZE > strlen(LOG_BUF)) strcat (LOG_BUF,",");
@@ -397,9 +390,6 @@ void logUsbFxn(void)
         return;
     }
    
-    /// Needs time to sync because f_sync() is extremely slow) 
-    usb_osalDelayMs(1000); 
-
     /// CLOSE 
     f_close(&fileWriteObject); 
 

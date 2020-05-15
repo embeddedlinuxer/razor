@@ -34,13 +34,18 @@
 *    V1.0.3 : Jan-27-2020 : Daniel Koh : SPECIAL VERSION FOR OLD RTC. NO DS1340 AT ALL 
 *    V1.0.4 : Jan-27-2020 : Daniel Koh : Bring back the latest version for runnig DS1340 
 *    V1.0.7 : May-01-2020 : Daniel Koh : REG_WATERCUT_AVG, mnuStepPressed with multiple times of displayLCD 
+*    V1.0.8 : May-15-2020 : Daniel Koh : Removed duplicated Timer_start from Menu.c -- this fixed lots of different issues in razor
+*                                        Added watercut averaging to Poll() 
+*                                        Removed osal_delay from usb logging
+*                                        Changed REG_WATERCUT_AVG from VAR to DBL
+*                                        Changed USB logging MAX_DATA_SIZE to 4096
 *------------------------------------------------------------------------*/
 
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION "1.0.0"
-#define FIRMWARE_VERSION "1.0.7"
+#define FIRMWARE_VERSION "1.0.08"
 
 #define BOOL Uint8
 #define DEMO_MODE
