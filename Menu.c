@@ -184,6 +184,12 @@ Process_Menu(void)
 	while (1)
 	{
         if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
+		if (!COIL_LOCK_SOFT_FACTORY_RESET.val && !COIL_LOCK_HARD_FACTORY_RESET.val) 
+		{
+			Swi_post(Swi_writeNand);
+            unloadUsbDriver();
+            _c_int00();
+		}
 
 		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post
 		needRelayClick 	= FALSE; 							// this is a great place for a breakpoint!
