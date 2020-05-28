@@ -355,7 +355,7 @@ Uint8 Apply_Density_Correction(void)
     // Razor does not use REG_DENSITY_CAL_VAL
     REG_DENSITY_CAL_VAL.calc_val = 0.0; // DKOH Oct 22, 2019
 
-	if ((REG_WATERCUT_RAW + REG_OIL_ADJUST.val) <= 5.0)
+	if ((REG_WATERCUT_RAW + REG_OIL_ADJUST.calc_val) <= 5.0)
 	{// hold last value of Dadj if WC > 5.0%, otherwise calculate new Dadj
 		REG_WC_ADJ_DENS = (REG_DENSITY_D2.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val) * (dens - REG_DENSITY_CAL_VAL.calc_val)) +
 					      (REG_DENSITY_D1.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val)) + 
