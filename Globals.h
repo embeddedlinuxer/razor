@@ -39,13 +39,14 @@
 *                                        Removed osal_delay from usb logging
 *                                        Changed REG_WATERCUT_AVG from VAR to DBL
 *                                        Changed USB logging MAX_DATA_SIZE to 4096
+*    V1.0.9 : Jun-02-2020 : Daniel Koh : Rewrite 'entire' Capture, Sampling, and Dens_Corr logics 
 *------------------------------------------------------------------------*/
 
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION "1.0.0"
-#define FIRMWARE_VERSION "1.0.8"
+#define FIRMWARE_VERSION "1.0.9"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -486,8 +487,8 @@ typedef struct
 #pragma DATA_SECTION(REG_DENSITY_UNIT,"CFG")
 	_EXTERN far REGSWI REG_DENSITY_UNIT;
 
-#pragma DATA_SECTION(REG_WC_ADJ_DENS,"CFG")
-	_EXTERN far double REG_WC_ADJ_DENS;
+#pragma DATA_SECTION(REG_DENS_CORR,"CFG")
+	_EXTERN far double REG_DENS_CORR;
 
 #pragma DATA_SECTION(REG_DENSITY_D3,"CFG")
 	_EXTERN far VAR REG_DENSITY_D3;

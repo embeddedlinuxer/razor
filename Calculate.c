@@ -40,6 +40,7 @@
 #include <limits.h>
 #include <time.h>
 
+static double WC_AVG = 0;
 static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_RTC_YR;
 
 // This is a __HWI__ called by Count_Freq_Pulses_Clock.
@@ -71,11 +72,9 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
     Swi_post(Swi_Poll);
 }
 
+
 void Poll(void)
 {
-    static float WC_AVG = 0;
-    static int WC_AVG_SAMPLES = 1;
-
 	float WC; 			// temp watercut value
 	BOOL err_f = FALSE;	// frequency calculation error
 	BOOL err_w = FALSE;	// watercut calculation error
@@ -89,6 +88,9 @@ void Poll(void)
 
 	// Read Frequency
 	err_f = Read_Freq();	
+
+	/// READ USER TEMPERATURE
+	Read_User_Temperature();
 
 	// Read Watercut 
 	if (!err_f) err_w = Read_WC(&WC);
@@ -117,43 +119,20 @@ void Poll(void)
 
 		if (!err_d)
 		{
-			// add adjustment from density correction (if any)
-			WC += REG_WC_ADJ_DENS;
+			/// add adjustment from density correction (if any)
+			WC += REG_DENS_CORR;
 
-			// max oil-phase watercut
+			/// max oil-phase watercut
 			if (WC > REG_OIL_CALC_MAX) WC = REG_OIL_CALC_MAX;	
 		}
 	}
 	
-	if((err_f | err_w | err_d) == FALSE)
+	if ((err_f | err_w | err_d) == FALSE)
 	{
 		COIL_AO_ALARM.val = FALSE;
 
-        ///////////////////////////////////////////////
-        ///////////////////////////////////////////////
-        /// AVERAGE FILTERING
-        ///////////////////////////////////////////////
-        ///////////////////////////////////////////////
-
-        /* 
-            [Previous Average] * (n-1) + [Next Value]
-            -----------------------------------------
-                                n
-        */
-
-        WC_AVG *= (REG_PROC_AVGING.calc_val-1);
-        WC_AVG += WC;
-        WC_AVG /= REG_PROC_AVGING.calc_val;
-        WC_AVG_SAMPLES++;
-
-        if (WC_AVG_SAMPLES >= REG_PROC_AVGING.calc_val)
-        {
-            WC_AVG_SAMPLES = 1;
-		    VAR_Update(&REG_WATERCUT,WC_AVG,CALC_UNIT);
-        }
-
-        ///////////////////////////////////////////////
-        ///////////////////////////////////////////////
+		/// update REG_WATERCUT here
+    	VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
 
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
 	} 
@@ -190,18 +169,18 @@ Uint8 Read_Freq(void)
 
 	key = Swi_disable();
 
-	// #pulses divided by #microseconds
+	/// #pulses divided by #microseconds
 	freq = ((double)FREQ_PULSE_COUNT_LO) / ((double)FREQ_U_SEC_ELAPSED); 
 
-	// oscillator board uses 80x divider
+	/// oscillator board uses 80x divider
 	freq *= 80;	
 
-	//update frequency
+	/// update frequency
 	VAR_Update(&REG_FREQ, freq + REG_OIL_INDEX.calc_val, CALC_UNIT); 	
 
 	Swi_restore(key);
 
-	// error checking routine
+	/// error checking routine
 	if (REG_FREQ.calc_val == NAN)
 	{
 		DIAGNOSTICS |= ERR_FRQ_LO;
@@ -220,7 +199,13 @@ Uint8 Read_Freq(void)
 	else
 		DIAGNOSTICS &= ~(ERR_FRQ_HI | ERR_FRQ_LO);
 
-	return 0; //no errors
+	return 0;
+}
+
+
+Uint8 Read_User_Temperature(void)
+{
+	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJUST.calc_val, CALC_UNIT);
 }
 
 
@@ -230,12 +215,6 @@ Uint8 Read_WC(float *WC)
 	float	ot[2];
 	Uint16	i,j;
 
-	// Convert temp_adj unit to Temp_extl calc_unit for calc_value
-	//t_adj_calc = Convert(REG_TEMPERATURE.class, REG_TEMP_ADJUST.unit, REG_TEMPERATURE.calc_unit, REG_TEMP_ADJUST.val, 1, REG_TEMP_ADJUST.aux);
-	//VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + t_adj_calc, CALC_UNIT);
-
-	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJUST.calc_val, CALC_UNIT);
-	//REG_OIL_PT = (REG_OIL_P1.calc_val * REG_FREQ.calc_val) + REG_OIL_P0.calc_val + (REG_OIL_T1.calc_val * REG_TEMP_USER.calc_val) + REG_OIL_T0.calc_val;
 	REG_OIL_PT = (REG_OIL_P1.calc_val * REG_FREQ.calc_val) + REG_OIL_P0.calc_val;
 
 	///////////////////////////////////////////////
@@ -259,14 +238,11 @@ Uint8 Read_WC(float *WC)
 
 	if ((phase_rollover_count < 2) && (cycles == REG_PHASE_HOLD_CYCLES))
 	{
-    	if (REG_FREQ.calc_val < REG_OIL_FREQ_LOW.calc_val) 
-            COIL_OIL_PHASE.val = FALSE;
+    	if (REG_FREQ.calc_val < REG_OIL_FREQ_LOW.calc_val) COIL_OIL_PHASE.val = FALSE;
 		else 
         {
-            if (REG_OIL_RP > REG_OIL_PT) 
-                COIL_OIL_PHASE.val = TRUE;
-            else            
-                COIL_OIL_PHASE.val = FALSE;
+            if (REG_OIL_RP > REG_OIL_PT) COIL_OIL_PHASE.val = TRUE;
+            else COIL_OIL_PHASE.val = FALSE;          
         }
 	}
 
@@ -312,19 +288,43 @@ Uint8 Read_WC(float *WC)
 
 		    REG_WATERCUT_RAW = w;
 
-            // add oil adjust
-            w += REG_OIL_ADJUST.calc_val;   
+			/*
+            /// add oil adjust
+            w += REG_OIL_ADJUST.calc_val;  [JUN 1, 2020: Enrique confirms a slightly different location for OIL_ADJ] 
 
-            // MAX 85% in Oil Phase
+            /// MAX 85% in Oil Phase
             if (w > REG_OIL_CALC_MAX) w = REG_OIL_CALC_MAX;    
+	
+			*/
+    		/// average REG_WATERCUT_RAW
+   			WC_AVG *= (REG_PROC_AVGING.calc_val-1);
+   			WC_AVG += w;
+   			WC_AVG /= REG_PROC_AVGING.calc_val;
 
-            *WC = w;
+			/// add REG_OIL_ADJUST
+            *WC = (float)WC_AVG + REG_OIL_ADJUST.calc_val;
+
+			/// MAX 85% in Oil Phase
+            if (WC_AVG > REG_OIL_CALC_MAX) *WC = REG_OIL_CALC_MAX;    
 		}
 		else
 		{
 		    REG_WATERCUT_RAW = w;
-			w += REG_OIL_ADJUST.calc_val; 	//add oil adjust
+	
+    		/// average REG_WATERCUT_RAW
+   			WC_AVG *= (REG_PROC_AVGING.calc_val-1);
+   			WC_AVG += w;
+   			WC_AVG /= REG_PROC_AVGING.calc_val;
+
+			/// add REG_OIL_ADJUST
+            *WC = (float)WC_AVG + REG_OIL_ADJUST.calc_val;
+
+			/*
+			/// add oil adjust
+			w += REG_OIL_ADJUST.calc_val;
+
 			*WC = w;
+			*/
 		}
 	}
 	else
@@ -341,7 +341,7 @@ Uint8 Apply_Density_Correction(void)
 {
 	double dens = 0.0;
 	
-	// get current density in units of kg/m3 @ 15C
+	/// get current density in units of kg/m3 @ 15C
 	dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, u_mpv_kg_cm_15C, REG_OIL_DENSITY.calc_val, 0, 0);
 
 	// error checking
@@ -349,49 +349,31 @@ Uint8 Apply_Density_Correction(void)
 	else if (dens > 998.0) DIAGNOSTICS |= ERR_DNS_HI;
 	else DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
 		
-	// get current density in same units as that of REG_DENSITY_CAL_VAL
-	//dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, REG_DENSITY_CAL_VAL.calc_unit, REG_OIL_DENSITY.calc_val, 0, 0);
-
-    // Razor does not use REG_DENSITY_CAL_VAL
+    /// Razor does not use REG_DENSITY_CAL_VAL
     REG_DENSITY_CAL_VAL.calc_val = 0.0; // DKOH Oct 22, 2019
 
 	if ((REG_WATERCUT_RAW + REG_OIL_ADJUST.calc_val) <= 5.0)
-	{// hold last value of Dadj if WC > 5.0%, otherwise calculate new Dadj
-		REG_WC_ADJ_DENS = (REG_DENSITY_D2.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val) * (dens - REG_DENSITY_CAL_VAL.calc_val)) +
+	{/// hold last value of Dadj if WC > 5.0%, otherwise calculate new Dadj
+		REG_DENS_CORR = (REG_DENSITY_D2.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val) * (dens - REG_DENSITY_CAL_VAL.calc_val)) +
 					      (REG_DENSITY_D1.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val)) + 
 					       REG_DENSITY_D0.calc_val;
-	 // [05/09/2018] Bentley requested we REMOVE 3rd-order calculations and only allow 2nd-order 
+	 /// [05/09/2018] Bentley requested we REMOVE 3rd-order calculations and only allow 2nd-order 
 	}
 
-	if (REG_WC_ADJ_DENS > 10.0)
+	if (REG_DENS_CORR > 10.0)
 	{
-		REG_WC_ADJ_DENS = 10.0;
+		REG_DENS_CORR = 10.0;
 		DIAGNOSTICS |= ERR_DNS_HI;
 	}
-	else if (REG_WC_ADJ_DENS < -10.0)
+	else if (REG_DENS_CORR < -10.0)
 	{
-		REG_WC_ADJ_DENS = -10.0;
+		REG_DENS_CORR = -10.0;
 		DIAGNOSTICS |= ERR_DNS_LO;
 	}
 	else
 		DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
-
-//	w = WC + REG_DENS_ADJ;
-//
-//	if (OIL_CALC_MODE==1)
-//	{
-//		if (w > REG_OIL_CALC_MAX[0])
-//			w = REG_OIL_CALC_MAX[0];
-//	}
-//	else if (OIL_CALC_MODE==2)
-//	{
-//		if (w > REG_OIL_CALC_MAX[1])
-//			w = REG_OIL_CALC_MAX[1];
-//	}
-//
-//	WC = w;
-
-	return 0; //success
+	
+	return 0; /// success
 }
 
 inline float Interpolate(float w1, float t1, float w2, float t2, float t)
@@ -525,7 +507,7 @@ void Capture_Sample(void)
         }
     }
     VAR_Update(&REG_TEMP_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
-
+/*
     //Average Frequency//
     sum = 0;
     for (i=0;i<num_samples;i++)
@@ -547,16 +529,17 @@ void Capture_Sample(void)
             sum += DATALOG.RP_BUFFER.buff[DATALOG.RP_BUFFER.head-i];
     }
     REG_OIL_RP_AVG =  sum/(double)num_samples;    //update average
-
+*/
     Clock_start(Capture_Sample_Clock); // call this again in 1 sec
 }
+
 
 void Calibrate_Oil(void)
 {
 	float t;
 	double sg = 1.0;
 
-    // FIXME: REG_DENS_ADJ needs to be an AVERAGE -- Isn't this already done??
+    /// REG_DENS_ADJ is used entered density offset 
     if ((REG_OIL_DENS_CORR_MODE != 0) && (((REG_ANALYZER_MODE&0xFF)==ANA_MODE_LOW)||((REG_ANALYZER_MODE&0xFF)==ANA_MODE_MID)))
     {   
         sg = Convert(c_mass_per_volume, FC.density.calc_unit, u_mpv_sg_15C, FC.density.calc_val, 0, FC.density.aux);
@@ -564,23 +547,31 @@ void Calibrate_Oil(void)
     }   
     else sg = 1.0;
 
-    if (REG_STREAM.calc_val == TEMP_STREAM) // CALIBRATE SAME STREAM
+	/// calibrate "current" stream
+    if (REG_STREAM.calc_val == TEMP_STREAM)
     {   
         if (REG_PROC_AVGING.calc_val < DATALOG.WC_BUFFER.n)
         {
             if (COIL_OIL_PHASE.val)
             {
-                if ((REG_WATERCUT.STAT & var_aux)==0) t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj);  // if not rollover 
+                if ((REG_WATERCUT.STAT & var_aux)==0) 
+				{
+					//t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj); [Jun-02-2020 : Enrique confirmed REG_WATERCUT_AVG instead of "REG_WATERCUT_RAW"
+					t = (REG_OIL_SAMPLE.calc_val*sg) - (WC_AVG + REG_DENS_CORR);
+				}
+
                 VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
             }
         }
         else
         {
             t = REG_OIL_SAMPLE.calc_val - (REG_WATERCUT_AVG + REG_DENS_ADJ);
+
             VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
         }
     }   
-    else // CALIBRATE "OLD" STREAM
+	/// calibrate "saved" stream
+    else
     {   
         if (REG_PROC_AVGING.calc_val < STREAM_SAMPLES[TEMP_STREAM-1])
         {

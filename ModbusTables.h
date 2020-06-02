@@ -99,7 +99,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
 	109	,   REGTYPE_DBL	,	REGPERM_PASSWD	,	(Uint32)&REG_AO_TRIMHI,		    // User-inputed measure of actual output current (20mA)
 	111	,   REGTYPE_DBL	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_ADJ,		// oil density offset
 	113	,   REGTYPE_SWI ,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_UNIT,		// oil density units i.e. kg/m^3@15C -or- API@60F
-	115	,   REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_WC_ADJ_DENS,		// adjustment to the watercut based on density correction
+	115	,   REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_DENS_CORR,		// adjustment to the watercut based on density correction
 	117	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_D3,		// density correction third-order coefficient -- not used
 	119	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_D2,		// density correction second-order coefficient
 	121	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_D1,		// density correction first-order coefficient
