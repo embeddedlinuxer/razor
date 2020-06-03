@@ -987,7 +987,7 @@ fxnOperation_OilCapture(const Uint16 input)
         COIL_BEGIN_OIL_CAP.val = TRUE;
         Init_Data_Buffer(); // clear buffer before sampling
     }
-
+/*
          if (blinks < 3)  blinks += countBlinkTimes(prg0,prg1);
     else if (blinks < 6)  blinks += countBlinkTimes(prg1,prg2);
     else if (blinks < 9)  blinks += countBlinkTimes(prg2,prg3);
@@ -1002,6 +1002,22 @@ fxnOperation_OilCapture(const Uint16 input)
     else if (blinks < 36) blinks += countBlinkTimes(prg11,prg12);
     else if (blinks < 39) blinks += countBlinkTimes(prg12,prg13);
     else if (blinks < 42) blinks += countBlinkTimes(prg13,prg14);
+*/
+	     if (blinks < 1)  blinks += countBlinkTimes(prg0,prg1);
+    else if (blinks < 2)  blinks += countBlinkTimes(prg1,prg2);
+    else if (blinks < 3)  blinks += countBlinkTimes(prg2,prg3);
+    else if (blinks < 4) blinks += countBlinkTimes(prg3,prg4);
+    else if (blinks < 5) blinks += countBlinkTimes(prg4,prg5);
+    else if (blinks < 6) blinks += countBlinkTimes(prg5,prg6);
+    else if (blinks < 7) blinks += countBlinkTimes(prg6,prg7);
+    else if (blinks < 8) blinks += countBlinkTimes(prg7,prg8);
+    else if (blinks < 9) blinks += countBlinkTimes(prg8,prg9);
+    else if (blinks < 10) blinks += countBlinkTimes(prg9,prg10);
+    else if (blinks < 11) blinks += countBlinkTimes(prg10,prg11);
+    else if (blinks < 12) blinks += countBlinkTimes(prg11,prg12);
+    else if (blinks < 13) blinks += countBlinkTimes(prg12,prg13);
+    else if (blinks < 14) blinks += countBlinkTimes(prg13,prg14);
+
     else 
     { 
         COIL_BEGIN_OIL_CAP.val = FALSE;

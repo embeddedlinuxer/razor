@@ -112,8 +112,7 @@
 #define ANA_MODE_LOW				1		// lowcut
 #define ANA_MODE_SA					0		// standalone
 #define SMAX 						60 		// max number of streams
-//#define MAXBUFF 					300		// set to 300 in old code
-#define MAXBUFF 					60		// set to 300 in old code
+#define MAXBUFF 					10		// set to 300 in old code
 #define MAX_DAMP_DELAY				50		// max damping period 50 secs
 #define MAX_WATER_PHASE				100		// Watercut in water phase always 100% in water phase
 #define PASSWORD_LENGTH				4
