@@ -461,6 +461,7 @@ void reloadFactoryDefault(void)
 
 	VAR_Initialize(&REG_OIL_DENSITY, c_mass_per_volume, u_mpv_kg_cm, 10.0, 1000.0, var_no_bound|var_no_alarm);
 	VAR_Update(&REG_OIL_DENSITY, 865.443, CALC_UNIT);
+	REG_OIL_DENSITY.swi = Swi_Apply_Density_Adj;
 
 	//////////////////////////////////////
 	/// Analog In Lower Range Value - 0.0
@@ -1116,6 +1117,7 @@ void initializeAllRegisters(void)
 
 	VAR_Initialize(&REG_OIL_DENSITY, c_mass_per_volume, u_mpv_kg_cm, 10.0, 1000.0, var_no_bound|var_no_alarm);
 	VAR_Update(&REG_OIL_DENSITY, 865.443, CALC_UNIT);
+	REG_OIL_DENSITY.swi = Swi_Apply_Density_Adj;
 
 	//////////////////////////////////////
 	/// Analog In Lower Range Value - 0.0

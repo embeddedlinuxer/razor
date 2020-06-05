@@ -47,8 +47,6 @@ static int y = 0;
 static int blinker = 0;             // MENU ID BLINKER 
 static BOOL isOn = FALSE;           // LINE1 BLINKER
 static BOOL isMessage = FALSE;      // Message to display? 
-static Uint8 dInputIndex = 0;	    // density input index			
-static Uint8 dDisplayIndex = 0;	    // density display index			
 static Uint8 isPowerCycled = TRUE;  // loadUsbDriver only 1 time after power cycle
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -719,22 +717,28 @@ mnuHomescreenDensity(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_HOMESCREEN_DST;
 
+	static Uint8 index;
+
     if (isUpdateDisplay) 
     {
-        if (REG_OIL_DENS_CORR_MODE == 1)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
-        else if (REG_OIL_DENS_CORR_MODE == 2)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
-        else if (REG_OIL_DENS_CORR_MODE == 3)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+        	 if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
+        else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
+        else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
 
-        for (dDisplayIndex = 0; dDisplayIndex < sizeof(densityIndex)/sizeof(densityIndex[0]); dDisplayIndex++)
-        {
-            if (REG_OIL_DENSITY.unit == densityUnit[dDisplayIndex]) break;
-        }
+	    if (isUpdateDisplay)
+    	{    
+        	for (index = 0; index<sizeof(densityIndex)/sizeof(densityIndex[0]); index++)
+        	{
+            	if (REG_OIL_DENSITY.unit == densityUnit[index]) break;
+        	}
+
+			sprintf(lcdLine1,"%8.1f%s",REG_OIL_DENSITY.val,densityIndex[index]);
+			(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
+		}
     }
-	sprintf(lcdLine1,"%10.1f%s",REG_OIL_DENSITY.val,densityIndex[dDisplayIndex]);
-	(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
+
+	sprintf(lcdLine1,"%8.1f%s",REG_OIL_DENSITY.val,densityIndex[index]);
+	displayLcd(lcdLine1, LCD1);
 
 	 switch (input)  {
         case BTN_VALUE  : return onNextPressed(MNU_HOMESCREEN_DGN);
@@ -2688,14 +2692,16 @@ mnuConfig_DnsCorr_DispUnit(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_DNSCORR_DISPUNIT;
 
+	static Uint8 index;
+
     if (isUpdateDisplay)
     {
-        for (dDisplayIndex = 0; dDisplayIndex < sizeof(densityIndex)/sizeof(densityIndex[0]); dDisplayIndex++)
+        for (index = 0; index<sizeof(densityIndex)/sizeof(densityIndex[0]); index++)
         {
-            if (REG_OIL_DENSITY.unit == densityUnit[dDisplayIndex]) break;
+            if (REG_OIL_DENSITY.unit == densityUnit[index]) break;
         }
 
-	    sprintf(lcdLine1,"%16s",densityIndex[dDisplayIndex]);
+	    sprintf(lcdLine1,"%16s",densityIndex[index]);
 	    updateDisplay(CFG_DNSCORR_DISPUNIT, lcdLine1);
     }
 
@@ -2717,19 +2723,29 @@ fxnConfig_DnsCorr_DispUnit(const Uint16 input)
     if (isMessage) { return notifyMessageAndExit(FXN_CFG_DNSCORR_DISPUNIT, MNU_CFG_DNSCORR_DISPUNIT); }
 
 	static Uint8 index;
+
+    if (isUpdateDisplay)
+    {
+        for (index = 0; index<sizeof(densityIndex)/sizeof(densityIndex[0]); index++)
+        {
+            if (REG_OIL_DENSITY.unit == densityUnit[index]) break;
+        }
+
+	    sprintf(lcdLine1,"%16s",densityIndex[index]);
+	    updateDisplay(CFG_DNSCORR_DISPUNIT, lcdLine1);
+    }
+
 	sprintf(lcdLine1, "%16s", densityIndex[index]); 
 	blinkLcdLine1(lcdLine1, BLANK);
 
     switch (input)  {
         case BTN_VALUE  :
-			index++;
-			if (index > 15) index = 0;
+			(index > 15) ? index = 0 : index++;
 			return FXN_CFG_DNSCORR_DISPUNIT;
         case BTN_ENTER  : 
-			dDisplayIndex = index;
-			REG_OIL_DENSITY.unit = densityUnit[dDisplayIndex];
+			REG_OIL_DENSITY.unit = densityUnit[index];
 			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY.calc_val, CALC_UNIT);
-   	        	Swi_post(Swi_writeNand);
+   	       	Swi_post(Swi_writeNand);
             return onNextMessagePressed(FXN_CFG_DNSCORR_DISPUNIT, CHANGE_SUCCESS);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_DNSCORR_DISPUNIT);
         default         : return FXN_CFG_DNSCORR_DISPUNIT;
@@ -2895,11 +2911,18 @@ mnuConfig_DnsCorr_InputUnit(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_DNSCORR_INPUTUNIT;
 
-	if (isUpdateDisplay)
-	{	
-		sprintf(lcdLine1,"%16s",densityIndex[dInputIndex]);
-		updateDisplay(CFG_DNSCORR_INPUTUNIT, lcdLine1);
-	}
+	static Uint8 index;
+
+    if (isUpdateDisplay)
+    {
+        for (index = 0; index<sizeof(densityIndex)/sizeof(densityIndex[0]); index++)
+        {
+            if (REG_OIL_DENSITY.calc_unit == densityUnit[index]) break;
+        }
+
+	    sprintf(lcdLine1,"%16s",densityIndex[index]);
+	    updateDisplay(CFG_DNSCORR_INPUTUNIT, lcdLine1);
+    }
 
 	switch (input)	
 	{
@@ -2929,26 +2952,35 @@ fxnConfig_DnsCorr_InputUnit(const Uint16 input)
 
     if (isMessage) { return notifyMessageAndExit(FXN_CFG_DNSCORR_INPUTUNIT, MNU_CFG_DNSCORR_INPUTUNIT); }
 
+    if (isUpdateDisplay)
+    {
+        for (index = 0; index<sizeof(densityIndex)/sizeof(densityIndex[0]); index++)
+        {
+            if (REG_OIL_DENSITY.calc_unit == densityUnit[index]) break;
+        }
+
+	    sprintf(lcdLine1,"%16s",densityIndex[index]);
+	    updateDisplay(CFG_DNSCORR_INPUTUNIT, lcdLine1);
+    }
+
 	sprintf(lcdLine1, "%16s", densityIndex[index]); 
 	blinkLcdLine1(lcdLine1, BLANK);
 
     switch (input)  {
         case BTN_VALUE  :
-			index++;
-			if (index > 15) index = 0;
+			(index > 15) ? index = 0 : index++;
 			return FXN_CFG_DNSCORR_INPUTUNIT;
         case BTN_ENTER  : 
-			dInputIndex=index;
 			tempDensityVal = REG_OIL_DENSITY.calc_val;
 			tempLrvVal = REG_OIL_DENSITY_AI_LRV.calc_val;
 			tempUrvVal = REG_OIL_DENSITY_AI_URV.calc_val;
-			REG_OIL_DENSITY.calc_unit = densityUnit[dInputIndex];
+			REG_OIL_DENSITY.calc_unit = densityUnit[index];
 			REG_OIL_DENSITY_AI_LRV.calc_unit = REG_OIL_DENSITY.calc_unit; 
 			REG_OIL_DENSITY_AI_URV.calc_unit = REG_OIL_DENSITY.calc_unit;
 			VAR_Update(&REG_OIL_DENSITY, tempDensityVal, CALC_UNIT);
 			VAR_Update(&REG_OIL_DENSITY_AI_LRV, tempLrvVal, CALC_UNIT);
 			VAR_Update(&REG_OIL_DENSITY_AI_URV, tempUrvVal, CALC_UNIT);
-   	        	Swi_post(Swi_writeNand);
+   	        Swi_post(Swi_writeNand);
 			return onNextMessagePressed(FXN_CFG_DNSCORR_INPUTUNIT, CHANGE_SUCCESS);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_DNSCORR_INPUTUNIT);
         default         : return FXN_CFG_DNSCORR_INPUTUNIT;

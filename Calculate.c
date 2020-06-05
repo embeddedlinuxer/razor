@@ -40,7 +40,7 @@
 #include <limits.h>
 #include <time.h>
 
-static double WC_AVG = 0;
+static double WC_RAW_AVG = 0;
 static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_RTC_YR;
 
 // This is a __HWI__ called by Count_Freq_Pulses_Clock.
@@ -98,22 +98,10 @@ void Poll(void)
 	// Read Density
 	if ((REG_OIL_DENS_CORR_MODE != 0) && !(err_f | err_w) )
 	{
-		double dens;
-
 		// get density from various sources 
 		     if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
-
-		// apply density adj
-		if (REG_DENSITY_ADJ != 0.0)
-		{
-			dens = REG_OIL_DENSITY.base_val;
-			dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, REG_OIL_DENSITY.unit, dens, 0, 0);
-			dens += REG_DENSITY_ADJ;
-			dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.unit, REG_OIL_DENSITY.calc_unit, dens, 0, 0);
-			VAR_Update(&REG_OIL_DENSITY,dens,CALC_UNIT);
-		}
 
 		err_d = Apply_Density_Correction();
 
@@ -297,27 +285,27 @@ Uint8 Read_WC(float *WC)
 	
 			*/
     		/// average REG_WATERCUT_RAW
-   			WC_AVG *= (REG_PROC_AVGING.calc_val-1);
-   			WC_AVG += w;
-   			WC_AVG /= REG_PROC_AVGING.calc_val;
+   			WC_RAW_AVG *= (REG_PROC_AVGING.calc_val-1);
+   			WC_RAW_AVG += w;
+   			WC_RAW_AVG /= REG_PROC_AVGING.calc_val;
 
 			/// add REG_OIL_ADJUST
-            *WC = (float)WC_AVG + REG_OIL_ADJUST.calc_val;
+            *WC = (float)WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
 
 			/// MAX 85% in Oil Phase
-            if (WC_AVG > REG_OIL_CALC_MAX) *WC = REG_OIL_CALC_MAX;    
+            if (WC_RAW_AVG > REG_OIL_CALC_MAX) *WC = REG_OIL_CALC_MAX;    
 		}
 		else
 		{
 		    REG_WATERCUT_RAW = w;
 	
     		/// average REG_WATERCUT_RAW
-   			WC_AVG *= (REG_PROC_AVGING.calc_val-1);
-   			WC_AVG += w;
-   			WC_AVG /= REG_PROC_AVGING.calc_val;
+   			WC_RAW_AVG *= (REG_PROC_AVGING.calc_val-1);
+   			WC_RAW_AVG += w;
+   			WC_RAW_AVG /= REG_PROC_AVGING.calc_val;
 
 			/// add REG_OIL_ADJUST
-            *WC = (float)WC_AVG + REG_OIL_ADJUST.calc_val;
+            *WC = (float)WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
 
 			/*
 			/// add oil adjust
@@ -556,8 +544,8 @@ void Calibrate_Oil(void)
             {
                 if ((REG_WATERCUT.STAT & var_aux)==0) 
 				{
-					//t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj); [Jun-02-2020 : Enrique confirmed REG_WATERCUT_AVG instead of "REG_WATERCUT_RAW"
-					t = (REG_OIL_SAMPLE.calc_val*sg) - (WC_AVG + REG_DENS_CORR);
+					//t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj); [Jun-02-2020 : Enrique confirmed WATERCUT_RAW_AVG instead of "REG_WATERCUT_RAW"
+					t = (REG_OIL_SAMPLE.calc_val*sg) - (WC_RAW_AVG + REG_DENS_CORR);
 				}
 
                 VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
@@ -643,3 +631,22 @@ void Bfr_Add(FP_BFR* bfr, double val)
 	if (bfr->n < MAX_BFR_SIZE_F)
 		bfr->n++;
 }
+
+
+void Apply_Density_Adj(void)
+{   
+    double dens;
+
+    if (REG_DENSITY_ADJ != 0.0)
+    {
+        dens = REG_OIL_DENSITY.base_val;
+
+        // convert to user units, add adjust, convert to calc units
+        dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, REG_OIL_DENSITY.unit, dens, 0, 0);
+        dens += REG_DENSITY_ADJ;
+        dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.unit, REG_OIL_DENSITY.calc_unit, dens, 0, 0);
+
+        VAR_Update(&REG_OIL_DENSITY,dens,CALC_UNIT);
+    }
+}
+
