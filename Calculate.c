@@ -110,8 +110,8 @@ void Poll(void)
 			/// add adjustment from density correction (if any)
 			WC += REG_DENS_CORR;
 
-			/// max oil-phase watercut
-			if (WC > REG_OIL_CALC_MAX) WC = REG_OIL_CALC_MAX;	
+			/// max oil-phase watercut (WC > 85%)
+			if (WC > REG_OIL_CALC_MAX) WC = 100.00;	
 		}
 	}
 	
@@ -291,9 +291,6 @@ Uint8 Read_WC(float *WC)
 
 			/// add REG_OIL_ADJUST
             *WC = (float)WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
-
-			/// MAX 85% in Oil Phase
-            if (WC_RAW_AVG > REG_OIL_CALC_MAX) *WC = REG_OIL_CALC_MAX;    
 		}
 		else
 		{
@@ -332,10 +329,8 @@ Uint8 Apply_Density_Correction(void)
 	/// get current density in units of kg/m3 @ 15C
 	dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, u_mpv_kg_cm_15C, REG_OIL_DENSITY.calc_val, 0, 0);
 
-	// error checking
-	if (dens < 750.0) DIAGNOSTICS |= ERR_DNS_LO;
-	else if (dens > 998.0) DIAGNOSTICS |= ERR_DNS_HI;
-	else DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
+	/// check error 
+	checkError(dens,750,998,ERR_DNS_LO,ERR_DNS_HI);
 		
     /// Razor does not use REG_DENSITY_CAL_VAL
     REG_DENSITY_CAL_VAL.calc_val = 0.0; // DKOH Oct 22, 2019
@@ -348,18 +343,8 @@ Uint8 Apply_Density_Correction(void)
 	 /// [05/09/2018] Bentley requested we REMOVE 3rd-order calculations and only allow 2nd-order 
 	}
 
-	if (REG_DENS_CORR > 10.0)
-	{
-		REG_DENS_CORR = 10.0;
-		DIAGNOSTICS |= ERR_DNS_HI;
-	}
-	else if (REG_DENS_CORR < -10.0)
-	{
-		REG_DENS_CORR = -10.0;
-		DIAGNOSTICS |= ERR_DNS_LO;
-	}
-	else
-		DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
+	/// check error 
+	checkError(REG_DENS_CORR,-10,10,ERR_DNS_LO,ERR_DNS_HI);
 	
 	return 0; /// success
 }
@@ -650,3 +635,10 @@ void Apply_Density_Adj(void)
     }
 }
 
+
+void checkError(float val, float boundLo, float boundHi, int errLo, int errHi)
+{
+	if (val < boundLo) DIAGNOSTICS |= errLo;
+	else if (val > boundHi) DIAGNOSTICS |= errHi;
+	else DIAGNOSTICS &= ~(errLo | errHi);
+}

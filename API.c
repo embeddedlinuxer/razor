@@ -518,25 +518,21 @@ double API_15C_PT(const double r, int* k_set)
 	double t1;
 	double t2;
 	double t3;
-//	FLOW_COMP* f; /* flow computer */
 
+	//t = Convert(FC.T.class, FC.T.calc_unit, u_temp_C, FC.T.calc_val, 0, FC.T.aux);
+	t = Convert(REG_TEMPERATURE.class, REG_TEMPERATURE.calc_unit, u_temp_C, REG_TEMPERATURE.calc_val, 1, REG_TEMPERATURE.aux);
 
-//	f = &FC[fcidx];
-	t = Convert(FC.T.class, FC.T.calc_unit, u_temp_C, FC.T.calc_val, 0, FC.T.aux);
 	p = r;
 
-	API_STATUS(0);			/* clear API status bits */
+	API_STATUS(0);	/* clear API status bits */
 
 	switch (FC.API_TABLE>>8)
 	{
 		case 'A':
 		{/* crude oil */
-			//if ((t<-18.0) || (p<610.5) || (p>1075.0))
 			if ((t<-18.0) || (p<450.0) || (p>1075.0))
 			{/* error conditions */
 				API_STATUS(API_fail);
-
-
 				return API_error_num;
 			}
 			else if (p<758.0)
@@ -544,8 +540,6 @@ double API_15C_PT(const double r, int* k_set)
 				if (t>90.0)
 				{
 					API_STATUS(API_fail);
-
-
 					return API_error_num;
 				}
 				else
@@ -556,8 +550,6 @@ double API_15C_PT(const double r, int* k_set)
 				if (t>90.0)
 				{
 					API_STATUS(API_fail);
-
-
 					return API_error_num;
 				}
 				else if (t>60.0)
@@ -568,7 +560,6 @@ double API_15C_PT(const double r, int* k_set)
 				if (t>120.0)
 				{
 					API_STATUS(API_fail);
-
 					return API_error_num;
 				}
 				else if (t>90.0)
@@ -579,7 +570,6 @@ double API_15C_PT(const double r, int* k_set)
 				if (t>150.0)
 				{
 					API_STATUS(API_fail);
-
 					return API_error_num;
 				}
 				else if (t>120.0)
@@ -598,8 +588,6 @@ double API_15C_PT(const double r, int* k_set)
 			if ((t<-18.0) || (p<653.0) || (p>1075.0))
 			{/* error conditions */
 				API_STATUS(API_fail);
-
-
 				return API_error_num;
 			}
 			else if (p<778.5)
@@ -607,8 +595,6 @@ double API_15C_PT(const double r, int* k_set)
 				if (t>90.0)
 				{
 					API_STATUS(API_fail);
-
-
 					return API_error_num;
 				}
 				else if (t>60.0)
@@ -619,8 +605,6 @@ double API_15C_PT(const double r, int* k_set)
 				if (t>120.0)
 				{
 					API_STATUS(API_fail);
-
-
 					return API_error_num;
 				}
 				else if (t>90.0)
@@ -631,8 +615,6 @@ double API_15C_PT(const double r, int* k_set)
 				if (t>150.0)
 				{
 					API_STATUS(API_fail);
-
-
 					return API_error_num;
 				}
 				else if (t>120.0)
@@ -708,29 +690,21 @@ double API_15C_PT(const double r, int* k_set)
 			if ((t1<0.0) || (a<270.0) || (a>930.0))
 			{/* these cases represent error conditions */
 				API_STATUS(API_fail);
-
-
 				return API_error_num;
 			}
 			else if ((a<510.0) && (t1>300.0))
 			{
 				API_STATUS(API_fail);
-
-
 				return API_error_num;
 			}
 			else if ((a<530.0) && (t1>250.0))
 			{
 				API_STATUS(API_fail);
-
-
 				return API_error_num;
 			}
 			else if ((a<=930.0) && (t1>200.0))
 			{
 				API_STATUS(API_fail);
-
-
 				return API_error_num;
 			}
 
@@ -748,8 +722,6 @@ double API_15C_PT(const double r, int* k_set)
 			if ((p<-10.0) || (p>45.0) || (t1<0.0) || (t1>300.0))
 			{/* error conditions */
 				API_STATUS(API_fail);
-
-
 				return API_error_num;
 			}
 
@@ -774,7 +746,6 @@ double API_15C_PT(const double r, int* k_set)
 	}
 
 	t = p * exp(-a*t*(1.0+0.8*a*t));
-
 
 	return t;
 }
@@ -1021,4 +992,35 @@ double API_to_kgm3(const double r)
 		return (double)0.0;
 
 	return (double)(141.5*999.012/(r+131.5));
+}
+
+
+double API2KGM3(const double KGM3_15, const double PROC_T)
+{
+	double dt 	= PROC_T - 15.0;
+	double a 	= 613.9723/pow(KGM3_15,2.0);
+	double vcf 	= pow(2.7172,(-a*dt-0.8*pow((a*dt),2.0)));
+
+	return KGM3_15*vcf; 
+}
+
+double API2KGM3_15(const double KGM3, const double PROC_T)
+{
+	double dt 	= PROC_T - 15.0;
+	double a 	= 613.9723/pow(KGM3,2.0);
+	double vcf 	= pow(2.7172,(-a*dt-0.8*pow((a*dt),2.0)));
+	double rho	= KGM3/vcf;
+	double rho2	= 0.0;
+	double vdif	= 0.0;
+
+	do	
+	{
+		a 		= 613.9723/pow(rho,2.0);
+		vcf		= pow(2.7172,(-a*dt-0.8*pow((a*dt),2.0)));
+		rho2	= KGM3/vcf;
+		vdif 	= fabs(rho2-rho);
+		rho 	= rho2;
+	} while (vdif > 0.01);
+
+	return rho2;
 }

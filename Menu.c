@@ -87,8 +87,8 @@ static const char * relayMode[4]     = {WATERCUT, PHASE, ERROR, MANUAL};
 static const char * aoMode[3] 		 = {AUTOMATIC, AUTO_REVERSE, MANUAL}; 
 static const char * errorMode[3] 	 = {DISABLE, AO_ALARM_HIGH, AO_ALARM_LOW}; 
 static const char * densityMode[4] 	 = {DISABLE, ANALOG_INPUT, MODBUS, MANUAL};
-static const char * densityIndex[17] = {KG_M3, KG_M3_15C, KG_M3_60F, API, API_15C, API_60F, SG, SG_15C, SG_60F, G_CC, G_ML, G_L, KG_L, LBS_GAL, LBS_FT3, LBS_IN3, STON_YD3}; 
-static const Uint8 densityUnit[17] 	 = {u_mpv_kg_cm, u_mpv_kg_cm_15C, u_mpv_kg_cm_60F, u_mpv_deg_API, u_mpv_deg_API_15C, u_mpv_deg_API_60F, u_mpv_sg, u_mpv_sg_15C, u_mpv_sg_60F, u_mpv_g_cc, u_mpv_g_mL, u_mpv_g_L, u_mpv_kg_L, u_mpv_lbs_gal, u_mpv_lbs_cf, u_mpv_lbs_ci, u_mpv_short_tons_cyard};
+static const char * densityIndex[8]  = {KG_M3, KG_M3_15C, API, API_60F, LBS_FT3, LBS_FT3_60F, SG, SG_15C}; 
+static const Uint8 densityUnit[8] 	 = {u_mpv_kg_cm, u_mpv_kg_cm_15C, u_mpv_deg_API, u_mpv_deg_API_60F, u_mpv_lbs_cf, u_mpv_lbs_cf_60F, u_mpv_sg, u_mpv_sg_15C};
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -2740,7 +2740,7 @@ fxnConfig_DnsCorr_DispUnit(const Uint16 input)
 
     switch (input)  {
         case BTN_VALUE  :
-			(index > 15) ? index = 0 : index++;
+			(index < 7) ? (index++) : (index = 0);
 			return FXN_CFG_DNSCORR_DISPUNIT;
         case BTN_ENTER  : 
 			REG_OIL_DENSITY.unit = densityUnit[index];
@@ -2968,7 +2968,7 @@ fxnConfig_DnsCorr_InputUnit(const Uint16 input)
 
     switch (input)  {
         case BTN_VALUE  :
-			(index > 15) ? index = 0 : index++;
+			(index<7) ? (index++) : (index = 0);
 			return FXN_CFG_DNSCORR_INPUTUNIT;
         case BTN_ENTER  : 
 			tempDensityVal = REG_OIL_DENSITY.calc_val;

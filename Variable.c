@@ -118,22 +118,24 @@ BOOL VAR_Update(VAR *v, double valin, BOOL user_unit)
 /****************************************************************************/
 double Convert(int class, int from_unit, int to_unit, double val, BOOL scale_only, int aux)
 {
-	double m;	/* multiplier 	*/
-	double b;	/* offset 		*/
-	double r;	/* return		*/
-	BOOL found;	/* found flag	*/
-	int k;		/* API parameter*/
+	double m;		/* multiplier 	*/
+	double b;		/* offset 		*/
+	double r;		/* return		*/
+	double kgm3;	/* kgm3		*/
+	double kgm3_15;	/* kgm3@15c		*/
+	double kgm3_60;	/* kgm3@60f		*/
+	BOOL found;		/* found flag	*/
+	int k;			/* API parameter*/
 
-	// default return value
+	/// input value, and return value later
 	r = val;
 
-	// same unit, no need to convert
-	if ((from_unit&0xFF)==(to_unit&0xFF))
-		return r;
+	/// same unit, no need to convert
+	if ((from_unit&0xFF)==(to_unit&0xFF)) return r;
 
 	found = FALSE;
 
-	if (class==c_temperature)
+	if (class==c_temperature) /// temperature conversion
 	{
 		found = TRUE;
 		switch (from_unit&0xFF)
@@ -148,135 +150,115 @@ double Convert(int class, int from_unit, int to_unit, double val, BOOL scale_onl
 				break;
 		}
 	}
-
 	else
-{
-	if (class==c_mass_per_volume)
-	{/* convert to kg/m^3 @ process Temperature */
-		found = TRUE;
-
-		switch (from_unit&0xFF)
+	{
+		if (class==c_mass_per_volume) /// density conversion
 		{
-			case u_mpv_sg_15C:
-			case u_mpv_sg_60F:
-			case u_mpv_sg:
+			found = TRUE;
+			switch (from_unit&0xFF)
 			{
-				r *= 1000.0;
-				break;
-			}
-			case u_mpv_kg_cm_15C:
-			case u_mpv_kg_cm_60F:
-			case u_mpv_kg_cm:
-			{
-				break;
-			}
-			case u_mpv_deg_API_60F:
-			case u_mpv_deg_API_15C:
-			case u_mpv_deg_API:
-			{
-				r = API_to_kgm3(r);
-				break;
-			}
-			default:
-			{
-				found = FALSE;
-				break;
+				case u_mpv_kg_cm:
+					kgm3 	= r;
+					kgm3_15 = API2KGM3_15(kgm3,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				case u_mpv_deg_API:
+					kgm3  	= (141.5*999.012)/(131.5+r);
+					kgm3_15 = API2KGM3_15(kgm3,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				case u_mpv_lbs_cf:
+					kgm3	= r*16.0105;
+					kgm3_15 = API2KGM3_15(kgm3,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				case u_mpv_sg:
+					kgm3	= r*998.23;
+					kgm3_15 = API2KGM3_15(kgm3,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				case u_mpv_kg_cm_15C:
+					kgm3_15	= r; 
+					kgm3  	= API2KGM3(kgm3_15,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				case u_mpv_deg_API_60F:
+					kgm3_15	= API2KGM3_15(((141.5*999.012)/(131.5+r)),15.5556);
+					kgm3  	= API2KGM3(kgm3_15,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				case u_mpv_lbs_cf_60F:
+					kgm3_15	= API2KGM3_15((r*16.0185),15.5556);
+					kgm3  	= API2KGM3(kgm3_15,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				case u_mpv_sg_15C:
+					kgm3_15	= r*998.23;
+					kgm3  	= API2KGM3(kgm3_15,REG_TEMP_USER.calc_val);
+					kgm3_60	= API2KGM3(kgm3_15,15.5556);
+					break;
+				default:
+				{
+					found = FALSE;
+					break;
+				}
 			}
 		}
 
-		switch (from_unit&0xFF)
-		{/* r is in kg/m^3 */
-			case u_mpv_sg_15C:
-			case u_mpv_kg_cm_15C:
-			case u_mpv_deg_API_15C:
-			{/* convert r to process Temperature from 15C */
-				k = -1;
-				r = API_15C_PT(r, &k);
-				break;
-			}
-			case u_mpv_sg_60F:
-			case u_mpv_kg_cm_60F:
-			case u_mpv_deg_API_60F:
-			{/* convert r to process Temperature from 60F */
-				k = -1;
-				r = API_60F_PT(r, &k);
-				break;
-			}
+		if (!found)
+		{
+			Get_Unit_Coeff((VAR*)0, from_unit&0xFF, class, &m, &b);
+			if (scale_only) b = 0;
+			r = (r-b)/m;
 		}
-	}
 
-	if (!found)
-	{
-		Get_Unit_Coeff((VAR*)0, from_unit&0xFF, class, &m, &b);
+		found = FALSE;
 
-		if (scale_only)
-			b = 0;
-
-		r = (r-b)/m;
-	}
-
-	found = FALSE;
-
-	if (class==c_mass_per_volume)
-	{
-		found = TRUE;
-
-		switch (to_unit&0xFF)
-		{//* r is in kg/m^3 @ process Temperature */
-			case u_mpv_deg_API:
+		if (class==c_mass_per_volume)
+		{
+			found = TRUE;
+			switch (to_unit&0xFF)
 			{
-				break;
-			}
-			case u_mpv_sg_15C:
-			case u_mpv_deg_API_15C:
-			case u_mpv_kg_cm_15C:
-			{/* convert r to 15C */
-				r = API_PT_ST(r, 0, 0);
-				break;
-			}
-			case u_mpv_sg_60F:
-			case u_mpv_deg_API_60F:
-			case u_mpv_kg_cm_60F:
-			{/* convert r to 60F */
-				r = API_PT_ST(r, 1, 0);
-				break;
-			}
-			default:
-			{
-				found = FALSE;
-				break;
+				case u_mpv_kg_cm:
+					r = kgm3;
+					break;
+				case u_mpv_deg_API:
+					r = (141.5*999.012)/kgm3 - 131.5;
+					break;
+				case u_mpv_lbs_cf:
+					r = kgm3/16.0185;
+					break;
+				case u_mpv_sg:
+					r = kgm3/998.23;
+					break;
+				case u_mpv_kg_cm_15C:
+					r = kgm3_15;
+					break;
+				case u_mpv_deg_API_60F:
+					r = (141.5*999.012)/kgm3_60 - 131.5;
+					break;
+				case u_mpv_lbs_cf_60F:
+					r = kgm3_60/16.0185;
+					break;
+				case u_mpv_sg_15C:
+					r = kgm3_15/998.23;
+					break;
+				default:
+				{
+					found = FALSE;
+					break;
+				}
 			}
 		}
 
-		switch (to_unit&0xFF)
-		{/* convert to API or sg */
-			case u_mpv_sg_15C:
-			case u_mpv_sg_60F:
-			case u_mpv_sg:
-			{
-				r /= 1000.0;
-				break;
-			}
-			case u_mpv_deg_API_15C:
-			case u_mpv_deg_API_60F:
-			case u_mpv_deg_API:
-			{
-				r = kgm3_to_API(r);
-				break;
-			}
+		if (!found)
+		{
+			Get_Unit_Coeff((VAR*)0, to_unit&0xFF, class, &m, &b);
+			if (scale_only) b = 0;
+			r = (r*m)+b;
 		}
 	}
 
-	if (!found)
-	{
-		Get_Unit_Coeff((VAR*)0, to_unit&0xFF, class, &m, &b);
-
-		if (scale_only)
-			b = 0;
-
-		r = (r*m)+b;
-	}
-}
 	return r;
 }
 

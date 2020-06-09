@@ -763,24 +763,20 @@ _EXTERN char RELAY_OFF[]						= "             Off";
 _EXTERN char MODBUS[]							= "          Modbus";  
 _EXTERN char ANALOG_INPUT[]						= "    Analog Input";  
 
-/// DENSITY UNITS ///////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/// DENSITY UNIT STRING  ///////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 _EXTERN char KG_M3[]						    = "Kg/m3";  
 _EXTERN char KG_M3_15C[]					    = "Kg/m3@15C";  
-_EXTERN char KG_M3_60F[]					    = "Kg/m3@60F";  
 _EXTERN char API[]						   	    = "API";  
-_EXTERN char API_15C[]						    = "API@15C";  
 _EXTERN char API_60F[]						    = "API@60F";  
 _EXTERN char SG[]						        = "sg";  
 _EXTERN char SG_15C[]						    = "sg@15C";  
-_EXTERN char SG_60F[]						    = "sg@60F";  
-_EXTERN char G_CC[]						   	    = "g/cc";  
-_EXTERN char G_ML[]						        = "g/mL";  
-_EXTERN char G_L[]						        = "g/L";  
-_EXTERN char KG_L[]						        = "Kg/L";  
-_EXTERN char LBS_GAL[]						    = "lbs/gal";  
 _EXTERN char LBS_FT3[]						    = "lbs/ft3";  
-_EXTERN char LBS_IN3[]						    = "lbs/in3";  
-_EXTERN char STON_YD3[]						    = "sTon/yd3";  
+_EXTERN char LBS_FT3_60F[]						= "lbs/ft3@60F";  
+/////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////

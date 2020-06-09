@@ -148,6 +148,9 @@ void reloadFactoryDefault(void)
 	char model_code[MAX_LCD_WIDTH];
 	int* model_code_int;
 
+	/// api table 'A' by default
+	FC.API_TABLE = 'A'<<8;
+
     //isUpdateFirmware = FALSE;
 
 	sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
@@ -826,7 +829,7 @@ void initializeAllRegisters(void)
 
     VAR_Initialize(&FCT_DENSITY_CAL_VAL, c_mass_per_volume, u_mpv_deg_API_60F, 100.0, 10000.0, var_no_bound|var_no_alarm);
     VAR_Update(&FCT_DENSITY_CAL_VAL, 0.0, CALC_UNIT);
-    //REG_DENSITY_CAL_VAL.swi = Swi_Set_REG_DENSITY_CAL_Unit;
+    REG_DENSITY_CAL_VAL.swi = Swi_Set_REG_DENSITY_CAL_Unit;
 
 	//////////////////////////////////////
    	/// Relay Setpoint - 0.0

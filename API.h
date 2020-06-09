@@ -40,6 +40,8 @@ _EXTERN double API_60F_PT(const double r, int* k_set);
 _EXTERN double API_PT_ST(const double r, const BOOL F60, const BOOL RET_VCF);
 _EXTERN double API_to_kgm3(const double r);
 _EXTERN double kgm3_to_API(const double r);
+_EXTERN double API2KGM3(const double KGM3_15, const double PROC_T);
+_EXTERN double API2KGM3_15(const double KGM3, const double PROC_T);
 _EXTERN void API_STATUS(const BOOL type);
 
 #define API_error_num	-99.0

@@ -218,6 +218,7 @@
 #define u_mpv_kg_cm							92
 #define u_mpv_lbs_gal						93
 #define u_mpv_lbs_cf						94
+#define u_mpv_lbs_cf_60F					941
 #define u_mpv_g_mL							95
 #define u_mpv_kg_L							96
 #define u_mpv_g_L							97
@@ -779,6 +780,7 @@ const Uint16 MASTER_UNITS_STR[]={
 								u_mpv_kg_L,				'k','g','/','L',' ',' ',' ',0,
 								u_mpv_lbs_gal,			'l','b','s','/','g','a','l',0,
 								u_mpv_lbs_cf,			'l','b','s','/','c','f',' ',0,
+								u_mpv_lbs_cf_60F,		'l','b','s','/','c','f','6',0,
 								u_mpv_lbs_ci,			'l','b','s','/','i','n','3',0,
 								u_mpv_short_tons_cyard,	't','s','/','y','d','3',' ',0,
 
