@@ -725,20 +725,14 @@ mnuHomescreenDensity(const Uint16 input)
         else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
         else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
 
-	    if (isUpdateDisplay)
-    	{    
-        	for (index = 0; index<sizeof(densityIndex)/sizeof(densityIndex[0]); index++)
-        	{
-            	if (REG_OIL_DENSITY.unit == densityUnit[index]) break;
-        	}
-
-			sprintf(lcdLine1,"%8.1f%s",REG_OIL_DENSITY.val,densityIndex[index]);
-			(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
-		}
+       	for (index = 0; index<sizeof(densityIndex)/sizeof(densityIndex[0]); index++)
+       	{
+           	if (REG_OIL_DENSITY.unit == densityUnit[index]) break;
+       	}
     }
 
 	sprintf(lcdLine1,"%8.1f%s",REG_OIL_DENSITY.val,densityIndex[index]);
-	displayLcd(lcdLine1, LCD1);
+	(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
 
 	 switch (input)  {
         case BTN_VALUE  : return onNextPressed(MNU_HOMESCREEN_DGN);
