@@ -93,8 +93,6 @@
 
 #define ERROR_VAL				(0x1)
 
-//#define MAXBUFF					(4096)
-
 #define I2C_INIT_NUM_CHARS      (6)
 
 #define I2C_START_SET		CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_STT,SET)

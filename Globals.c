@@ -320,7 +320,7 @@ void reloadFactoryDefault(void)
 	//////////////////////////////////////
 
 	VAR_Initialize(&REG_PROC_AVGING, c_not_classified, u_mfgr_specific_none, 1.0, 1.0, var_no_alarm|var_round);
-	VAR_Setup_Unit(&REG_PROC_AVGING, u_mfgr_specific_none, MAXBUFF, 1.0, MAXBUFF, 1.0);
+	VAR_Setup_Unit(&REG_PROC_AVGING, u_mfgr_specific_none, MAXBUF, 1.0, MAXBUF, 1.0);
 	VAR_Update(&REG_PROC_AVGING, FCT_PROC_AVGING.calc_val, CALC_UNIT);
 
 	//////////////////////////////////////
@@ -713,8 +713,8 @@ void initializeAllRegisters(void)
 	//////////////////////////////////////
 
 	VAR_Initialize(&FCT_PROC_AVGING, c_not_classified, u_mfgr_specific_none, 1.0, 1.0, var_no_alarm|var_round);
-	VAR_Setup_Unit(&FCT_PROC_AVGING, u_mfgr_specific_none, MAXBUFF, 1.0, MAXBUFF, 1.0);
-	VAR_Update(&FCT_PROC_AVGING, 5.0, CALC_UNIT);
+	VAR_Setup_Unit(&FCT_PROC_AVGING, u_mfgr_specific_none, MAXBUF, 1.0, MAXBUF, 1.0);
+	VAR_Update(&FCT_PROC_AVGING, 1.0, CALC_UNIT);
 
     //////////////////////////////////////
     /// Oil Index (37) - 0.0
@@ -837,7 +837,6 @@ void initializeAllRegisters(void)
 
     VAR_Initialize(&FCT_DENSITY_CAL_VAL, c_mass_per_volume, u_mpv_deg_API_60F, 100.0, 10000.0, var_no_bound|var_no_alarm);
     VAR_Update(&FCT_DENSITY_CAL_VAL, 0.0, CALC_UNIT);
-    //REG_DENSITY_CAL_VAL.swi = Swi_Set_REG_DENSITY_CAL_Unit;
 
 	//////////////////////////////////////
    	/// Relay Setpoint - 0.0
@@ -991,7 +990,7 @@ void initializeAllRegisters(void)
 	//////////////////////////////////////
 
 	VAR_Initialize(&REG_PROC_AVGING, c_not_classified, u_mfgr_specific_none, 1.0, 1.0, var_no_alarm|var_round);
-	VAR_Setup_Unit(&REG_PROC_AVGING, u_mfgr_specific_none, MAXBUFF, 1.0, MAXBUFF, 1.0);
+	VAR_Setup_Unit(&REG_PROC_AVGING, u_mfgr_specific_none, MAXBUF, 1.0, MAXBUF, 1.0);
 	VAR_Update(&REG_PROC_AVGING, FCT_PROC_AVGING.calc_val, CALC_UNIT);
 
 	//////////////////////////////////////

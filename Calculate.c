@@ -490,7 +490,7 @@ void Capture_Sample(void)
         else
             sum += DATALOG.F_BUFFER.buff[DATALOG.F_BUFFER.head-i];
     }
-    REG_FREQ_AVG = sum/(double)num_samples;   //update average
+    VAR_Update(&REG_FREQ_AVG, sum/(double)num_samples, CALC_UNIT);   //update average
 
     //Average Reflected Power//
     sum = 0;

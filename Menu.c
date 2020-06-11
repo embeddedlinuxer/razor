@@ -90,6 +90,7 @@ static const char * densityMode[4] 	 = {DISABLE, ANALOG_INPUT, MODBUS, MANUAL};
 static const char * densityIndex[8]  = {KG_M3, KG_M3_15C, API, API_60F, LBS_FT3, LBS_FT3_60F, SG, SG_15C}; 
 static const Uint8 densityUnit[8] 	 = {u_mpv_kg_cm, u_mpv_kg_cm_15C, u_mpv_deg_API, u_mpv_deg_API_60F, u_mpv_lbs_cf, u_mpv_lbs_cf_60F, u_mpv_sg, u_mpv_sg_15C};
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 /////
@@ -1160,7 +1161,7 @@ fxnConfig_Analyzer_ProcsAvg(const Uint16 input)
     switch (input)  {
         case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_ANALYZER_PROCSAVG, FALSE, 0);
         case BTN_STEP   : return onFxnStepPressed(FXN_CFG_ANALYZER_PROCSAVG,3); // 60'\0'
-        case BTN_ENTER  : return onFxnEnterPressed(FXN_CFG_ANALYZER_PROCSAVG, 60.0, 1.0, &REG_PROC_AVGING, NULL_DBL, NULL_INT);
+        case BTN_ENTER  : return onFxnEnterPressed(FXN_CFG_ANALYZER_PROCSAVG, MAXBUF, 1.0, &REG_PROC_AVGING, NULL_DBL, NULL_INT);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_ANALYZER_PROCSAVG);
         default         : return FXN_CFG_ANALYZER_PROCSAVG;
 	}
