@@ -34,7 +34,6 @@
 
 #define USB_INSTANCE    0
 #define MAX_DATA_SIZE   4096 
-//#define MAX_DATA_SIZE   1024
 #define MIN_DISK_SPACE  10240 // 10MB
 
 unsigned int g_ulMSCInstance = 0;

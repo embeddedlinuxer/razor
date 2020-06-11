@@ -34,12 +34,6 @@
 *    V1.0.3 : Jan-27-2020 : Daniel Koh : SPECIAL VERSION FOR OLD RTC. NO DS1340 AT ALL 
 *    V1.0.4 : Jan-27-2020 : Daniel Koh : Bring back the latest version for runnig DS1340 
 *    V1.0.7 : May-01-2020 : Daniel Koh : REG_WATERCUT_AVG, mnuStepPressed with multiple times of displayLCD 
-*    V1.0.8 : May-15-2020 : Daniel Koh : Removed duplicated Timer_start from Menu.c -- this fixed lots of different issues in razor
-*                                        Added watercut averaging to Poll() 
-*                                        Removed osal_delay from usb logging
-*                                        Changed REG_WATERCUT_AVG from VAR to DBL
-*                                        Changed USB logging MAX_DATA_SIZE to 4096
-*    V1.0.9 : Jun-02-2020 : Daniel Koh : Rewrite 'entire' Capture, Sampling, and Dens_Corr logics 
 *------------------------------------------------------------------------*/
 
 #ifndef GLOBALS_H_
@@ -399,9 +393,9 @@ typedef struct
 #pragma DATA_SECTION(REG_FREQ,"CFG")
 	_EXTERN far VAR REG_FREQ;
 
-	_EXTERN far double REG_FREQ_AVG;
+	_EXTERN far VAR REG_FREQ_AVG;
 
-	_EXTERN far double REG_WATERCUT_AVG;
+	_EXTERN far VAR REG_WATERCUT_AVG;
 
 	_EXTERN far double REG_WATERCUT_RAW;
 
@@ -1081,11 +1075,10 @@ _EXTERN far double FCT_RESERVED_167;
 
 	_EXTERN Uint8 PASSWORD_DELAYED;
 
-
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
 ///  
-/// flow computer struct -- NOT USED IN RAZOR EXCEPT FOR DENSITY CONVERSION
+/// flow computer struct
 ///  
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////

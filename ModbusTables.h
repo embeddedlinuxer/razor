@@ -53,7 +53,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
 	17	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_WATER_ADJUST,		// Water Adjust
 	19	, 	REGTYPE_VAR	,	REGPERM_READ_O	,	(Uint32)&REG_FREQ,				// oscillator frequency
 	21	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_FREQ_AVG,			// average frequency
-	23	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_WATERCUT_AVG,		// average watercut
+	23	, 	REGTYPE_VAR	,	REGPERM_READ_O	,	(Uint32)&REG_WATERCUT_AVG,		// average watercut
 	25	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_WATERCUT_RAW,		// average RAW watercut
 	27	, 	REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&RESERVED_27,		    // RESERVED 
 	29	, 	REGTYPE_VAR	,	REGPERM_READ_O	,	(Uint32)&REG_TEMP_AVG,			// average temperature (NOT YET IMPLEMENTED)

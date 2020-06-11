@@ -28,8 +28,6 @@ void resetGlobalVars(void)
 {
     CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 
-	VAR_Update(&REG_OIL_DENSITY, 865.443, CALC_UNIT);
-
     isWriteRTC = FALSE;
     isLogging = FALSE;
 
@@ -38,8 +36,6 @@ void resetGlobalVars(void)
     DIAGNOSTICS_MASK                    = 0xFFFFFFFF;
 	REG_ACTIVE_ERROR                    = 0;
 	REG_WATERCUT_RAW                    = 0;
-	REG_WATERCUT_AVG                    = 0;
-	REG_FREQ_AVG                        = 0;
 	STAT_SUCCESS 	                    = 0;
 	STAT_PKT 		                    = 0;
 	STAT_CMD 		                    = 0;
@@ -147,9 +143,6 @@ void reloadFactoryDefault(void)
 	Uint16 i,j;
 	char model_code[MAX_LCD_WIDTH];
 	int* model_code_int;
-
-	/// api table 'A' by default
-	FC.API_TABLE = 'A'<<8;
 
     //isUpdateFirmware = FALSE;
 
@@ -279,6 +272,22 @@ void reloadFactoryDefault(void)
 	VAR_Initialize(&REG_FREQ, c_frequency, u_mfgr_specific_MHz, 10.0, 1000.0, var_no_alarm);
 	VAR_Setup_Unit(&REG_FREQ, u_mfgr_specific_MHz, 1000.0, 0.0, 1001.0, -1.0);
 	VAR_Update(&REG_FREQ, 0.0, 0);
+
+	//////////////////////////////////////
+	/// Average Frequency - 0.0
+	//////////////////////////////////////
+
+	VAR_Initialize(&REG_FREQ_AVG, c_frequency, u_mfgr_specific_MHz, 10.0, 1000.0, var_no_alarm);
+	VAR_Setup_Unit(&REG_FREQ_AVG, u_mfgr_specific_MHz, 1000.0, 0.0, 1001.0, -1.0);
+	VAR_Update(&REG_FREQ_AVG, 0.0, 0);
+
+	//////////////////////////////////////
+   	/// Average Watercut - 0.0
+	//////////////////////////////////////
+
+	VAR_Initialize(&REG_WATERCUT_AVG, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
+	VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, -100.0, 105.0, -3.0);
+	VAR_Update(&REG_WATERCUT_AVG, 0.0, CALC_UNIT);
 
 	//////////////////////////////////////
 	/// Average Temperature - N/A
@@ -464,7 +473,6 @@ void reloadFactoryDefault(void)
 
 	VAR_Initialize(&REG_OIL_DENSITY, c_mass_per_volume, u_mpv_kg_cm, 10.0, 1000.0, var_no_bound|var_no_alarm);
 	VAR_Update(&REG_OIL_DENSITY, 865.443, CALC_UNIT);
-	REG_OIL_DENSITY.swi = Swi_Apply_Density_Adj;
 
 	//////////////////////////////////////
 	/// Analog In Lower Range Value - 0.0
@@ -656,7 +664,7 @@ void initializeAllRegisters(void)
     REG_AO_TRIMLO			= FCT_AO_TRIMLO;
 	REG_AO_TRIMHI 			= FCT_AO_TRIMHI;
 	REG_DENSITY_ADJ 		= FCT_DENSITY_ADJ;
-	REG_DENS_CORR 		= 0;
+	REG_DENS_CORR 		    = 0;
 	REG_AO_OUTPUT			= 0;
 	REG_OIL_DENSITY_MODBUS	= FCT_OIL_DENSITY_MODBUS;
 	REG_OIL_DENSITY_AI		= FCT_OIL_DENSITY_AI;
@@ -829,7 +837,7 @@ void initializeAllRegisters(void)
 
     VAR_Initialize(&FCT_DENSITY_CAL_VAL, c_mass_per_volume, u_mpv_deg_API_60F, 100.0, 10000.0, var_no_bound|var_no_alarm);
     VAR_Update(&FCT_DENSITY_CAL_VAL, 0.0, CALC_UNIT);
-    REG_DENSITY_CAL_VAL.swi = Swi_Set_REG_DENSITY_CAL_Unit;
+    //REG_DENSITY_CAL_VAL.swi = Swi_Set_REG_DENSITY_CAL_Unit;
 
 	//////////////////////////////////////
    	/// Relay Setpoint - 0.0
@@ -928,6 +936,22 @@ void initializeAllRegisters(void)
 	VAR_Initialize(&REG_FREQ, c_frequency, u_mfgr_specific_MHz, 10.0, 1000.0, var_no_alarm);
 	VAR_Setup_Unit(&REG_FREQ, u_mfgr_specific_MHz, 1000.0, 0.0, 1001.0, -1.0);
 	VAR_Update(&REG_FREQ, 0.0, 0);
+
+	//////////////////////////////////////
+	/// Average Frequency - 0.0
+	//////////////////////////////////////
+
+	VAR_Initialize(&REG_FREQ_AVG, c_frequency, u_mfgr_specific_MHz, 10.0, 1000.0, var_no_alarm);
+	VAR_Setup_Unit(&REG_FREQ_AVG, u_mfgr_specific_MHz, 1000.0, 0.0, 1001.0, -1.0);
+	VAR_Update(&REG_FREQ_AVG, 0.0, 0);
+
+	//////////////////////////////////////
+   	/// Average Watercut - 0.0
+	//////////////////////////////////////
+
+	VAR_Initialize(&REG_WATERCUT_AVG, c_analytical, u_ana_percent, 100.0, 1000.0, var_dampen|var_NaNproof);
+	VAR_Setup_Unit(&REG_WATERCUT_AVG, u_ana_percent, 100.0, -100.0, 105.0, -3.0);
+	VAR_Update(&REG_WATERCUT_AVG, 0.0, CALC_UNIT);
 
 	//////////////////////////////////////
 	/// Average Temperature - N/A
@@ -1120,7 +1144,6 @@ void initializeAllRegisters(void)
 
 	VAR_Initialize(&REG_OIL_DENSITY, c_mass_per_volume, u_mpv_kg_cm, 10.0, 1000.0, var_no_bound|var_no_alarm);
 	VAR_Update(&REG_OIL_DENSITY, 865.443, CALC_UNIT);
-	REG_OIL_DENSITY.swi = Swi_Apply_Density_Adj;
 
 	//////////////////////////////////////
 	/// Analog In Lower Range Value - 0.0
