@@ -176,6 +176,8 @@ const Uint32 MB_TBL_FLOAT[][4] = {
     777 ,   REGTYPE_VAR ,   REGPERM_FCT ,   (Uint32)&FCT_OIL_T0,            // T0 for threshold
     779 ,   REGTYPE_VAR ,   REGPERM_FCT ,   (Uint32)&FCT_OIL_T1,            // T1 for threshold
     781 ,   REGTYPE_VAR ,   REGPERM_FCT ,   (Uint32)&PDI_TEMP_ADJUST,       // PDI factory temp adjust - no FCT_ exists
+    783 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&PDI_FREQ_F0,           // PDI factory freq adjust - no FCT_ exists
+    785 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&PDI_FREQ_F1,           // PDI factory freq adjust - no FCT_ exists
 
 	0	, 	0			, 	0					, 	0
 };
@@ -328,8 +330,8 @@ const Uint32 MB_TBL_COIL[][4] = {
 	24	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_AI_TRIM_MODE,			    // Enable trimming mode 
 	25	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_LOCK_SOFT_FACTORY_RESET,	// Factory Reset Trigger 
 	26	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_LOCK_HARD_FACTORY_RESET,	// DELETE *EVERYTHING* AND REINITIALIZE 
-	999	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UNLOCKED_FACTORY_DEFAULT,	// Unlock factory default to write
-	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPDATE_FACTORY_DEFAULT,	    // Update factory default values
+	999	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UNLOCKED_FACTORY_DEFAULT,	// Unlock factory default registers and coils 
+	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPDATE_FACTORY_DEFAULT,	// Update factory default registers and coils
 	0	, 	0			, 	0					,   0
 };
 

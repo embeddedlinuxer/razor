@@ -676,6 +676,9 @@ void initializeAllRegisters(void)
 	REG_DENS_ADJ 			= FCT_DENS_ADJ;
 	REG_OIL_PT 	            = 0;
 
+    PDI_FREQ_F0             = 0;
+    PDI_FREQ_F1             = 0;
+
     //////////////////////////////////////
     /// Salinity (9) - 0.02
     //////////////////////////////////////

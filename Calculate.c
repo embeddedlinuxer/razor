@@ -163,8 +163,14 @@ Uint8 Read_Freq(void)
 	/// oscillator board uses 80x divider
 	freq *= 80;	
 
+	/// apply PDI_FREQ_F0 / PDI_FREQ_F1
+    freq += PDI_FREQ_F1*REG_TEMPERATURE.calc_val + PDI_FREQ_F0;
+
+    /// apply REG_OIL_INDEX
+    freq += REG_OIL_INDEX.calc_val;
+
 	/// update frequency
-	VAR_Update(&REG_FREQ, freq + REG_OIL_INDEX.calc_val, CALC_UNIT); 	
+	VAR_Update(&REG_FREQ, freq, CALC_UNIT); 	
 
 	Swi_restore(key);
 
