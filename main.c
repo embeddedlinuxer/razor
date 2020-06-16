@@ -81,9 +81,9 @@ static inline void Init_All(void)
 	Restore_Vars_From_NAND();
 
     // INITIAL FLASHING OR FACTORY RESET LEVEL
-	if (!COIL_LOCK_SOFT_FACTORY_RESET.val)
+	if (!COIL_LOCKED_SOFT_FACTORY_RESET.val)
 	{	
-        if (!COIL_LOCK_HARD_FACTORY_RESET.val) 
+        if (!COIL_LOCKED_HARD_FACTORY_RESET.val) 
         {
             initializeAllRegisters();
         }

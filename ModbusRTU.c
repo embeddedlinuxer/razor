@@ -41,6 +41,8 @@ extern void delayInt(Uint32 count);
 #define REMAINDER      10000 // used to be 2000
 #define MIN_MB_INT     201
 #define MAX_MB_INT     300
+#define MIN_FCT_INT    401 
+#define MAX_FCT_INT    500
 #define MIN_MB_LONGINT 301
 #define MAX_MB_LONGINT 400
 
@@ -889,8 +891,8 @@ Modbus_RX(void)
 			start_reg |= uart_pkt_ptr[3 + la_offset];		//LSB
 			start_reg++; //convert from 0-based to 1-based
 
-			//if ( (start_reg >= 40000) && (start_reg < 50000) ) //integer table
-			if ( (start_reg >= MIN_MB_INT) && (start_reg < MAX_MB_INT) ) //integer table
+			if ( ((start_reg >= MIN_MB_INT) && (start_reg < MAX_MB_INT))
+                || ((start_reg >= MIN_FCT_INT) && (start_reg < MAX_FCT_INT)) ) //integer table
 			{
 				using_int_offset = TRUE;
 				using_longint_offset = FALSE;
@@ -1116,8 +1118,8 @@ Modbus_RX(void)
 			start_reg |= uart_pkt_ptr[3 + la_offset];		//LSB
 			start_reg++; //convert from 0-based to 1-based
 
-			//if ( (start_reg >= 40000) && (start_reg < 50000) ) //integer table
-			if ( (start_reg >= MIN_MB_INT) && (start_reg < MAX_MB_INT) ) //integer table
+			if ( (start_reg >= MIN_MB_INT) && (start_reg < MAX_MB_INT) ||
+                (start_reg >= MIN_FCT_INT) && (start_reg < MAX_FCT_INT) ) //integer table
 			{
 				using_int_offset = TRUE;
 				using_longint_offset = FALSE;
@@ -1681,7 +1683,7 @@ MB_SendPacket_Coil(void)
 {
 	Uint32 	key,CRC, msg_num_bytes, wrap_count;
 	Uint16 	data_byte, modulo_bits;
-	Uint16 i, j, offset_cnt;
+	Uint16  i, j, offset_cnt;
 	Int8	rtn;
 	Uint8	coil_val, data_type, prot; //protection status
 	COIL* 	mbtable_ptr = NULL;
@@ -1736,11 +1738,11 @@ MB_SendPacket_Coil(void)
 			return;
 		}
 
-		//send the coil address -- note: need to convert back to zero-based addressing
+   		/// send the coil address -- note: need to convert back to zero-based addressing
 		BfrPut(&UART_TXBUF,(mb_pkt_ptr->start_reg-1) >> 8);		//MSB
 		BfrPut(&UART_TXBUF,(mb_pkt_ptr->start_reg-1) & 0xFF);	//LSB
 
-		///// WRITE TO MODBUS TABLE /////
+		/// WRITE TO MODBUS TABLE
 		if (mb_pkt_ptr->data[0] == TRUE)  	// if we are setting the coil
 		{
 			if (mbtable_ptr->val == FALSE) // if the coil is not already set

@@ -32,7 +32,10 @@
 /// 201 - 300   : INTEGER
 /// 301 - 60K   : LONG INTEGER
 /// 60K         : EXTENDED ARRAY TYPE
-///
+/////////////////////////////////////////////////////////////////////////////////////
+/// FACTORY REGISTERS & COILS
+/// 701 - 800   : FLOAT or DOUBLE 
+/// 401 - 500   : INTEGER
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -328,10 +331,10 @@ const Uint32 MB_TBL_COIL[][4] = {
 	22	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_UNLOCKED,				    // Password locker 
 	23	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_AO_TRIM_MODE,			    // Enable trimming mode 
 	24	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_AI_TRIM_MODE,			    // Enable trimming mode 
-	25	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_LOCK_SOFT_FACTORY_RESET,	// Factory Reset Trigger 
-	26	, 	REGTYPE_COIL	,	REGPERM_READ_O	,	(Uint32)&COIL_LOCK_HARD_FACTORY_RESET,	// DELETE *EVERYTHING* AND REINITIALIZE 
-	999	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UNLOCKED_FACTORY_DEFAULT,	// Unlock factory default registers and coils 
-	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPDATE_FACTORY_DEFAULT,	// Update factory default registers and coils
+	25, 	REGTYPE_COIL	,	REGPERM_PASSWD  ,	(Uint32)&COIL_LOCKED_SOFT_FACTORY_RESET,// Factory Reset Trigger 
+	26, 	REGTYPE_COIL	,	REGPERM_PASSWD  ,	(Uint32)&COIL_LOCKED_HARD_FACTORY_RESET,// Modbus Reset Trigger 
+	999 , 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UNLOCKED_FACTORY_DEFAULT,	// Unlock factory default Modbus 
+	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPDATE_FACTORY_DEFAULT,	// Chage factory default Modbus values 
 	0	, 	0			, 	0					,   0
 };
 

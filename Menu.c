@@ -183,7 +183,7 @@ Process_Menu(void)
 	while (1)
 	{
         if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
-		if (!COIL_LOCK_SOFT_FACTORY_RESET.val && !COIL_LOCK_HARD_FACTORY_RESET.val) 
+		if (!COIL_LOCKED_SOFT_FACTORY_RESET.val && !COIL_LOCKED_HARD_FACTORY_RESET.val) 
 		{
 			Swi_post(Swi_writeNand);
             unloadUsbDriver();
@@ -3653,8 +3653,8 @@ fxnSecurityInfo_FactReset(const Uint16 input)
 	{
 		case BTN_STEP 	:
 			if (!isEntered) return FXN_SECURITYINFO_FACTRESET;
-            COIL_LOCK_SOFT_FACTORY_RESET.val = FALSE;   // Unlock SOFT_RESET in reloadFactoryDefault()
-            COIL_LOCK_HARD_FACTORY_RESET.val = TRUE;    // lock HARD_RESET in reloadFactoryDefault()
+            COIL_LOCKED_SOFT_FACTORY_RESET.val = FALSE;   // Unlock SOFT_RESET in reloadFactoryDefault()
+            COIL_LOCKED_HARD_FACTORY_RESET.val = TRUE;    // lock HARD_RESET in reloadFactoryDefault()
             Swi_post(Swi_writeNand);
             unloadUsbDriver();
 			_c_int00();			
