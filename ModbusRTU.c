@@ -1698,11 +1698,11 @@ MB_SendPacket_Coil(void)
 
 	mb_pkt_ptr = &MB_PKT_LIST.BFR[MB_PKT_LIST.head];
 
-	key = Hwi_disableInterrupt(5); ////
+	key = Hwi_disableInterrupt(5);
 	old_tail	= UART_TXBUF.tail;
 	old_n		= UART_TXBUF.n;
 
-	///create the modbus frame
+	/// create the modbus frame
 	if (mb_pkt_ptr->long_address)
 	{
 		BfrPut(&UART_TXBUF,(Uint8)0xFA);
@@ -1719,10 +1719,69 @@ MB_SendPacket_Coil(void)
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->fxn);
 
     /////////////////////////////////////////////////
+	/// READ COIL
+	/////////////////////////////////////////////////
+
+    if ((mb_pkt_ptr->fxn == 1) || (mb_pkt_ptr->fxn == 2)) //read coil
+	{//read coil
+		BfrPut(&UART_TXBUF,mb_pkt_ptr->byte_cnt);
+
+		// we pack all coils (i.e. bits) into a minimum number of bytes
+		// modulo_bits is the number of bits left over that don't completely fill a byte (bits < 8)
+		modulo_bits	= mb_pkt_ptr->num_regs % 8;
+		offset_cnt = 0;
+
+		//generate data byte(s)
+		for(j=1;j<=mb_pkt_ptr->byte_cnt;j++)
+		{
+			data_byte = 0;
+			for(i=1;i<=8;i++)
+			{
+				coil_val = 0;
+				rtn = MB_Tbl_Search_CoilRegs(mb_pkt_ptr->start_reg + offset_cnt,&mbtable_ptr,&data_type,&prot);
+				offset_cnt++;
+
+                /// coil not found && we haven't overshot the number of coils
+				if ( (rtn == -1) || (mbtable_ptr == (COIL*)NULL) && (offset_cnt <= mb_pkt_ptr->num_regs) || (data_type != REGTYPE_COIL) )
+				{ 
+					MB_SendException(mb_pkt_ptr->slave, mb_pkt_ptr->fxn, MB_EXCEP_SLAVE_FAIL);
+					Discard_MB_Pkt_Head(&MB_PKT_LIST); // discard the packet at the head of the list
+					Hwi_restoreInterrupt(5,key);
+					return;
+				}
+
+                /// checking access permission
+                if (isNoPermission(prot,MB_READ_QRY))
+    	        {
+			        UART_TXBUF.n 	= old_n; // remove everything we just added to the TX buffer
+			        UART_TXBUF.tail	= old_tail;
+    		        MB_SendException(mb_pkt_ptr->slave, mb_pkt_ptr->fxn, MB_EXCEP_BAD_VALUE);
+			        Discard_MB_Pkt_Head(&MB_PKT_LIST); // discard the packet at the head of the list
+			        Hwi_restoreInterrupt(5,key);
+			        return;
+		        }
+
+				//special case: last byte only partially filled with coils
+				if ( (j==mb_pkt_ptr->byte_cnt) && (i > modulo_bits) ) break;
+				else
+				{ //full byte worth of coils
+					coil_val = mbtable_ptr->val & 0x1; 	//get coil value
+					coil_val = coil_val << (i-1);		//shift left as needed
+					data_byte |= coil_val;			// OR with data_byte
+				}
+
+			}
+			BfrPut(&UART_TXBUF,data_byte);	// send data_byte
+		}
+
+		msg_num_bytes = 3 + mb_pkt_ptr->byte_cnt; // address byte + fxn byte + bytecnt byte + data bytes
+	}
+
+    /////////////////////////////////////////////////
 	/// WRITE COIL
 	/////////////////////////////////////////////////
 
-	if (mb_pkt_ptr->fxn == 5) //write coil
+    else if (mb_pkt_ptr->fxn == 5) //write coil
 	{//write coil
 		rtn = MB_Tbl_Search_CoilRegs(mb_pkt_ptr->start_reg,&mbtable_ptr,&data_type,&prot);
 
@@ -1737,6 +1796,17 @@ MB_SendPacket_Coil(void)
 			Hwi_restoreInterrupt(5,key);
 			return;
 		}
+
+       /// checking access permission
+       if (isNoPermission(prot,MB_WRITE_QRY))
+       {
+            UART_TXBUF.n 	= old_n; // remove everything we just added to the TX buffer
+	        UART_TXBUF.tail	= old_tail;
+   	        MB_SendException(mb_pkt_ptr->slave, mb_pkt_ptr->fxn, MB_EXCEP_BAD_VALUE);
+	        Discard_MB_Pkt_Head(&MB_PKT_LIST); // discard the packet at the head of the list
+	        Hwi_restoreInterrupt(5,key);
+	        return;
+        }
 
    		/// send the coil address -- note: need to convert back to zero-based addressing
 		BfrPut(&UART_TXBUF,(mb_pkt_ptr->start_reg-1) >> 8);		//MSB
@@ -1784,53 +1854,6 @@ MB_SendPacket_Coil(void)
 		if (mbtable_ptr->swi != (Swi_Handle)NULL) Swi_post(mbtable_ptr->swi);// post any COIL-related SWI
 
 		msg_num_bytes = 6; // slave byte + fxn byte + 2 address bytes + 2 data bytes
-	}
-
-    ////////////////////////////////////////////////////
-    ///  READ COIL
-    ////////////////////////////////////////////////////
-
-	else if ((mb_pkt_ptr->fxn == 1) || (mb_pkt_ptr->fxn == 2)) //read coil
-	{//read coil
-		BfrPut(&UART_TXBUF,mb_pkt_ptr->byte_cnt);
-
-		// we pack all coils (i.e. bits) into a minimum number of bytes
-		// modulo_bits is the number of bits left over that don't completely fill a byte (bits < 8)
-		modulo_bits	= mb_pkt_ptr->num_regs % 8;
-		offset_cnt = 0;
-
-		//generate data byte(s)
-		for(j=1;j<=mb_pkt_ptr->byte_cnt;j++)
-		{
-			data_byte = 0;
-			for(i=1;i<=8;i++)
-			{
-				coil_val = 0;
-				rtn = MB_Tbl_Search_CoilRegs(mb_pkt_ptr->start_reg + offset_cnt,&mbtable_ptr,&data_type,&prot);
-				offset_cnt++;
-
-				if ( (rtn == -1) || (mbtable_ptr == (COIL*)NULL) && (offset_cnt <= mb_pkt_ptr->num_regs) || (data_type != REGTYPE_COIL) )
-				{// coil not found && we haven't overshot the number of coils
-					MB_SendException(mb_pkt_ptr->slave, mb_pkt_ptr->fxn, MB_EXCEP_SLAVE_FAIL);
-					Discard_MB_Pkt_Head(&MB_PKT_LIST); //discard the packet at the head of the list
-					Hwi_restoreInterrupt(5,key);
-					return;
-				}
-
-				//special case: last byte only partially filled with coils
-				if ( (j==mb_pkt_ptr->byte_cnt) && (i > modulo_bits) ) break;
-				else
-				{ //full byte worth of coils
-					coil_val = mbtable_ptr->val & 0x1; 	//get coil value
-					coil_val = coil_val << (i-1);		//shift left as needed
-					data_byte |= coil_val;			// OR with data_byte
-				}
-
-			}
-			BfrPut(&UART_TXBUF,data_byte);	// send data_byte
-		}
-
-		msg_num_bytes = 3 + mb_pkt_ptr->byte_cnt; // address byte + fxn byte + bytecnt byte + data bytes
 	}
 	else
 	{
