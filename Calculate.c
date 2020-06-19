@@ -199,7 +199,7 @@ Uint8 Read_Freq(void)
 
 Uint8 Read_User_Temperature(void)
 {
-	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJ, CALC_UNIT);
+	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJUST.calc_val, CALC_UNIT);
 }
 
 
@@ -296,7 +296,7 @@ Uint8 Read_WC(float *WC)
    			WC_RAW_AVG /= REG_PROC_AVGING.calc_val;
 
 			/// add REG_OIL_ADJUST
-            *WC = WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
+            *WC = (float)WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
 		}
 		else
 		{
@@ -308,7 +308,7 @@ Uint8 Read_WC(float *WC)
    			WC_RAW_AVG /= REG_PROC_AVGING.calc_val;
 
 			/// add REG_OIL_ADJUST
-            *WC = WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
+            *WC = (float)WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
 
 			/*
 			/// add oil adjust

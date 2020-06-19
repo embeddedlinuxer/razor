@@ -30,7 +30,6 @@ void resetGlobalVars(void)
 
     isWriteRTC = FALSE;
     isLogging = FALSE;
-    isPowerOnReset = FALSE;
 
     THROW_ERROR 	                    = 0;
     DIAGNOSTICS 	                    = 0;
@@ -62,7 +61,6 @@ void storeUserDataToFactoryDefault(void)
     COIL_UNLOCKED_FACTORY_DEFAULT.val = TRUE;
 
     isWriteRTC = FALSE;
-    isPowerOnReset = FALSE;
 
     // REGTYPE_INT
     FCT_AO_DAMPEN           = REG_AO_DAMPEN;
@@ -141,7 +139,6 @@ void storeUserDataToFactoryDefault(void)
 
 void reloadFactoryDefault(void)
 {
-    isPowerOnReset =  FALSE;
     isWriteRTC = FALSE;
 	Uint16 i,j;
 	char model_code[MAX_LCD_WIDTH];
@@ -679,7 +676,6 @@ void initializeAllRegisters(void)
 	REG_DENS_ADJ 			= FCT_DENS_ADJ;
 	REG_OIL_PT 	            = 0;
 
-    PDI_TEMP_ADJ            = 0;
     PDI_FREQ_F0             = 0;
     PDI_FREQ_F1             = 0;
 
@@ -976,6 +972,13 @@ void initializeAllRegisters(void)
 	//VAR_Setup_Unit(&REG_TEMP_ADJUST, REG_TEMPERATURE.calc_unit, 350.0, -50.0, 310, 0);
 	//VAR_Update(&REG_TEMP_ADJUST, 0.0, CALC_UNIT);
 	VAR_Update(&REG_TEMP_ADJUST, FCT_TEMP_ADJUST.calc_val, CALC_UNIT);
+
+	//////////////////////////////////////
+	/// PDI SPECIAL - Temperature Adjustment - 0.0
+	//////////////////////////////////////
+
+	VAR_Initialize(&PDI_TEMP_ADJUST, REG_TEMPERATURE.class, REG_TEMPERATURE.calc_unit, 100.0, 100.0, var_no_bound|var_no_alarm);
+	VAR_Update(&PDI_TEMP_ADJUST, 0.0, CALC_UNIT);
 
 	//////////////////////////////////////
 	/// User Temperature - 0.0
