@@ -30,6 +30,7 @@ void resetGlobalVars(void)
 
     isWriteRTC = FALSE;
     isLogging = FALSE;
+    isPowerOnReset = FALSE;
 
     THROW_ERROR 	                    = 0;
     DIAGNOSTICS 	                    = 0;
@@ -61,6 +62,7 @@ void storeUserDataToFactoryDefault(void)
     COIL_UNLOCKED_FACTORY_DEFAULT.val = TRUE;
 
     isWriteRTC = FALSE;
+    isPowerOnReset = FALSE;
 
     // REGTYPE_INT
     FCT_AO_DAMPEN           = REG_AO_DAMPEN;
@@ -139,6 +141,7 @@ void storeUserDataToFactoryDefault(void)
 
 void reloadFactoryDefault(void)
 {
+    isPowerOnReset =  FALSE;
     isWriteRTC = FALSE;
 	Uint16 i,j;
 	char model_code[MAX_LCD_WIDTH];

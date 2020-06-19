@@ -146,6 +146,7 @@ _EXTERN Uint32 delayTimer;
 _EXTERN BOOL isUpdateDisplay;
 _EXTERN BOOL isWriteRTC;
 _EXTERN BOOL isLogging;
+_EXTERN BOOL isPowerOnReset;
 //_EXTERN BOOL isUpdateFirmware;
 
 //////////////////////////////////////////////////////////

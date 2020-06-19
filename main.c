@@ -35,7 +35,7 @@
 #define NANDWIDTH_16
 #define C6748_LCDK
 
-extern void setupwatchdog(void);
+extern void setupWatchDog(void);
 
 extern void delayTimerSetup(void);
 extern void Init_Data_Buffer(void);
@@ -65,12 +65,12 @@ int main (void)
     /// INITIALIZE C6748 SPECIFcd IC BOARD CLOCKS
     ///
     Init_BoardClocks();
-
+ 
     ///
     /// SETUP WATCHDOG
     ///
     //setupWatchDog();
-
+   
     ///
     /// INITIALIZE POWER AND SLEEP CONTROLLER
     ///

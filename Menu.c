@@ -166,7 +166,9 @@ Process_Menu(void)
 	Uint8	needRelayClick;
 	static 	Uint16 (*stateFxn)(Uint16);
     Uint8   isValidInput = TRUE;
-    static uint32_t triggerValue = 0; // watchdog trigger
+
+    /// Disable POR after power cycle
+    isPowerOnReset = FALSE;
 
     /// Enable USB device
     loadUsbDriver();
@@ -185,7 +187,7 @@ Process_Menu(void)
 	while (1)
 	{
         /// Reactivate watchdog timer. Otherwise, futner reset will happen.
-        //TimerWatchdogReactivate(CSL_TMR_1_REGS);
+        //if (!isPowerOnReset) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 
         if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
 		if (!COIL_LOCKED_SOFT_FACTORY_RESET.val && !COIL_LOCKED_HARD_FACTORY_RESET.val) 
