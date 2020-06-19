@@ -34,6 +34,7 @@
 #include "nandwriter.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "watchdog.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -107,8 +108,8 @@ setupMenu (void)
 	MENU.debounceDone 	= TRUE;
 	MENU.isPressAndHold	= FALSE;
 	MENU.isHomeScreen 	= FALSE;			  // trigger to homescreen
-	MENU.col 		= NULL;
-	MENU.row 		= NULL;
+	MENU.col    		= NULL;
+	MENU.row    		= NULL;
 	MENU.curStat 		= LCD_CURS_OFF | LCD_CURS_NOBLINK;
 }
 
@@ -165,23 +166,27 @@ Process_Menu(void)
 	Uint8	needRelayClick;
 	static 	Uint16 (*stateFxn)(Uint16);
     Uint8   isValidInput = TRUE;
+    static uint32_t triggerValue = 0; // watchdog trigger
 
-    // Enable USB device
+    /// Enable USB device
     loadUsbDriver();
 
-	// function pointer
+	/// function pointer
 	stateFxn = MENU_TABLE[0].fxnPtr;
 
-	// Initialize menu
+	/// Initialize menu
 	setupMenu();						 
     
-    // Initialize buttons
+    /// Initialize buttons
 	int i;
 	for (i=0; i<4; i++) buttons[i] = 0;
 
-	// Start main loop
+	/// Start main loop
 	while (1)
 	{
+        /// Reactivate watchdog timer. Otherwise, futner reset will happen.
+        //TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
         if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
 		if (!COIL_LOCKED_SOFT_FACTORY_RESET.val && !COIL_LOCKED_HARD_FACTORY_RESET.val) 
 		{
@@ -641,6 +646,7 @@ Uint16
 mnuHomescreenFrequency(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_HOMESCREEN_FREQ;
+
 	sprintf(lcdLine1, "%12.3f Mhz", Round_N(REG_FREQ.calc_val,3));
 	updateDisplay(FREQUENCY, lcdLine1);
 

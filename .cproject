@@ -225,6 +225,7 @@
 									<listOptionValue builtIn="false" value="${PROJECT_LOC}/Common/include"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}"/>
+									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}\ti\csl\src\ip\wd_timer\V0"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/example/usb_host/msc"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/src/usb_func/include"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/soc/omapl138"/>

@@ -32,9 +32,10 @@
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 
-#define USB_INSTANCE    0
-#define MAX_DATA_SIZE   4096 
-#define MIN_DISK_SPACE  10240 // 10MB
+#define USB_INSTANCE        0
+#define MAX_DATA_SIZE       4096 
+#define MAX_DATA_BUF_SIZE   200
+#define MIN_DISK_SPACE      10240 // 10MB
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -313,7 +314,7 @@ void logUsbFxn(void)
         if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return;
 
         // write header1
-		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
+		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,Temp(C),", FIRMWARE_VERSION, REG_SN_PIPE);
         if (f_puts(LOG_HEADER,&fileWriteObject) == EOF)
         {
             f_close(&fileWriteObject);
@@ -322,7 +323,7 @@ void logUsbFxn(void)
 	    f_sync(&fileWriteObject);
 
         // write header2
-        sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
+        sprintf(LOG_HEADER,"Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,Density,Oil_Freq_Low,");
         if (f_puts(LOG_HEADER,&fileWriteObject) == EOF)
         {
             f_close(&fileWriteObject);
@@ -331,7 +332,7 @@ void logUsbFxn(void)
         f_sync(&fileWriteObject);
 
         // write header3
-        sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
+        sprintf(LOG_HEADER,"Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint,Density_Corr,Oil_Adj,PDI_Temp_Adj,PDI_Freq0,PDI_Freq1\n");
         if (f_puts(LOG_HEADER,&fileWriteObject) == EOF)
         {
             f_close(&fileWriteObject);
@@ -351,13 +352,25 @@ void logUsbFxn(void)
         return;
     }   
 
-    char DATA_BUF[160];
+    //////////////////////////////////////////////////////
+    //// ADJUST DATA SIZE UPON ADDING MORE REGISTER VALUES
+    //////////////////////////////////////////////////////
+    char DATA_BUF[MAX_DATA_BUF_SIZE/2];
+    char DATA_BUF2[MAX_DATA_BUF_SIZE/2];
+    //////////////////////////////////////////////////////
 
-    sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+    sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT);
 
-    // FILL DATA UPTO MAX_DATA_SIZE
+    sprintf(DATA_BUF2,"%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f",REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val,REG_DENS_CORR,REG_OIL_ADJUST.calc_val,PDI_TEMP_ADJ,PDI_FREQ_F0,PDI_FREQ_F1);
+
+    // debugging purpose...
+    //int a = strlen(DATA_BUF);
+    //int b = strlen(DATA_BUF2);
+
+    /// COLLECT DATA UPTO (MAX_DATA_SIZE-MAX_DATA_BUF_SIZE)
     strcat(LOG_BUF,DATA_BUF);
-    if (MAX_DATA_SIZE - strlen(LOG_BUF) > 160) return;
+    strcat(LOG_BUF,DATA_BUF2);
+    if (MAX_DATA_SIZE - strlen(LOG_BUF) > MAX_DATA_BUF_SIZE ) return;
     while (MAX_DATA_SIZE > strlen(LOG_BUF)) strcat (LOG_BUF,",");
 
     if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) != FR_OK) 

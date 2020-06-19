@@ -72,6 +72,7 @@
 #include <ti/csl/cslr_i2c.h>
 #include <ti/csl/src/ip/gpio/V3/cslr_gpio.h>
 #include <ti/csl/V1/cslr_tmr.h>
+
 #include <ti/csl/cslr_rtc.h>
 #include <ti/csl/soc/omapl138/src/cslr_soc_baseaddress.h>
 #include <ti/csl/soc/omapl138/src/cslr_soc.h>
@@ -292,7 +293,7 @@ typedef struct
 	CSL_EmifaRegsOvly 	emifaRegs = (CSL_EmifaRegsOvly)CSL_EMIFA_0_REGS;
 
 	// Timer register overlays
-	CSL_TmrRegsOvly		tmr1Regs = (CSL_TmrRegsOvly)CSL_TMR_1_REGS;
+	//CSL_TmrRegsOvly		tmr1Regs = (CSL_TmrRegsOvly)CSL_TMR_1_REGS;
 	CSL_TmrRegsOvly		tmr3Regs = (CSL_TmrRegsOvly)CSL_TMR_3_REGS;
 
 	// RTC register overlay	
@@ -324,7 +325,7 @@ typedef struct
 	extern CSL_EmifaRegsOvly   emifaRegs;
 
 	// Timer register overlays
-	extern CSL_TmrRegsOvly 	   tmr1Regs;
+	//extern CSL_TmrRegsOvly 	   tmr1Regs;
 	extern CSL_TmrRegsOvly 	   tmr3Regs;
 
 	// RTC register overlay
@@ -405,8 +406,8 @@ typedef struct
 #pragma DATA_SECTION(REG_TEMP_ADJUST,"CFG")
 	_EXTERN far VAR REG_TEMP_ADJUST;
 
-#pragma DATA_SECTION(PDI_TEMP_ADJUST,"CFG")
-	_EXTERN far VAR PDI_TEMP_ADJUST;
+#pragma DATA_SECTION(PDI_TEMP_ADJ,"CFG")
+	_EXTERN far double PDI_TEMP_ADJ;
 
 #pragma DATA_SECTION(PDI_FREQ_F0,"CFG")
 	_EXTERN far double PDI_FREQ_F0;

@@ -15,12 +15,10 @@
 * Main.c
 *-------------------------------------------------------------------------
 * HISTORY:
-*       ?-?-?       : David Skew : Created
 *       Jul-18-2018 : Daniel Koh : Rewrote 90% of the entire projet
 *------------------------------------------------------------------------*/
 
 #undef MENU_H_
-#include <ti/board/board.h>
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -32,48 +30,75 @@
 #include "device_nand.h"
 #include "util.h" 
 #include "Globals.h"
+#include "watchdog.h"
 
 #define NANDWIDTH_16
 #define C6748_LCDK
 
+extern void setupwatchdog(void);
+
 extern void delayTimerSetup(void);
 extern void Init_Data_Buffer(void);
 extern void resetGlobalVars(void);
+
 static inline void Init_Counter_3(void);
 static inline void initHardwareObjects(void);
 static inline void initSoftwareObjects(void);
 static inline void startClocks(void);
 static inline void Init_All(void);
 
+
 int main (void)
 {
-    // SUSPEND SOURCE REGISTER (SUSPSRC)
+    ///
+    /// SUSPEND SOURCE REGISTER (SUSPSRC)
+    ///
     SYSTEM->SUSPSRC &= ((1 << 27) | (1 << 22) | (1 << 20) | (1 << 5) | (1 << 16));
 
-    // INITIALIZE EMIF FOR CS4 FLASH MEMORY REGION
+    ///
+    /// INITIALIZE EMIF FOR CS4 FLASH MEMORY REGION
+    ///
     CSL_FINST(emifaRegs->CE4CFG,EMIFA_CE4CFG_ASIZE,16BIT);
     CSL_FINST(emifaRegs->NANDFCR,EMIFA_NANDFCR_CS4NAND,NAND_ENABLE);
 
-    // INITIALIZE C6748 SPECIFcd IC BOARD CLOCKS
+    ///
+    /// INITIALIZE C6748 SPECIFcd IC BOARD CLOCKS
+    ///
     Init_BoardClocks();
 
-    // INITIALIZE POWER AND SLEEP CONTROLLER
+    ///
+    /// SETUP WATCHDOG
+    ///
+    //setupWatchDog();
+
+    ///
+    /// INITIALIZE POWER AND SLEEP CONTROLLER
+    ///
 	Init_PSC();
 
-    // INITIALIZE PIN MUXING
+    ///
+    /// INITIALIZE PIN MUXING
+    ///
 	Init_PinMux();
 
-    // INITIALIZE EVERYTHING ELSE
+    ///
+    /// INITIALIZE EVERYTHING ELSE
+    ///
 	Init_All();
 
-    // USB OSAL DELAY TIMER 
+    ///
+    /// USB OSAL DELAY TIMER 
+    ///
     delayTimerSetup();
 
-    // START TI-RTOS KERNEL
+    ///
+    /// START TI-RTOS KERNEL
+    ///
 	BIOS_start();
 
 	return 0;
 }
+
 
 static inline void Init_All(void)
 {

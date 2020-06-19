@@ -1781,13 +1781,13 @@ MB_SendPacket_Coil(void)
 	/// WRITE COIL
 	/////////////////////////////////////////////////
 
-    else if (mb_pkt_ptr->fxn == 5) //write coil
-	{//write coil
+    else if (mb_pkt_ptr->fxn == 5)
+	{
 		rtn = MB_Tbl_Search_CoilRegs(mb_pkt_ptr->start_reg,&mbtable_ptr,&data_type,&prot);
 
 		if ( (rtn == -1) || (mbtable_ptr == (COIL*)NULL) || (data_type != REGTYPE_COIL) )
 		{
-			//COIL not found, remove everything we just added to the TX buffer
+			/// COIL not found, remove everything we just added to the TX buffer
 			UART_TXBUF.n 	= old_n;
 			UART_TXBUF.tail	= old_tail;
 
@@ -1812,7 +1812,7 @@ MB_SendPacket_Coil(void)
 		BfrPut(&UART_TXBUF,(mb_pkt_ptr->start_reg-1) >> 8);		//MSB
 		BfrPut(&UART_TXBUF,(mb_pkt_ptr->start_reg-1) & 0xFF);	//LSB
 
-		/// WRITE TO MODBUS TABLE
+		/// write to modbus table
 		if (mb_pkt_ptr->data[0] == TRUE)  	// if we are setting the coil
 		{
 			if (mbtable_ptr->val == FALSE) // if the coil is not already set
