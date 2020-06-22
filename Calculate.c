@@ -199,7 +199,7 @@ Uint8 Read_Freq(void)
 
 Uint8 Read_User_Temperature(void)
 {
-	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJUST.calc_val, CALC_UNIT);
+	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJ, CALC_UNIT);
 }
 
 

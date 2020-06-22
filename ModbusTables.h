@@ -178,7 +178,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
     775 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&FCT_DENS_ADJ,          // Density Adjustment
     777 ,   REGTYPE_VAR ,   REGPERM_FCT ,   (Uint32)&FCT_OIL_T0,            // T0 for threshold
     779 ,   REGTYPE_VAR ,   REGPERM_FCT ,   (Uint32)&FCT_OIL_T1,            // T1 for threshold
-    781 ,   REGTYPE_VAR ,   REGPERM_FCT ,   (Uint32)&PDI_TEMP_ADJUST,       // PDI factory temp adjust - no FCT_ exists
+    781 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&PDI_TEMP_ADJ,          // PDI factory temp adjust - no FCT_ exists
     783 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&PDI_FREQ_F0,           // PDI factory freq adjust - no FCT_ exists
     785 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&PDI_FREQ_F1,           // PDI factory freq adjust - no FCT_ exists
 
