@@ -3626,7 +3626,6 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 
 	switch (input)	
 	{
-        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
         case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
