@@ -676,7 +676,6 @@ void initializeAllRegisters(void)
 	REG_DENS_ADJ 			= FCT_DENS_ADJ;
 	REG_OIL_PT 	            = 0;
 
-    /// PDI IN-HOUSE REGISTERS
     PDI_TEMP_ADJ            = 0;
     PDI_FREQ_F0             = 0;
     PDI_FREQ_F1             = 0;
