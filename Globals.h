@@ -406,7 +406,7 @@ typedef struct
 	_EXTERN far VAR REG_TEMP_ADJUST;
 
 #pragma DATA_SECTION(PDI_TEMP_ADJ,"CFG")
-	_EXTERN far VAR PDI_TEMP_ADJ;
+	_EXTERN far double PDI_TEMP_ADJ;
 
 #pragma DATA_SECTION(PDI_FREQ_F0,"CFG")
 	_EXTERN far double PDI_FREQ_F0;
