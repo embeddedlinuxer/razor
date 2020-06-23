@@ -172,6 +172,8 @@ _EXTERN void Init_Data_Buffer(void);
 _EXTERN void initializeAllRegisters(void);
 _EXTERN void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr);
 _EXTERN void reloadFactoryDefault(void);
+_EXTERN void storeUserDataToFactoryDefault(void);
+_EXTERN void _c_int00(void);
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

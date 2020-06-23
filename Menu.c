@@ -41,8 +41,6 @@
 #define MENU_H
 #include "Menu.h"
 
-extern void storeUserDataToFactoryDefault(void);
-extern void _c_int00(void);
 static int y = 0;
 static int blinker = 0;             // MENU ID BLINKER 
 static BOOL isOn = FALSE;           // LINE1 BLINKER
