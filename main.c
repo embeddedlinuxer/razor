@@ -36,9 +36,7 @@
 #define NANDWIDTH_16
 #define C6748_LCDK
 
-extern void delayTimerSetup(void);
-extern void Init_Data_Buffer(void);
-extern void resetGlobalVars(void);
+void Init_BoardClocks(void);
 static inline void Init_Counter_3(void);
 static inline void initHardwareObjects(void);
 static inline void initSoftwareObjects(void);

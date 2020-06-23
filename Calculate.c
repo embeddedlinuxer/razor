@@ -76,9 +76,9 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 void Poll(void)
 {
 	float WC; 			// temp watercut value
-	BOOL err_f = FALSE;	// frequency calculation error
-	BOOL err_w = FALSE;	// watercut calculation error
-	BOOL err_d = FALSE;	// density correction error
+	Uint8 err_f = FALSE;	// frequency calculation error
+	Uint8 err_w = FALSE;	// watercut calculation error
+	Uint8 err_d = FALSE;	// density correction error
 
     // Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;
@@ -197,7 +197,7 @@ Uint8 Read_Freq(void)
 }
 
 
-Uint8 Read_User_Temperature(void)
+void Read_User_Temperature(void)
 {
 	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJ, CALC_UNIT);
 }
@@ -335,9 +335,6 @@ Uint8 Apply_Density_Correction(void)
 	/// get current density in units of kg/m3 @ 15C
 	dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, u_mpv_kg_cm_15C, REG_OIL_DENSITY.calc_val, 0, 0);
 
-	/// check error 
-	checkError(dens,750,998,ERR_DNS_LO,ERR_DNS_HI);
-		
     /// Razor does not use REG_DENSITY_CAL_VAL
     REG_DENSITY_CAL_VAL.calc_val = 0.0; // DKOH Oct 22, 2019
 
@@ -350,7 +347,7 @@ Uint8 Apply_Density_Correction(void)
 	}
 
 	/// check error 
-	checkError(REG_DENS_CORR,-10,10,ERR_DNS_LO,ERR_DNS_HI);
+	checkError(REG_DENS_CORR,-10.0,10.0,ERR_DNS_LO,ERR_DNS_HI);
 	
 	return 0; /// success
 }
@@ -371,7 +368,8 @@ void Update_Demo_Values(void)
 #ifdef DEMO_MODE
 	rand_num = (rand() % 100) - 51; //between -50 and 50
 	rand_freq_delta = (float)flip * (float)rand_num / 200;
-	#ifdef DEMO_MODE_FREQ
+
+#ifdef DEMO_MODE_FREQ
 		VAR_Update(&REG_FREQ, REG_FREQ.calc_val+rand_freq_delta, 0);
 		if ( (REG_FREQ.calc_val < 560) || (REG_FREQ.calc_val > 590) )
 		{
@@ -379,15 +377,17 @@ void Update_Demo_Values(void)
 			VAR_Update(&REG_FREQ,REG_FREQ.calc_val-(rand_freq_delta*3), CALC_UNIT); //wc -= rand_freq_delta*3
 			flip *= -1;
 		}
-	#endif
-	#ifdef DEMO_MODE_TEMP
+#endif
+
+#ifdef DEMO_MODE_TEMP
 		rand_temp_delta = rand_freq_delta/-1;
 		VAR_Update(&REG_TEMPERATURE, REG_TEMPERATURE.calc_val+rand_temp_delta, 0);
 		// range check
 			 if (REG_TEMPERATURE.calc_val < 50) VAR_Update(&REG_TEMPERATURE, 50 + abs(rand_temp_delta)*2, 0);
 		else if (REG_TEMPERATURE.calc_val > 60) VAR_Update(&REG_TEMPERATURE, 60 - abs(rand_temp_delta)*2, 0);
 			
-	#endif
+#endif
+
 #endif
 }
 
@@ -642,7 +642,7 @@ void Apply_Density_Adj(void)
 }
 
 
-void checkError(float val, float boundLo, float boundHi, int errLo, int errHi)
+void checkError(double val, double boundLo, double boundHi, int errLo, int errHi)
 {
 	if (val < boundLo) DIAGNOSTICS |= errLo;
 	else if (val > boundHi) DIAGNOSTICS |= errHi;

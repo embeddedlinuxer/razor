@@ -47,7 +47,6 @@
 /*=======================================================================*/
 static BOOL isOk = TRUE;
 extern void delayInt(Uint32 count);
-extern void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr);
 static inline void Pulse_ePin(int read, int write, Uint8 lcd_data);
 static inline void Pulse_ePin_Manual(int read, int write, Uint8 lcd_data);
 static inline Uint8 I2C_Wait_For_TXRDY(void)
@@ -79,13 +78,12 @@ unsigned char Bcd2Hex(unsigned char BCDValue)
   HexVal = 0;   
   while(1)   
   {   
-    // Get the tens digit by doing multiple subtraction   
-    // of 10 from the binary value.   
+    /// Get the tens digit by doing multiple subtraction of 10 from the binary value. 
     if(temp >= 10)   
     {   
       temp -= 10;   
       HexVal += 0x10;   
-  }   
+    }   
     else // Get the ones digit by adding the remainder.   
     {   
       HexVal += temp;   
@@ -2042,7 +2040,6 @@ void I2C_DS1340_Read_RTC(void)
 
 	Uint32 key;
 	Uint16 read_val;
-	Uint8 isFailed = TRUE;
 
     static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
 
@@ -2117,9 +2114,7 @@ void I2C_DS1340_Read_RTC(void)
 	I2C_START_SET; 
 }
 
-
-void 
-Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr)
+void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr)
 {
     if (isOk)
     {

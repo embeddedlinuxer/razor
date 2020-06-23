@@ -140,7 +140,7 @@ void storeUserDataToFactoryDefault(void)
 void reloadFactoryDefault(void)
 {
     isWriteRTC = FALSE;
-	Uint16 i,j;
+	Uint16 i;
 	char model_code[MAX_LCD_WIDTH];
 	int* model_code_int;
 

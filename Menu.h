@@ -1146,8 +1146,8 @@ _EXTERN MENU_STATE MENU_TABLE[] = {
 {MNU_SECURITYINFO_UPDATEFIRMWARE, 99, 99, mnuSecurityInfo_UpdateFirmware},
 {FXN_SECURITYINFO_UPDATEFIRMWARE, 99, 99, fxnSecurityInfo_UpdateFirmware},
 
-
-{99, 99, 99, 99}
+//{99, 99, 99, 99}
+{NULL, NULL, NULL, NULL}
 };
 
 #endif

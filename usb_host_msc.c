@@ -58,14 +58,10 @@ static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
 /*                                Prototypes                                  */
 /* ========================================================================== */
 
-void resetUsbDriver(void);
 void usbHostIntrConfig(USB_Params* usbParams);
 void MSCCallback(uint32_t ulInstance, uint32_t ulEvent, void *pvData);
 void usbCoreIntrHandler(uint32_t* pUsbParam);
 void checkFreeSpace(void);
-extern void unloadUsbDriver(void);
-extern void loadUsbDriver(void);
-extern void logUsbFxn(void);
 
 /*****************************************************************************
 *

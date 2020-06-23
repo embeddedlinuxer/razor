@@ -121,11 +121,10 @@ double Convert(int class, int from_unit, int to_unit, double val, BOOL scale_onl
 	double m;		/* multiplier 	*/
 	double b;		/* offset 		*/
 	double r;		/* return		*/
-	double kgm3;	/* kgm3		*/
+	double kgm3;	/* kgm3		    */
 	double kgm3_15;	/* kgm3@15c		*/
 	double kgm3_60;	/* kgm3@60f		*/
 	BOOL found;		/* found flag	*/
-	int k;			/* API parameter*/
 
 	/// input value, and return value later
 	r = val;
@@ -135,7 +134,8 @@ double Convert(int class, int from_unit, int to_unit, double val, BOOL scale_onl
 
 	found = FALSE;
 
-	if (class==c_temperature) /// temperature conversion
+    /// temperature conversion
+	if (class==c_temperature) 
 	{
 		found = TRUE;
 		switch (from_unit&0xFF)
@@ -151,8 +151,8 @@ double Convert(int class, int from_unit, int to_unit, double val, BOOL scale_onl
 		}
 	}
 	else
-	{
-		if (class==c_mass_per_volume) /// density conversion
+	{   /// density conversion
+		if (class==c_mass_per_volume) 
 		{
 			found = TRUE;
 			switch (from_unit&0xFF)

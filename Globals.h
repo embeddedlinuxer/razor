@@ -150,20 +150,27 @@ _EXTERN BOOL isLogging;
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 /// 
-/// FUNCTION DECLARATIION
+/// GLOBAL FUNCTION DECLARATIION
 /// 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 
-void reloadFactoryDefaultToUserData (void);
-void setDemoValues (void);
-void Set_Rst_Dflt_Chkr_Ptr (void);
-
-_EXTERN void setupMenu (void);
 _EXTERN double Round_N (double v, int n);
 _EXTERN float Round_N_Float (float v, int n);
 _EXTERN double sigfig (double v, int n);
 _EXTERN double truncate (double v, int n);
+_EXTERN void setupMenu (void);
+_EXTERN void logUsbFxn(void);
+_EXTERN void loadUsbDriver(void);
+_EXTERN void resetUsbDriver(void);
+_EXTERN void resetGlobalVars(void);
+_EXTERN void delayTimerSetup(void);
+_EXTERN void unloadUsbDriver(void);
+_EXTERN void Init_Data_Buffer(void);
+_EXTERN void Init_Data_Buffer(void);
+_EXTERN void initializeAllRegisters(void);
+_EXTERN void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr);
+_EXTERN void reloadFactoryDefault(void);
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

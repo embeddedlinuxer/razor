@@ -40,23 +40,18 @@
 #define _EXTERN extern
 #endif
 
-//#define DEMO_MODE
-//#define DEMO_MODE_FREQ
-//#define DEMO_MODE_TEMP
-
-// used before finally updating raw watercut value
-_EXTERN float Interpolate(float w1, float t1, float w2, float t2, float t);
 _EXTERN void Poll(void);
-_EXTERN void getAverageTemperature(void);
-_EXTERN void getAverageFrequency(void);
-_EXTERN void getAverageRP(void);
-_EXTERN void getOilSamples(void);
-_EXTERN void Update_Demo_Values(void);
-_EXTERN void Bfr_Add(FP_BFR* bfr, double val);
-_EXTERN Uint8 readWaterCut(float *WC);
-_EXTERN Uint8 Apply_Density_Correction(void);
-_EXTERN Uint8 readFrequency(void);
-_EXTERN inline void Init_Data_Buffer(void);
+
+inline void Init_Data_Buffer(void);
+void Bfr_Add(FP_BFR* bfr, double val);
+void Update_Demo_Values(void);
+void checkError(double val, double boundLo, double boundHi, int errLo, int errHi);
+void Count_Freq_Pulses(Uint32 u_sec_elapsed);
+void Read_User_Temperature(void);
+Uint8 Apply_Density_Correction(void);
+Uint8 Read_Freq(void);
+Uint8 Read_WC(float *WC);
+float Interpolate(float w1, float t1, float w2, float t2, float t);
 
 #undef _EXTERN
 #undef CALCULATE_H

@@ -1642,7 +1642,7 @@ Uint16
 fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 {
     if (I2C_TXBUF.n > 0) return FXN_CFG_DATALOGGER_ENABLELOGGER;
-    static BOOL isEnabled = TRUE;
+    static BOOL isEnabled = FALSE;
     if (isMessage) { return notifyMessageAndExit(FXN_CFG_DATALOGGER_ENABLELOGGER, MNU_CFG_DATALOGGER_ENABLELOGGER); }
 
     (isEnabled) ? blinkLcdLine1(ENABLE, BLANK) : blinkLcdLine1(DISABLE, BLANK);
