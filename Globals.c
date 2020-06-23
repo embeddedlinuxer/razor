@@ -30,6 +30,7 @@ void resetGlobalVars(void)
 
     isWriteRTC = FALSE;
     isLogging = FALSE;
+    usbStatus = 0;
 
     THROW_ERROR 	                    = 0;
     DIAGNOSTICS 	                    = 0;

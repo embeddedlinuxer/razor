@@ -241,9 +241,52 @@ checkFreeSpace(void)
     if ((totalSize*pFatFs->csize)/2 < MIN_DISK_SPACE) COIL_LOG_ENABLE.val = FALSE;
 }
 
+void disableUsbLoggingAfterClose(void)
+{
+    /// stop usb logging if file open failed for any reason
+    f_close(&fileWriteObject);
+    isLogging = FALSE;
+    COIL_LOG_ENABLE.val = FALSE;
+    current_day = 99;
+    LOG_BUF[0] = '\0';
+    usbStatus = 17;
+    return;
+}
+
+
+void disableUsbLogging(FRESULT fr)
+{
+    /// stop usb logging if file open failed for any reasons
+    isLogging = FALSE;
+    COIL_LOG_ENABLE.val = FALSE;
+    current_day = 99;
+    LOG_BUF[0] = '\0';
+
+    /// find out why it failed
+         if (fr == FR_DISK_ERR) usbStatus = 2;
+    else if (fr == FR_INT_ERR) usbStatus = 3;
+    else if (fr == FR_NOT_READY) usbStatus = 4;
+    else if (fr == FR_NO_FILE) usbStatus = 5;
+    else if (fr == FR_NO_PATH) usbStatus = 6;
+    else if (fr == FR_INVALID_NAME) usbStatus = 7;
+    else if (fr == FR_DENIED) usbStatus = 8;
+    else if (fr == FR_INVALID_OBJECT) usbStatus = 9;
+    else if (fr == FR_WRITE_PROTECTED) usbStatus = 10;
+    else if (fr == FR_INVALID_DRIVE) usbStatus = 11;
+    else if (fr == FR_NOT_ENABLED) usbStatus = 12;
+    else if (fr == FR_NO_FILESYSTEM) usbStatus = 13;
+    else if (fr == FR_TIMEOUT) usbStatus = 14;
+    else if (fr == FR_LOCKED) usbStatus = 15;
+    else if (fr == FR_NOT_ENOUGH_CORE) usbStatus = 16;
+    else usbStatus = 17;
+        
+    return;
+}
 
 void logUsbFxn(void)
 {
+    FRESULT fresult;
+
     if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) return;
 
     if (g_eState == STATE_DEVICE_ENUM)
@@ -289,7 +332,6 @@ void logUsbFxn(void)
         if (delayLogging < 10) return;
         delayLogging = 0;
 
-        FRESULT fresult;
 		FILINFO fno;
         current_day = USB_RTC_DAY;
 
@@ -303,86 +345,107 @@ void logUsbFxn(void)
 
         // mkdir PDI
         fresult = f_mkdir("/PDI");
-        if ((fresult != FR_EXIST) && (fresult != FR_OK)) return;
-
-		// open file
-        if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return;
-
-        // write header1
-		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
-        if (f_puts(LOG_HEADER,&fileWriteObject) == EOF)
+        if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
         {
-            f_close(&fileWriteObject);
+            disableUsbLogging(fresult);
             return;
-        } 
-	    f_sync(&fileWriteObject);
+        }
 
-        // write header2
+		/// open file
+        fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
+        if (fresult != FR_OK) 
+        {
+            disableUsbLogging(fresult);
+            return;
+        }
+
+        /// write header1
+		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
+        if (f_puts(LOG_HEADER,&fileWriteObject) == EOF) 
+        {
+            disableUsbLoggingAfterClose();
+            return;
+        }
+
+        if (f_sync(&fileWriteObject) != FR_OK)
+        {
+            disableUsbLoggingAfterClose();
+            return;
+        }
+
+        /// write header2
         sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
         if (f_puts(LOG_HEADER,&fileWriteObject) == EOF)
         {
-            f_close(&fileWriteObject);
+            disableUsbLoggingAfterClose();
             return;
         } 
-        f_sync(&fileWriteObject);
 
-        // write header3
+        if (f_sync(&fileWriteObject) != FR_OK)
+        {
+            disableUsbLoggingAfterClose();
+            return;
+        }
+
+        /// write header3
         sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
         if (f_puts(LOG_HEADER,&fileWriteObject) == EOF)
         {
-            f_close(&fileWriteObject);
+            disableUsbLoggingAfterClose();
             return;
         } 
-        f_sync(&fileWriteObject);
 
-        // close file
+        if (f_sync(&fileWriteObject) != FR_OK)
+        {
+            disableUsbLoggingAfterClose();
+            return;
+        }
+
+        /// close file
         f_close(&fileWriteObject);
 
-        // check remaining disk space
+        /// check remaining disk space
         checkFreeSpace();
 
-        // flush LOG_BUF 
+        /// flush LOG_BUF 
         LOG_BUF[0] = '\0';
 
         return;
     }   
 
     char DATA_BUF[160];
-
     sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
+    int a = strlen(DATA_BUF);
     // FILL DATA UPTO MAX_DATA_SIZE
     strcat(LOG_BUF,DATA_BUF);
     if (MAX_DATA_SIZE - strlen(LOG_BUF) > 160) return;
     while (MAX_DATA_SIZE > strlen(LOG_BUF)) strcat (LOG_BUF,",");
 
-    if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) != FR_OK) 
+    fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+    if (fresult != FR_OK)
     {
-        current_day = 99;
-        LOG_BUF[0] = '\0';
+        disableUsbLogging(fresult);
         return;
     }
 
     if (f_lseek(&fileWriteObject,f_size(&fileWriteObject)) != FR_OK)
     {
-        f_close(&fileWriteObject);
-        LOG_BUF[0] = '\0';
+        disableUsbLoggingAfterClose();
         return;
     }
 
     /// WRITE 
     if(f_puts(LOG_BUF,&fileWriteObject) != strlen(LOG_BUF))
     {
-        f_close(&fileWriteObject);
-        LOG_BUF[0] = '\0';
+        disableUsbLoggingAfterClose();
         return;
     }
 
     /// SYNC WITH USB DRIVE
-    if (f_sync(&fileWriteObject) != FR_OK) 
+    if (f_sync(&fileWriteObject) != FR_OK)
     {
-        f_close(&fileWriteObject);
-        LOG_BUF[0] = '\0';
+        disableUsbLoggingAfterClose();
         return;
     }
    

@@ -1625,7 +1625,26 @@ mnuConfig_DataLogger_EnableLogger(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_DATALOGGER_ENABLELOGGER;
 	if (isUpdateDisplay) (COIL_LOG_ENABLE.val) ? updateDisplay(CFG_DATALOGGER_ENABLELOGGER, ENABLED) : updateDisplay(CFG_DATALOGGER_ENABLELOGGER, DISABLED);
-	(COIL_LOG_ENABLE.val) ? displayLcd(ENABLED, LCD1) : displayLcd(DISABLED, LCD1);
+	//(COIL_LOG_ENABLE.val) ? displayLcd(ENABLED, LCD1) : displayLcd(DISABLED, LCD1);
+
+    if (usbStatus == 0) displayLcd(DISABLED, LCD1);
+    else if (usbStatus == 1) displayLcd(ENABLED, LCD1);
+    else if (usbStatus == 2) displayLcd(USB_ERROR2,LCD1);
+    else if (usbStatus == 3) displayLcd(USB_ERROR3,LCD1);
+    else if (usbStatus == 4) displayLcd(USB_ERROR4,LCD1);
+    else if (usbStatus == 5) displayLcd(USB_ERROR5,LCD1);
+    else if (usbStatus == 6) displayLcd(USB_ERROR6,LCD1);
+    else if (usbStatus == 7) displayLcd(USB_ERROR7,LCD1);
+    else if (usbStatus == 8) displayLcd(USB_ERROR8,LCD1);
+    else if (usbStatus == 9) displayLcd(USB_ERROR9,LCD1);
+    else if (usbStatus == 10) displayLcd(USB_ERROR10,LCD1);
+    else if (usbStatus == 11) displayLcd(USB_ERROR11,LCD1);
+    else if (usbStatus == 12) displayLcd(USB_ERROR12,LCD1);
+    else if (usbStatus == 13) displayLcd(USB_ERROR13,LCD1);
+    else if (usbStatus == 14) displayLcd(USB_ERROR14,LCD1);
+    else if (usbStatus == 15) displayLcd(USB_ERROR15,LCD1);
+    else if (usbStatus == 16) displayLcd(USB_ERROR16,LCD1);
+    else displayLcd("USB Malfunction", LCD1);
 
 	switch (input)	
 	{
@@ -1645,6 +1664,12 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
     static BOOL isEnabled = FALSE;
     if (isMessage) { return notifyMessageAndExit(FXN_CFG_DATALOGGER_ENABLELOGGER, MNU_CFG_DATALOGGER_ENABLELOGGER); }
 
+    if (isUpdateDisplay)
+    {
+        if (usbStatus == 1) isEnabled = 1;
+        else isEnabled = 0;
+        isUpdateDisplay = FALSE;
+    }
     (isEnabled) ? blinkLcdLine1(ENABLE, BLANK) : blinkLcdLine1(DISABLE, BLANK);
 
     switch (input)  {
@@ -1656,10 +1681,15 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
             COIL_LOG_ENABLE.val = isEnabled;
             if (COIL_LOG_ENABLE.val) 
 			{
+                usbStatus = isEnabled;
 				isLogging = TRUE;
 				if (!isPowerCycled) resetUsbDriver();
                 else isPowerCycled = FALSE;
 			}
+            else
+            {
+                usbStatus = 0;
+            }
             return onNextMessagePressed(FXN_CFG_DATALOGGER_ENABLELOGGER,CHANGE_SUCCESS);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_DATALOGGER_ENABLELOGGER);
         default         : return FXN_CFG_DATALOGGER_ENABLELOGGER;
