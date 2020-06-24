@@ -15,8 +15,7 @@
 * Main.c
 *-------------------------------------------------------------------------
 * HISTORY:
-*       ?-?-?       : David Skew : Created
-*       Jul-18-2018 : Daniel Koh : Rewrote 90% of the entire projet
+*      1.01.00 : Jun-24-2020 : Daniel Koh : Added usb logging error checking 
 *------------------------------------------------------------------------*/
 
 #undef MENU_H_
