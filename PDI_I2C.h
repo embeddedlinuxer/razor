@@ -115,9 +115,7 @@
 #define I2C_CNT_2BYTE		i2cRegs->ICCNT = CSL_FMK(I2C_ICCNT_ICDC,0x2) 	//Data count register = 2
 #define I2C_CNT_3BYTE		i2cRegs->ICCNT = CSL_FMK(I2C_ICCNT_ICDC,0x3) 	//Data count register = 3
 #define I2C_CNT_4BYTE		i2cRegs->ICCNT = CSL_FMK(I2C_ICCNT_ICDC,0x4) 	//Data count register = 4
-
 #define I2C_CNT_6BYTE		i2cRegs->ICCNT = CSL_FMK(I2C_ICCNT_ICDC,0x6) 	// TESTING PURPOSES
-
 #define I2C_MASTER_MODE	    CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_MST,MASTER_MODE)	// put I2C module in Master mode
 
 static Uint8 ADC_BUSY_TEMP;
@@ -126,38 +124,31 @@ static Uint8 ADC_BUSY_OVERRIDE;
 
 inline void DisableButtonInts(void);
 inline void EnableButtonInts(void);
-
 int	LCD_setaddr(int column, int line);
 int LCD_printch(char c, int column, int line);
-
 void Button_HwiFxn(void);
 void GpioBank6_HwiSelect(void);
 void GpioBank8_HwiSelect(void);
-
 void I2C_HwiFxn(void);
 void I2C_SwiFxn(void);
-
-//void gpioPowerOn(void);
-//void Init_PinMux(void);
 void Init_I2C(void);
-void Reset_I2C(void);
+void Reset_I2C(Uint8 isKey, Uint32 I2C_KEY);
 int  I2C_Recover(void);
 void Init_LCD(void);
 void Init_MBVE(void);
-
 void I2C_SendByte(Uint8 out_byte);
 void displayLcd(const char c[], int line);
 void LCD_setcursor(int curs_on, int curs_blink);
 void GPIO_INTpin_HwiFxn(void);
-
 void LCD_setBlinking(int column, int line);
 
 static inline int I2C_Wait_To_Send(void);
 static inline int I2C_Wait_To_Send_ARDY(void);
-static inline int I2C_Wait_To_Recieve(void);
+static inline int I2C_Wait_To_Receive(void);
 static inline int I2C_Wait_For_Start(void);
 static inline int I2C_Wait_For_Stop(void);
 static inline int I2C_Wait_For_Ack(void);
+static inline int errorCounter(Uint8 i2c_slave, Uint32 I2C_KEY);
 
 //#undef PDI_I2C_H_
 #endif /* PDI_I2C_H_ */
