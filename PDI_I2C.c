@@ -1118,65 +1118,6 @@ static inline int I2C_Wait_To_Send_ARDY(void)
 
 	return timeout;
 }
-
-static inline errorCounter(Uint8 i2c_slave, Uint32 I2C_KEY)
-{
-    /// MAX NUMBER OF RETRYS BEFORE DISABLING DEFECTED I2C SLAVE
-    static Uint8 DEAD_COUNT = 30; 
-   
-     switch (i2c_slave) {
-        case I2C_TEMP :
-            if (tryTemp > DEAD_COUNT) 
-            {
-                tryTemp = 0;
-                isTEMPDead = TRUE;
-                isVREFDead = TRUE;
-                Reset_I2C(KEY, I2C_KEY);
-            }
-            else tryTemp++;
-            break;
-        case I2C_VREF :
-            if (tryVref > DEAD_COUNT) 
-            {
-                tryVref = 0;
-                isTEMPDead = TRUE;
-                isVREFDead = TRUE;
-                Reset_I2C(KEY, I2C_KEY);
-            }
-            else tryVref++;
-            break;
-        case I2C_RTC :
-            if (tryRtc > DEAD_COUNT) 
-            {
-                tryRtc = 0;
-                isRTCDead = TRUE;
-                Reset_I2C(KEY, I2C_KEY);
-            }
-            else tryRtc++;
-            break;
-        case I2C_DENS :
-            if (tryDens > DEAD_COUNT) 
-            {
-                tryDens = 0;
-                isDENSDead = TRUE;
-                Reset_I2C(KEY, I2C_KEY);
-            }
-            else tryDens++;
-            break;
-        case I2C_AO :
-            if (tryAo > DEAD_COUNT) 
-            {
-                tryAo = 0;
-                isAODead = TRUE;
-                Reset_I2C(KEY, I2C_KEY);
-            }
-            else tryAo++;
-            break;
-        default : break;
-    } 
-}
-
-
 static inline int I2C_Wait_To_Receive(void)
 {
     int count = 0; 
@@ -1280,7 +1221,7 @@ void I2C_ADC_Read_Temp(void)
 	I2C_MASTER_MODE;
 	I2C_CNT_1BYTE;
 
-	if (I2C_Wait_To_Send());
+	if (I2C_Wait_To_Send()) Reset_I2C(KEY, key);
 
 	// read ICIVR until it's cleared of all flags
 	while (CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); 
@@ -1766,7 +1707,7 @@ int I2C_DS1340_Read(int TIME_ADDR)
 		I2C_STOP_SET; 
 		I2C_START_SET;
 
-		if (I2C_Wait_For_Start()) Reset_I2C(KEY, key);
+		I2C_Wait_For_Start();
 		(I2C_Wait_To_Receive()) ? errorCounter(I2C_RTC, key) : (tryRtc = 0);
 
         ////////////////////////////////////////////////////////////
@@ -2259,7 +2200,7 @@ void I2C_Update_AO(void)
 		I2C_STOP_SET; 
 		I2C_START_SET;
         
-		if (I2C_Wait_For_Start()) Reset_I2C(KEY, key);
+		I2C_Wait_For_Start();
         (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryDens = 0);
 
 		////////////////////////////////////////////////////////////////////
@@ -2325,3 +2266,64 @@ void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_
         isOk = TRUE;
     }
 }
+
+
+static inline errorCounter(Uint8 i2c_slave, Uint32 I2C_KEY)
+{
+    /// MAX NUMBER OF RETRYS BEFORE DISABLING DEFECTED I2C SLAVE
+    static Uint8 DEAD_COUNT = 30; 
+   
+     switch (i2c_slave) {
+        case I2C_TEMP :
+            if (tryTemp > DEAD_COUNT) 
+            {
+                tryTemp = 0;
+                isTEMPDead = TRUE;
+                isVREFDead = TRUE;
+                Reset_I2C(KEY, I2C_KEY);
+            }
+            else tryTemp++;
+            break;
+        case I2C_VREF :
+            if (tryVref > DEAD_COUNT) 
+            {
+                tryVref = 0;
+                isTEMPDead = TRUE;
+                isVREFDead = TRUE;
+                Reset_I2C(KEY, I2C_KEY);
+            }
+            else tryVref++;
+            break;
+        case I2C_RTC :
+            if (tryRtc > DEAD_COUNT) 
+            {
+                tryRtc = 0;
+                isRTCDead = TRUE;
+                Reset_I2C(KEY, I2C_KEY);
+            }
+            else tryRtc++;
+            break;
+        case I2C_DENS :
+            if (tryDens > DEAD_COUNT) 
+            {
+                tryDens = 0;
+                isDENSDead = TRUE;
+                Reset_I2C(KEY, I2C_KEY);
+            }
+            else tryDens++;
+            break;
+        case I2C_AO :
+            if (tryAo > DEAD_COUNT) 
+            {
+                tryAo = 0;
+                isAODead = TRUE;
+                Reset_I2C(KEY, I2C_KEY);
+            }
+            else tryAo++;
+            break;
+        default : break;
+    } 
+}
+
+
+
