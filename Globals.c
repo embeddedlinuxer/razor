@@ -577,6 +577,7 @@ void initializeAllRegisters(void)
 	FCT_OIL_DENS_CORR_MODE	= 0; 
 	FCT_RELAY_MODE 			= 0; // WATERCUT
 
+    REG_USB_TRY             = 5; // (REGPERM_FCT)
     REG_SN_PIPE             = 0; // (REGPERM_FCT)
 	REG_ANALYZER_MODE 	    = ANA_MODE_MID;
 	REG_AO_DAMPEN			= FCT_AO_DAMPEN;

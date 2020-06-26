@@ -224,6 +224,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
     231 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_OIL_DENS_CORR_MODE,// Disabled, Ai, Modbus, Manual
     232 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_RELAY_MODE,        // relay mode
     233 ,   REGTYPE_INT ,   REGPERM_READ_O  ,   (Uint32)&REG_DIAGNOSTICS,       // diagnostics 
+    234 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&REG_USB_TRY,           // MAX_USB_TRY 
 
     402 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_AO_DAMPEN,         //
     403 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_SLAVE_ADDRESS,     //  
@@ -334,7 +335,7 @@ const Uint32 MB_TBL_COIL[][4] = {
 	25, 	REGTYPE_COIL	,	REGPERM_PASSWD  ,	(Uint32)&COIL_LOCKED_SOFT_FACTORY_RESET,// copy factory default values to user space 
 	26, 	REGTYPE_COIL	,	REGPERM_FCT     ,	(Uint32)&COIL_LOCKED_HARD_FACTORY_RESET,// Re-initialize all modebus registers and coils 
 	999 , 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UNLOCKED_FACTORY_DEFAULT,	// Unlock factory default registers and coils 
-	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPDATE_FACTORY_DEFAULT,	// Update factory default registers and coils values 
+	9999, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPDATE_FACTORY_DEFAULT,	// Update factory default registers and coils
 	0	, 	0			, 	0					,   0
 };
 

@@ -1357,26 +1357,20 @@ void I2C_ADC_Read_Temp_Callback(void)
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 
-	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); 
+	while (CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); 
 
-    /// start 
-	I2C_STOP_SET; 
 	I2C_START_SET;
-
-	if (I2C_Wait_For_Start()) 
-    {
-         Reset_I2C(KEY, key);
-         return;
-    }
-	(I2C_Wait_To_Receive()) ? errorCounter(I2C_TEMP, key) : (tryTemp = 0);
+	I2C_STOP_SET;
+	I2C_Wait_For_Start();
+	I2C_Wait_To_Receive();
 
     /// MSB
 	temp_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8; 
-	(I2C_Wait_To_Receive()) ? errorCounter(I2C_TEMP, key) : (tryTemp = 0);
+	I2C_Wait_To_Receive();
 
     /// LSB
 	temp_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
-	(I2C_Wait_To_Receive()) ? errorCounter(I2C_TEMP, key) : (tryTemp = 0);
+	I2C_Wait_To_Receive();
 
     /// CONFIG
 	adc_config = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
@@ -1578,27 +1572,23 @@ void I2C_ADC_Read_VREF_Callback(void)
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 
-    //read ICIVR until it's cleared of all flags
+    if (count > 1) vref_dbl = 2;
+    if (count > 2) vref_dbl = 3;
+
     while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
 
-	/// start
     I2C_START_SET;
 	I2C_STOP_SET;
-
-    if (I2C_Wait_For_Start()) 
-    {
-        Reset_I2C(KEY, key);
-        return;
-    }
-    (I2C_Wait_To_Receive()) ? errorCounter(I2C_VREF, key) : (tryVref = 0);
+    I2C_Wait_For_Start();
+    I2C_Wait_To_Receive();
 
     /// MSB
     vref_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8;
-    (I2C_Wait_To_Receive()) ? errorCounter(I2C_VREF, key) : (tryVref = 0);
+    I2C_Wait_To_Receive();
 
     /// LSB
     vref_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
-    (I2C_Wait_To_Receive()) ? errorCounter(I2C_VREF, key) : (tryVref = 0);
+    I2C_Wait_To_Receive();
 
     /// CONFIG
     adc_config = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
@@ -1987,29 +1977,23 @@ void I2C_ADC_Read_Density_Callback(void)
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-    //read ICIVR until it's cleared of all flags
+
+    // testing
+    if (count > 1) vref_dbl = 2;
+    if (count > 2) vref_dbl = 3;
+
     while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
 
-	// start 
     I2C_START_SET;
     I2C_STOP_SET;
+    I2C_Wait_For_Start();
+    I2C_Wait_To_Receive();
 
-    if (I2C_Wait_For_Start()) 
-    {
-        Reset_I2C(KEY, key);
-        return;
-    }
-    (I2C_Wait_To_Receive()) ? errorCounter(I2C_DENS, key) : (tryDens = 0);
-
-    //////////////////////////////////////////////////////
-    /// read values
-    //////////////////////////////////////////////////////
- 
     vref_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8; //MSB
-    (I2C_Wait_To_Receive()) ? errorCounter(I2C_DENS, key) : (tryDens = 0);
+    I2C_Wait_To_Receive();
 
     vref_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D); //LSB
-    (I2C_Wait_To_Receive()) ? errorCounter(I2C_DENS, key) : (tryDens = 0);
+    I2C_Wait_To_Receive();
 
     adc_config = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D); //config
     I2C_Wait_For_Stop();

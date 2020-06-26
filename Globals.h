@@ -739,6 +739,9 @@ typedef struct
 #pragma DATA_SECTION(REG_RELAY_MODE,"CFG")
 	_EXTERN far Uint8 REG_RELAY_MODE;
 
+#pragma DATA_SECTION(REG_USB_TRY,"CFG")
+	_EXTERN far int REG_USB_TRY;
+ 
     _EXTERN far int TMP_RTC_SEC;        // RTC read-only: seconds
     _EXTERN far int TMP_RTC_MIN;        // RTC read-only: minutes
     _EXTERN far int TMP_RTC_HR;         // RTC read-only: hours

@@ -32,7 +32,6 @@
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 
-#define MAX_USB_TRY         10
 #define USB_INSTANCE        0
 #define MAX_DATA_BUF_SIZE   160 
 #define MAX_DATA_SIZE       4096 
@@ -304,7 +303,7 @@ void logUsbFxn(void)
             else 
             {
                 try = 0;
-                if (try2 > MAX_USB_TRY) 
+                if (try2 > REG_USB_TRY) 
                 {
                     try2 = 0;
                     disableUsbLogging(FR_INVALID_DRIVE);
@@ -319,7 +318,7 @@ void logUsbFxn(void)
     }
     else 
     {
-        if (try > MAX_USB_TRY) 
+        if (try > REG_USB_TRY) 
         {
             try = 0;
             disableUsbLogging(FR_INVALID_DRIVE);
