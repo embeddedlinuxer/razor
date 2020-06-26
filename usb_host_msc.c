@@ -32,6 +32,7 @@
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 
+#define MAX_USB_TRY         10
 #define USB_INSTANCE        0
 #define MAX_DATA_BUF_SIZE   160 
 #define MAX_DATA_SIZE       4096 
@@ -239,7 +240,10 @@ checkFreeSpace(void)
     FATFS *pFatFs;
 
     f_getfree("0:", (DWORD *)&totalSize, &pFatFs);
-    if ((totalSize*pFatFs->csize)/2 < MIN_DISK_SPACE) COIL_LOG_ENABLE.val = FALSE;
+    if ((totalSize*pFatFs->csize)/2 < MIN_DISK_SPACE) 
+    {
+        COIL_LOG_ENABLE.val = FALSE;
+    }
 }
 
 void disableUsbLogging(FRESULT fr)
@@ -274,20 +278,59 @@ void disableUsbLogging(FRESULT fr)
 void logUsbFxn(void)
 {
     FRESULT fresult;
+    static Uint8 try = 0;
+    static Uint8 try2 = 0;
 
-    if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) return;
+    if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) 
+    {
+        return;
+    }
 
     if (g_eState == STATE_DEVICE_ENUM)
     {   
-        if (USBHMSCDriveReady(g_ulMSCInstance) != 0) return;
+        if (USBHMSCDriveReady(g_ulMSCInstance) != 0) 
+        {
+            return;
+        }
 
         if (!g_fsHasOpened)
         {
-            if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) g_fsHasOpened = 1;
-            else return;
+            if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) 
+            {
+                try = 0;
+                try2 = 0;
+                g_fsHasOpened = 1;
+            }
+            else 
+            {
+                try = 0;
+                if (try2 > MAX_USB_TRY) 
+                {
+                    try2 = 0;
+                    disableUsbLogging(FR_INVALID_DRIVE);
+                    return;
+                }
+                else
+                {
+                    try2++;
+                }
+            }
         }
     }
-    else return;
+    else 
+    {
+        if (try > MAX_USB_TRY) 
+        {
+            try = 0;
+            disableUsbLogging(FR_INVALID_DRIVE);
+        }
+        else
+        {
+            try++;
+        }
+
+        return;
+    }
 
    	/// STOP LOGGING?	
     if (!COIL_LOG_ENABLE.val)
@@ -301,7 +344,10 @@ void logUsbFxn(void)
     Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
 	/// VALIDATE PERIOD
-    if ((tmp_sec % REG_LOGGING_PERIOD != 0) || (tmp_sec == USB_RTC_SEC)) return;
+    if ((tmp_sec % REG_LOGGING_PERIOD != 0) || (tmp_sec == USB_RTC_SEC)) 
+    {
+        return;
+    }
 
 	/// UPDATE TIME	
 	if (USB_RTC_SEC != tmp_sec) USB_RTC_SEC = tmp_sec;
@@ -317,7 +363,10 @@ void logUsbFxn(void)
         // TIMESTAMP VALIDATOR
         static int delayLogging = 0;
         delayLogging++;
-        if (delayLogging < 10) return;
+        if (delayLogging < 10) 
+        {
+            return;
+        }
         delayLogging = 0;
 
 		FILINFO fno;
@@ -329,8 +378,10 @@ void logUsbFxn(void)
         sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
 		// file already exists?
-		if (f_stat(logFile, &fno) == FR_OK) return;
-
+		if (f_stat(logFile, &fno) == FR_OK) 
+        {
+            return;
+        }
         // mkdir PDI
         fresult = f_mkdir("/PDI");
         if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
@@ -496,7 +547,10 @@ void loadUsbDriver(void)
     usb_handle = USB_open(usb_host_params.instanceNo, &usb_host_params);
 
     // failed to open
-    if (usb_handle == 0) return;
+    if (usb_handle == 0) 
+    {
+        return;
+    }
 
     // Setup the INT Controller
 	usbHostIntrConfig (&usb_host_params);

@@ -180,6 +180,7 @@ Process_Menu(void)
 	// Start main loop
 	while (1)
 	{
+        
         if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
 		if (!COIL_LOCKED_SOFT_FACTORY_RESET.val && !COIL_LOCKED_HARD_FACTORY_RESET.val) 
 		{
