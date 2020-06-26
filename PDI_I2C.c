@@ -778,6 +778,7 @@ void I2C_Pulse_MBVE(void)
 	Uint8	i2c_lsb, i2c_msb;
     Uint8   button_state_changed = FALSE;
 	Uint32	button_pin = 0;
+    int     timeout = TRUE;
 
 	if (I2C_BUTTON_CHOOSER == I2C_BUTTON_NONE)
 	{	// we are done with this series of pulses, start the "long" MBVE clock
@@ -905,7 +906,8 @@ void I2C_Pulse_MBVE(void)
 	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
 	I2C_START_SET;
 	I2C_Wait_For_Start();
-	if (!I2C_Wait_To_Send())
+    timeout = I2C_Wait_To_Send();
+	if (!timeout)
 	{	// send new data to LCD
         int x;
         for (x=0;x<2;x++)
@@ -925,7 +927,8 @@ void I2C_Pulse_MBVE(void)
 	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
 	I2C_START_SET; // send start condition to LCD expander
 
-	if (button_state_changed) Semaphore_post(Menu_sem); // "call" Process_Menu()
+    if (timeout) Reset_I2C(KEY, key);
+	else if (button_state_changed) Semaphore_post(Menu_sem); // "call" Process_Menu()
 
 	// start the "short" MBVE clock
 	Clock_start(I2C_Pulse_MBVE_Clock); //pulse the next button in ~37.5ms 100 clock ticks
@@ -1221,7 +1224,11 @@ void I2C_ADC_Read_Temp(void)
 	I2C_MASTER_MODE;
 	I2C_CNT_1BYTE;
 
-	if (I2C_Wait_To_Send()) Reset_I2C(KEY, key);
+	if (I2C_Wait_To_Send()) 
+    {
+        Reset_I2C(KEY, key);
+        return;
+    }
 
 	// read ICIVR until it's cleared of all flags
 	while (CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); 
@@ -1308,7 +1315,11 @@ void I2C_ADC_Read_Temp_Callback(void)
 		I2C_STOP_SET; 
 		I2C_START_SET;
 
-		if (I2C_Wait_For_Start()) Reset_I2C(KEY, key);
+		if (I2C_Wait_For_Start()) 
+        {
+            Reset_I2C(KEY, key);
+            return;
+        }
 		(I2C_Wait_To_Receive()) ? errorCounter(I2C_TEMP, key) : (tryTemp = 0);
 
 		////////////////////////////////////////////////////////////////////
@@ -1335,9 +1346,44 @@ void I2C_ADC_Read_Temp_Callback(void)
 		count++;
 
 	} while (((adc_config != 0x7C) || (temp_val == 0x7C7C)) && (count < 3));
+
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
 	//note:	occasionally the ADC will give back 0x7C (the config register value) for every byte.
 	//	Immediately re-reading the ADC registers once more seems to fix this, but I haven't yet
 	//	discovered why it's happening. Perhaps it's related to the clock countdown values... TODO
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+
+	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); 
+
+    /// start 
+	I2C_STOP_SET; 
+	I2C_START_SET;
+
+	if (I2C_Wait_For_Start()) 
+    {
+         Reset_I2C(KEY, key);
+         return;
+    }
+	(I2C_Wait_To_Receive()) ? errorCounter(I2C_TEMP, key) : (tryTemp = 0);
+
+    /// MSB
+	temp_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8; 
+	(I2C_Wait_To_Receive()) ? errorCounter(I2C_TEMP, key) : (tryTemp = 0);
+
+    /// LSB
+	temp_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
+	(I2C_Wait_To_Receive()) ? errorCounter(I2C_TEMP, key) : (tryTemp = 0);
+
+    /// CONFIG
+	adc_config = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
+	I2C_Wait_For_Stop();
+
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
 
 	I2C_TX_MODE; 										// put I2C back in TX mode
 	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); // mask the ICRRDY interrupt
@@ -1406,7 +1452,11 @@ void I2C_ADC_Read_VREF(void)
 	I2C_MASTER_MODE;
 	I2C_CNT_1BYTE;
 
-	if (I2C_Wait_To_Send()) Reset_I2C(KEY, key);
+	if (I2C_Wait_To_Send()) 
+    {
+        Reset_I2C(KEY, key);
+        return;
+    }
 
 	// read ICIVR until it's cleared of all flags
 	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
@@ -1489,7 +1539,11 @@ void I2C_ADC_Read_VREF_Callback(void)
         I2C_START_SET;
 		I2C_STOP_SET;
 
-        if (I2C_Wait_For_Start()) Reset_I2C(KEY, key);
+        if (I2C_Wait_For_Start()) 
+        {
+            Reset_I2C(KEY, key);
+            return;
+        }
         (I2C_Wait_To_Receive()) ? errorCounter(I2C_VREF, key) : (tryVref = 0);
 
         ///////////////////////////////////////////////////////////////
@@ -1513,6 +1567,45 @@ void I2C_ADC_Read_VREF_Callback(void)
 
         count++;
     } while ((adc_config != 0x5C) && (count < 3));
+
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	//note:	occasionally the ADC will give back 0x7C (the config register value) for every byte.
+	//	Immediately re-reading the ADC registers once more seems to fix this, but I haven't yet
+	//	discovered why it's happening. Perhaps it's related to the clock countdown values... TODO
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+
+    //read ICIVR until it's cleared of all flags
+    while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
+
+	/// start
+    I2C_START_SET;
+	I2C_STOP_SET;
+
+    if (I2C_Wait_For_Start()) 
+    {
+        Reset_I2C(KEY, key);
+        return;
+    }
+    (I2C_Wait_To_Receive()) ? errorCounter(I2C_VREF, key) : (tryVref = 0);
+
+    /// MSB
+    vref_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8;
+    (I2C_Wait_To_Receive()) ? errorCounter(I2C_VREF, key) : (tryVref = 0);
+
+    /// LSB
+    vref_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
+    (I2C_Wait_To_Receive()) ? errorCounter(I2C_VREF, key) : (tryVref = 0);
+
+    /// CONFIG
+    adc_config = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
+    I2C_Wait_For_Stop();
+
+    ///////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////
 
 	// put I2C back in TX mode
     I2C_TX_MODE;    
@@ -1734,7 +1827,6 @@ int I2C_DS1340_Read(int TIME_ADDR)
 }
 
 
-
 void I2C_ADC_Read_Density(void)
 {
 	if(I2C_TXBUF.n > 0)
@@ -1767,7 +1859,11 @@ void I2C_ADC_Read_Density(void)
 	I2C_MASTER_MODE;
 	I2C_CNT_1BYTE;
 
-	if (I2C_Wait_To_Send()) Reset_I2C(KEY, key);
+	if (I2C_Wait_To_Send()) 
+    {
+        Reset_I2C(KEY, key);
+        return;
+    }
 
 	// read ICIVR until it's cleared of all flags
 	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
@@ -1855,7 +1951,11 @@ void I2C_ADC_Read_Density_Callback(void)
         I2C_START_SET;
 		I2C_STOP_SET;
 
-        if (I2C_Wait_For_Start()) Reset_I2C(KEY, key);
+        if (I2C_Wait_For_Start()) 
+        {
+            Reset_I2C(KEY, key);
+            return;
+        }
         (I2C_Wait_To_Receive()) ? errorCounter(I2C_DENS, key) : (tryDens = 0);
 
         //////////////////////////////////////////////////////
@@ -1877,6 +1977,45 @@ void I2C_ADC_Read_Density_Callback(void)
         count++;
 
     } while ((adc_config != 0x5C) && (count < 3));
+
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	//note:	occasionally the ADC will give back 0x7C (the config register value) for every byte.
+	//	Immediately re-reading the ADC registers once more seems to fix this, but I haven't yet
+	//	discovered why it's happening. Perhaps it's related to the clock countdown values... TODO
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+    //read ICIVR until it's cleared of all flags
+    while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
+
+	// start 
+    I2C_START_SET;
+    I2C_STOP_SET;
+
+    if (I2C_Wait_For_Start()) 
+    {
+        Reset_I2C(KEY, key);
+        return;
+    }
+    (I2C_Wait_To_Receive()) ? errorCounter(I2C_DENS, key) : (tryDens = 0);
+
+    //////////////////////////////////////////////////////
+    /// read values
+    //////////////////////////////////////////////////////
+ 
+    vref_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8; //MSB
+    (I2C_Wait_To_Receive()) ? errorCounter(I2C_DENS, key) : (tryDens = 0);
+
+    vref_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D); //LSB
+    (I2C_Wait_To_Receive()) ? errorCounter(I2C_DENS, key) : (tryDens = 0);
+
+    adc_config = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D); //config
+    I2C_Wait_For_Stop();
+
+    //////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////
 
 	// put I2C back in TX mode
     I2C_TX_MODE;    
@@ -2144,7 +2283,11 @@ void I2C_Update_AO(void)
 	I2C_CNT_3BYTE;
 
     /// start
-	if (I2C_Wait_For_Start()) Reset_I2C(KEY, key);
+	if (I2C_Wait_For_Start()) 
+    {
+        Reset_I2C(KEY, key);
+        return;
+    }
 
 	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
 	I2C_START_SET;	// initiate sequence
