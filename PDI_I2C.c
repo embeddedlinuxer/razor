@@ -1393,7 +1393,7 @@ void I2C_ADC_Read_Temp_Callback(void)
 
 		count++;
 
-	} while (( adc_config != 0x7C) || (temp_val == 0x7C7C) && (count < 3));
+	} while (((adc_config != 0x7C) || (temp_val == 0x7C7C)) && (count < 3));
 	//note:	occasionally the ADC will give back 0x7C (the config register value) for every byte.
 	//	Immediately re-reading the ADC registers once more seems to fix this, but I haven't yet
 	//	discovered why it's happening. Perhaps it's related to the clock countdown values... TODO
