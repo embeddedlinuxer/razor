@@ -114,6 +114,10 @@ void Poll(void)
 			if (WC > REG_OIL_CALC_MAX) WC = 100.00;	
 		}
 	}
+    else
+    {
+        REG_DENS_CORR = 0;
+    }
 	
 	if ((err_f | err_w | err_d) == FALSE)
 	{
@@ -535,8 +539,15 @@ void Calibrate_Oil(void)
             {
                 if ((REG_WATERCUT.STAT & var_aux)==0) 
 				{
-					//t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj); [Jun-02-2020 : Enrique confirmed WATERCUT_RAW_AVG instead of "REG_WATERCUT_RAW"
-					t = (REG_OIL_SAMPLE.calc_val*sg) - (WC_RAW_AVG + REG_DENS_CORR);
+					//t = (REG_OIL_SAMPLE.calc_val*sg) - (REG_WATERCUT_RAW + FC.Dadj); [Jun-02-2020] : Enrique confirmed WATERCUT_RAW_AVG instead of "REG_WATERCUT_RAW"
+                    if (REG_OIL_DENS_CORR_MODE != 0)
+					{
+                        t = (REG_OIL_SAMPLE.calc_val*sg) - (WC_RAW_AVG + REG_DENS_CORR);
+                    }
+                    else
+                    {
+                        t = REG_OIL_SAMPLE.calc_val*sg - WC_RAW_AVG;  /// [Jun-30-2020] : Enerique correctd equation when there is no density correction 
+                    }
 				}
 
                 VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
@@ -545,7 +556,7 @@ void Calibrate_Oil(void)
         else
         {
             t = REG_OIL_SAMPLE.calc_val - (REG_WATERCUT_AVG.calc_val + REG_DENS_ADJ);
-
+        
             VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
         }
     }   
