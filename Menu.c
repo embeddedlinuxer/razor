@@ -180,7 +180,6 @@ Process_Menu(void)
 	// Start main loop
 	while (1)
 	{
-        
         if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
 		if (!COIL_LOCKED_SOFT_FACTORY_RESET.val && !COIL_LOCKED_HARD_FACTORY_RESET.val) 
 		{
@@ -318,6 +317,7 @@ Process_Menu(void)
 	}
 }
 
+
 void
 blinkMenu(void)
 {
@@ -325,6 +325,7 @@ blinkMenu(void)
     (isOn) ? LCD_printch(MENU.id, MENU.pos, 0) : LCD_printch(' ', MENU.pos, 0);
 	LCD_setaddr(MENU.col,MENU.row); 	// restore cursor position
 }
+
 
 void
 blinkLcdLine1(const char * textA, const char * textB)

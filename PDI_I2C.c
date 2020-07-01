@@ -53,15 +53,12 @@
 #define KEY             1
 #define NO_KEY          0
 
-#define I2C_TEMP    1
-#define I2C_VREF    2 
-#define I2C_RTC     3 
-#define I2C_DENS    4 
-#define I2C_AO      5 
+#define I2C_TEMP    	1
+#define I2C_VREF    	2 
+#define I2C_RTC     	3 
+#define I2C_DENS    	4 
+#define I2C_AO      	5 
 
-/*=======================================================================*/
-/*                         	FUNCTION PROTOTYPES                	         */
-/*=======================================================================*/
 static BOOL isTEMPDead = FALSE;
 static BOOL isVREFDead = FALSE;
 static BOOL isRTCDead = FALSE;
@@ -1201,7 +1198,7 @@ void I2C_ADC_Read_Temp(void)
 
 	Uint32 key;
 
-    /// check usb logging
+    /// usb data logging
 	if (isLogging) logUsbFxn();
 
 	I2C_START_CLR;
