@@ -282,11 +282,15 @@ void logUsbFxn(void)
 
     if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) 
     {
+		try = 0;
+		try2 = 0;
         return;
     }
 
     if (g_eState == STATE_DEVICE_ENUM)
     {   
+        try = 0;
+
         if (USBHMSCDriveReady(g_ulMSCInstance) != 0) 
         {
             return;
@@ -296,13 +300,11 @@ void logUsbFxn(void)
         {
             if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) 
             {
-                try = 0;
                 try2 = 0;
                 g_fsHasOpened = 1;
             }
             else 
             {
-                try = 0;
                 if (try2 > REG_USB_TRY) 
                 {
                     try2 = 0;
@@ -318,6 +320,8 @@ void logUsbFxn(void)
     }
     else 
     {
+        try2 = 0;
+
         if (try > REG_USB_TRY) 
         {
             try = 0;
