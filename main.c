@@ -63,7 +63,7 @@ int main (void)
     // INITIALIZE EVERYTHING ELSE
 	Init_All();
 
-    // USB OSAL DELAY TIMER 
+    // USB OSAL DELAY TIMER
     delayTimerSetup();
 
     // START TI-RTOS KERNEL
