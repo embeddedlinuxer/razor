@@ -2131,12 +2131,9 @@ else if (handle == I2C_Update_AO_Clock)
 void
 setLcdExpander(void)
 {
-	I2C_TX_MODE; 										// put I2C back in TX mode
-	I2C_MASTER_MODE;
-	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); // mask the ICRRDY interrupt
+	setTx();
 	i2cRegs->ICSAR = CSL_FMK(I2C_ICSAR_SADDR,I2C_SLAVE_ADDR_XPANDR); 	//Set slave address to 0x20
 	CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_STP,CLEAR); 		// clear stop bit;
-	I2C_RM_ON;											// enable repeated start mode
 }
 
 
@@ -2160,17 +2157,16 @@ void
 setTx(void)
 {
 	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); //mask the ICRRDY interrupt
-	I2C_START_CLR;
-	I2C_STOP_SET;
-    I2C_TX_MODE;    // TX MODE
+    	I2C_TX_MODE; // I2C in TX MODE
+	I2C_RM_ON;
 	I2C_MASTER_MODE;
 }
 
 void
 setRx(void)
 {
+    	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
 	I2C_RX_MODE; // I2C in RX mode 
 	I2C_RM_OFF;
 	I2C_MASTER_MODE;
-    CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
 }
