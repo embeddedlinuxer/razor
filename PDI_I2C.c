@@ -213,7 +213,7 @@ void Reset_I2C(Uint8 isKey, Uint32 I2C_KEY)
 	//////////////////////////////////////////
 	// Stop any and all I2C-related clocks
 	//////////////////////////////////////////
-	/// TEMPERATURE -> VREF -> Read_RTC -> DENSITY -> (Write_RTC) -> AO
+	/// TEMP -> VREF -> R_RTC -> DENS -> (W_RTC) -> AO
 
 	// stop AI Temperature
 	Clock_stop(I2C_ADC_Read_Temp_Callback_Clock_Retry);
@@ -2115,7 +2115,7 @@ void startNextI2cClock(Clock_Handle handle)
         else if (!isRTCDead) Clock_start(I2C_DS1340_Read_RTC_Clock);
         else if (!isDENSDead) Clock_start(I2C_ADC_Read_Density_Clock);
     }
-else if (handle == I2C_Update_AO_Clock)
+	else if (handle == I2C_Update_AO_Clock)
     {
              if (!isAODead) Clock_start(I2C_Update_AO_Clock);  /// if this fails then all I2C slaves are totally dead
         else if (!isTEMPDead) Clock_start(I2C_ADC_Read_Temp_Clock);
@@ -2157,7 +2157,7 @@ void
 setTx(void)
 {
 	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); //mask the ICRRDY interrupt
-    	I2C_TX_MODE; // I2C in TX MODE
+   	I2C_TX_MODE; // I2C in TX MODE
 	I2C_RM_ON;
 	I2C_MASTER_MODE;
 }
@@ -2165,7 +2165,7 @@ setTx(void)
 void
 setRx(void)
 {
-    	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
+   	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
 	I2C_RX_MODE; // I2C in RX mode 
 	I2C_RM_OFF;
 	I2C_MASTER_MODE;

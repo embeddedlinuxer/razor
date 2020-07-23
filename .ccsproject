@@ -7,7 +7,7 @@
 	<codegenToolVersion value="7.4.2"/>
 	<isElfFormat value="true"/>
 	<rts value="libc.a"/>
-	<origin value="G:/x2"/>
+	<origin value="G:/workspace_upgrade/PDI_Razor"/>
 	<isTargetManual value="false"/>
 	<connection value="common/targetdb/connections/TIXDS2XXUSB_Connection.xml"/>
 </projectOptions>

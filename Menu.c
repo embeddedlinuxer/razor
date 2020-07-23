@@ -3718,7 +3718,7 @@ fxnSecurityInfo_UpdateFirmware(const Uint16 input)
 {
     if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_UPDATEFIRMWARE;
 
-	if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_UPDATEFIRMWARE, MNU_SECURITYINFO_UPDATEFIRMWARE); }
+    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_UPDATEFIRMWARE, MNU_SECURITYINFO_UPDATEFIRMWARE); }
 
     static BOOL isEntered = FALSE;
 

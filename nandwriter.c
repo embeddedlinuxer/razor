@@ -44,8 +44,6 @@
 /************************************************************
 * FIRMWARE AND VARIABLE START BLOCK ADDRESS
 ************************************************************/
-
-#define DEBUG_ON		0	
 #define ACCESS_DELAY	1000
 #define APP_START_BLK 	1
 #define VAR_START_BLK 	50
@@ -320,9 +318,9 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
   	numBlks = 0;
   	while ( (numBlks*hNandInfo->pagesPerBlock) < totalPageCnt ) numBlks++;
 
-  	if (DEBUG_ON) DEBUG_printString("Number of blocks needed for data: ");
-  	if (DEBUG_ON) DEBUG_printHexInt(numBlks);
-  	if (DEBUG_ON) DEBUG_printString("\r\n");
+  	DEBUG_printString("Number of blocks needed for data: ");
+  	DEBUG_printHexInt(numBlks);
+  	DEBUG_printString("\r\n");
 
   	// Start in block 1 (leave block 0 alone)
   	blockNum = 1;
@@ -346,16 +344,16 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
    	// Start page writing loop
    	do
    	{
-   		if (DEBUG_ON) DEBUG_printString((String)"Writing image data to block ");
-   		if (DEBUG_ON) DEBUG_printHexInt(blockNum);
-   		if (DEBUG_ON) DEBUG_printString((String)", page ");
-   		if (DEBUG_ON) DEBUG_printHexInt(pageNum);
-   		if (DEBUG_ON) DEBUG_printString((String)"\r\n");
+   		DEBUG_printString((String)"Writing image data to block ");
+   		DEBUG_printHexInt(blockNum);
+   		DEBUG_printString((String)", page ");
+   		DEBUG_printHexInt(pageNum);
+   		DEBUG_printString((String)"\r\n");
 
    		/// write AIS image data to the NAND device
    		if (NAND_writePage(hNandInfo, blockNum,  pageNum, dataPtr) != E_PASS)
    		{
-       		if (DEBUG_ON) DEBUG_printString("Write failed. Marking block as bad...\n");
+       		DEBUG_printString("Write failed. Marking block as bad...\n");
        		NAND_reset(hNandInfo);
        		NAND_badBlockMark(hNandInfo,blockNum);
        		dataPtr -=  pageNum * hNandInfo->dataBytesPerPage;
@@ -385,7 +383,7 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
    	} while (pageCnt < totalPageCnt);
 
    	NAND_protectBlocks(hNandInfo);
-	if (DEBUG_ON) DEBUG_printString("\n\nNand boot preparation was successful.");
+	DEBUG_printString("\n\nNand boot preparation was successful.");
   	return E_PASS;
 }
 
@@ -456,28 +454,28 @@ void updateFirmware(void)
     /// Go to start of file
     if (f_lseek(&fPtr,0) != FR_OK) return;
 
-	displayLcd("  Reading....  ",1);
+	displayLcd("    Readng...   ",1);
 	/// read file	
 	for (;;) {
      	if (f_read(&fPtr, buffer, sizeof buffer, &br) != FR_OK) return;  /* Read a chunk of data from the source file */
-   		for(i=0;i<ACCESS_DELAY*50;i++);
+   		for(i=0;i<ACCESS_DELAY*20;i++);
         if (br == 0) break; /* error or eof */
 
 		for(loop = 0; loop < sizeof buffer; loop++) {
       		aisPtr[index] = buffer[loop];
 			index++;
    		}
-   		for(i=0;i<ACCESS_DELAY*50;i++);
+   		for(i=0;i<ACCESS_DELAY*20;i++);
     }
 
 	/// close
     if (f_close (&fPtr) != FR_OK) return;
 
+    /// GLOBAL NAND ERASE
+	displayLcd("   Flashing...  ",1);
+
 	/// unload usb driver
 	unloadUsbDriver();
-
-	/// global erasing and flashing 
-	displayLcd("  Flashing...  ",1);
 
 	Swi_disable();
 	Hwi_disable();

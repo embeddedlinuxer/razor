@@ -63,7 +63,7 @@ int main (void)
     // INITIALIZE EVERYTHING ELSE
 	Init_All();
 
-    // USB OSAL DELAY TIMER
+    /// osal delay timer reset
     delayTimerSetup();
 
     // START TI-RTOS KERNEL
@@ -113,7 +113,7 @@ static inline void Init_All(void)
 void Init_BoardClocks(void)
 {
     Uint32 i;
-    for (i=0; i < 5000000; i++);
+    for (i=0;i<5000000;i++);
 
     Board_moduleClockSyncReset(CSL_PSC_USB20);
     Board_moduleClockSyncReset(CSL_PSC_GPIO);

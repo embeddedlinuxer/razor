@@ -373,15 +373,15 @@ void logUsbFxn(void)
         	return;
     	}
 
-        /// firmware upgrade
-        if (isFirmwareUpgrade)
-        {
-            isFirmwareUpgrade = FALSE;
-            displayLcd("   Loading....  ", LCD1);
-            Swi_post(Swi_updateFirmware);
+		/// firmware upgrade
+	 	if (isFirmwareUpgrade)
+    	{
+        	isFirmwareUpgrade = FALSE;
+			displayLcd("   Loading....  ", LCD1);
+			Swi_post(Swi_updateFirmware);
 
-            return;
-        }
+        	return;
+    	}
 
    		/// STOP LOGGING?	
     	if (!COIL_LOG_ENABLE.val)
@@ -437,11 +437,11 @@ void logUsbFxn(void)
         	// get a file name
         	sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
-			if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
-			{
-				fresult = f_close(&fileWriteObject);
-				if (fresult == FR_OK) return;
-			}
+		if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
+		{
+			fresult = f_close(&fileWriteObject);
+			if (fresult == FR_OK) return;
+		}
 
 			/// open file
         	fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
