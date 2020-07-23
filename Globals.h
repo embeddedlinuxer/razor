@@ -33,8 +33,8 @@
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
-#define HARDWARE_VERSION "1.0.0"
-#define FIRMWARE_VERSION "1.1.0"
+#define HARDWARE_VERSION		"1.1.1"
+#define FIRMWARE_VERSION 		"1.2.0"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -140,7 +140,8 @@ _EXTERN Uint32 delayTimer;
 _EXTERN BOOL isUpdateDisplay;
 _EXTERN BOOL isWriteRTC;
 _EXTERN BOOL isLogging;
-//_EXTERN BOOL isUpdateFirmware;
+_EXTERN BOOL isFirmwareUpgrade;
+_EXTERN BOOL isResetPower;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

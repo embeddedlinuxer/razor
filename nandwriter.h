@@ -152,7 +152,6 @@ NANDWRITER_Boot;
 /// swi to writeNand()
 //////////////////////////////////
 extern void writeNand(void);
-extern void updateFirmware(void);
 
 /******************************************************
 * Global Function Declarations                        *

@@ -41,6 +41,8 @@
 #define MENU_H
 #include "Menu.h"
 
+#define USB_UPGRADE_DELAY 	100
+
 static int y = 0;
 static int blinker = 0;             // MENU ID BLINKER 
 static BOOL isOn = FALSE;           // LINE1 BLINKER
@@ -163,6 +165,9 @@ Process_Menu(void)
 	Uint8	needRelayClick;
 	static 	Uint16 (*stateFxn)(Uint16);
     Uint8   isValidInput = TRUE;
+	
+	// reset power
+	isResetPower = FALSE;
 
     // Enable USB device
     loadUsbDriver();
@@ -232,8 +237,6 @@ Process_Menu(void)
 						    prevButtons[i]		= buttons[i];
 						    MENU.debounceDone 	= FALSE;
 						    Clock_start(DebounceMBVE_Clock);	// start the debounce clock
-						    //MENU.isPressAndHold = TRUE;
-						    //Clock_start(pressAndHoldClock);		// Start countdown to "mnu hold reset"
 						    needRelayClick 		= TRUE;
 					    }
 				    }
@@ -340,16 +343,6 @@ DebounceMBVE(void)
 	MENU.debounceDone = TRUE;
 }
 
-
-void 
-resetPressAndHold(void)
-{
-/*	if (MENU.isPressAndHold)
-	{
-		MENU.isHomeScreen = TRUE;
-		Semaphore_post(Menu_sem);
-	}*/
-}
 
 int
 notifyMessageAndExit(const int currentId, const int nextId)
@@ -3656,8 +3649,8 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 
 	switch (input)	
 	{
-        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
-        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
+        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
+        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;
@@ -3702,41 +3695,67 @@ fxnSecurityInfo_FactReset(const Uint16 input)
 
 
 // MENU 3.8
-Uint16 
+Uint16
 mnuSecurityInfo_UpdateFirmware(const Uint16 input)
 {
-	if (I2C_TXBUF.n > 0) return MNU_SECURITYINFO_UPDATEFIRMWARE;
+    if (I2C_TXBUF.n > 0) return MNU_SECURITYINFO_UPDATEFIRMWARE;
 
-	if (isUpdateDisplay) updateDisplay(SECURITYINFO_UPDATEFIRMWARE, BLANK);
+    if (isUpdateDisplay) updateDisplay(SECURITYINFO_UPDATEFIRMWARE, BLANK);
 
-	switch (input)	
-	{
-        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
-		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_UPDATEFIRMWARE,MNU_SECURITYINFO_UPDATEFIRMWARE,SECURITYINFO_UPDATEFIRMWARE);
-		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
-		default			: return MNU_SECURITYINFO_UPDATEFIRMWARE;
-	}
+    switch (input)
+    {
+        case BTN_VALUE  : return onNextPressed(MNU_SECURITYINFO_INFO);
+        case BTN_STEP   : return onMnuStepPressed(FXN_SECURITYINFO_UPDATEFIRMWARE,MNU_SECURITYINFO_UPDATEFIRMWARE,SECURITYINFO_UPDATEFIRMWARE);
+        case BTN_BACK   : return onNextPressed(MNU_SECURITYINFO);
+        default         : return MNU_SECURITYINFO_UPDATEFIRMWARE;
+    }
 }
 
 
 // FXN 3.8
-Uint16 
+Uint16
 fxnSecurityInfo_UpdateFirmware(const Uint16 input)
 {
-	if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_UPDATEFIRMWARE;
+    if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_UPDATEFIRMWARE;
+    static BOOL isEntered = FALSE;
 
-    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_UPDATEFIRMWARE, MNU_SECURITYINFO_UPDATEFIRMWARE); }
-
-	if (isUpdateDisplay) updateDisplay(SECURITYINFO_UPDATEFIRMWARE, ENTER_START);
-
-	switch (input)	
+	if (isFirmwareUpgrade) 
 	{
-		case BTN_ENTER 	:
-            unloadUsbDriver();
-			_c_int00();			
+		static Uint8 i = 0;
+		blinkLcdLine1(LOADING, BLANK);
+		if (i < USB_UPGRADE_DELAY)
+		{
+			i++;
 			return FXN_SECURITYINFO_UPDATEFIRMWARE;
-		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
-		default			: return FXN_SECURITYINFO_UPDATEFIRMWARE;
+		}
+	    logUsbFxn();
 	}
+	else if (isResetPower) 
+	{
+		blinkLcdLine1(RESET_POWER,BLANK);
+		return FXN_SECURITYINFO_UPDATEFIRMWARE;
+	}
+	else if (isUpdateDisplay) updateDisplay(SECURITYINFO_UPDATEFIRMWARE, ENTER_RESTART);
+	else if (isEntered) blinkLcdLine1(STEP_CONFIRM, BLANK);
+	else blinkLcdLine1(ENTER_START, BLANK);
+
+    switch (input)
+    {
+        case BTN_ENTER  :
+             isEntered = TRUE;
+             return FXN_SECURITYINFO_UPDATEFIRMWARE;
+        case BTN_STEP   :
+             if (!isEntered) return FXN_SECURITYINFO_UPDATEFIRMWARE;
+             isLogging = FALSE;
+             COIL_LOG_ENABLE.val = FALSE;
+             Swi_post(Swi_writeNand);
+             isFirmwareUpgrade = TRUE;
+             return FXN_SECURITYINFO_UPDATEFIRMWARE;
+        case BTN_BACK   :
+            isEntered = FALSE;
+            isFirmwareUpgrade = FALSE;
+            return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
+        default         : return FXN_SECURITYINFO_UPDATEFIRMWARE;
+    }
 }
 

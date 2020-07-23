@@ -145,7 +145,8 @@ void reloadFactoryDefault(void)
 	char model_code[MAX_LCD_WIDTH];
 	int* model_code_int;
 
-    //isUpdateFirmware = FALSE;
+    isFirmwareUpgrade = FALSE;
+    isResetPower = FALSE;
 
 	sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
 	model_code_int = (int*)model_code;
