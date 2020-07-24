@@ -1834,161 +1834,166 @@ void I2C_DS1340_Write(int RTC_ADDR, int RTC_DATA)
 void I2C_Update_AO(void)
 {
 	if(I2C_TXBUF.n > 0)
-	{
-		Clock_start(I2C_Update_AO_Clock_Retry);
-		return;
-	}
+    {
+        Clock_start(I2C_Update_AO_Clock_Retry);
+        return;
+    }
 
-	long double percent_val;
-	long double dmax; 
-	long double dmin;
-	Uint32 out_data;
-	Uint32 key;
-	Uint16 in_val;
-	Uint16 ctrl_byte;
-	Uint8 is_missing_DAC;
+    long double percent_val;
+    long double dmax;
+    long double dmin;
+    Uint32 out_data;
+    Uint32 key;
+    Uint16 in_val;
+    Uint16 ctrl_byte;
+    Uint8 is_missing_DAC;
 
-	key = Swi_disable();
-
-	/// stop
-	setStop();
+    I2C_START_CLR;
+    I2C_STOP_SET;
+    I2C_Wait_For_Stop();
+    key = Swi_disable();
 
 ///////////////////////////////////////////////////////////////////////////// 
-#define R		10       		  	  // 12 KOhm (origianl value)
-#define VREF 	2.5	     			  // Reference Voltage
-#define BIN16  	65536    			  // 16 bit DAC multiplier 
-#define CMIN	0.04 	 			  // 4 mA min target current
-#define CMAX    0.2  	 			  // 20 mA max target current
-#define VMIN 	(R * CMIN) 		  	  // Min voltage
-#define VMAX 	(R * CMAX) 			  // Max voltage
-#define DMIN	(VMIN * BIN16 / VREF) // Dmin
-#define DMAX 	(VMAX * BIN16 / VREF) // Dmax
-#define ALM_HI	20.5				  // Alarm Hi
-#define ALM_LO  3.8				      // Alarm Lo
+#define R       10                    // 12 KOhm (origianl value)
+#define VREF    2.5                   // Reference Voltage
+#define BIN16   65536                 // 16 bit DAC multiplier 
+#define CMIN    0.04                  // 4 mA min target current
+#define CMAX    0.2                   // 20 mA max target current
+#define VMIN    (R * CMIN)            // Min voltage
+#define VMAX    (R * CMAX)            // Max voltage
+#define DMIN    (VMIN * BIN16 / VREF) // Dmin
+#define DMAX    (VMAX * BIN16 / VREF) // Dmax
+#define ALM_HI  20.5                  // Alarm Hi
+#define ALM_LO  3.8                   // Alarm Lo
 ///////////////////////////////////////////////////////////////////////////// 
 
-	// is trimming mode?
-	if (COIL_AO_TRIM_MODE.val)
-	{
-		dmax = DMAX;
-		dmin = DMIN;
-	}
-	else
-	{
-		dmax = 16*(DMAX-DMIN)/(REG_AO_TRIMHI-4.0) + DMIN;
-		dmin = (4-REG_AO_TRIMLO)*(DMAX-DMIN)/(20.0-REG_AO_TRIMLO) + DMIN;
-	}
+    // is trimming mode?
+    if (COIL_AO_TRIM_MODE.val)
+    {
+        dmax = DMAX;
+        dmin = DMIN;
+    }
+    else
+    {
+        dmax = 16*(DMAX-DMIN)/(REG_AO_TRIMHI-4.0) + DMIN;
+        dmin = (4-REG_AO_TRIMLO)*(DMAX-DMIN)/(20.0-REG_AO_TRIMLO) + DMIN;
+    }
 
-	// is active error && alarm notificaion enabled?
-	if ((DIAGNOSTICS > 0) && (REG_AO_ALARM_MODE > 0))
-	{
-		if (REG_AO_ALARM_MODE == 1)
-			percent_val = ((REG_AO_URV.calc_val-REG_AO_LRV.calc_val)*(ALM_HI-4))/(16*100);
-		else if (REG_AO_ALARM_MODE == 2)
-			percent_val = ((REG_AO_URV.calc_val-REG_AO_LRV.calc_val)*(ALM_LO-4))/(16*100);
-	}
-	else 
-	{
-		if (REG_AO_MODE == 2)	// manual mode
-			percent_val = ((REG_AO_URV.calc_val-REG_AO_LRV.calc_val)*(REG_AO_MANUAL_VAL-4))/(16*100);
-		else 					// automatic or reverse
-			percent_val = (REG_WATERCUT.calc_val-REG_AO_LRV.calc_val)/(REG_AO_URV.calc_val-REG_AO_LRV.calc_val);
-	}
-	
-	// is reverse mode?    
-	if (REG_AO_MODE == 1) 
-		out_data = ((dmax-dmin)*(1.0-percent_val)) + dmin;
-	else
-		out_data = ((dmax-dmin)*percent_val) + dmin;
+    // is active error && alarm notificaion enabled?
+    if ((DIAGNOSTICS > 0) && (REG_AO_ALARM_MODE > 0))
+    {
+        if (REG_AO_ALARM_MODE == 1)
+            percent_val = ((REG_AO_URV.calc_val-REG_AO_LRV.calc_val)*(ALM_HI-4))/(16*100);
+        else if (REG_AO_ALARM_MODE == 2)
+            percent_val = ((REG_AO_URV.calc_val-REG_AO_LRV.calc_val)*(ALM_LO-4))/(16*100);
+    }
+    else
+    {
+        if (REG_AO_MODE == 2)   // manual mode
+            percent_val = ((REG_AO_URV.calc_val-REG_AO_LRV.calc_val)*(REG_AO_MANUAL_VAL-4))/(16*100);
+        else                    // automatic or reverse
+            percent_val = (REG_WATERCUT.calc_val-REG_AO_LRV.calc_val)/(REG_AO_URV.calc_val-REG_AO_LRV.calc_val);
+    }
 
-	/// set Slave Address
-	i2cRegs->ICSAR = CSL_FMK(I2C_ICSAR_SADDR,I2C_SLAVE_ADDR_DAC); 
+    // is reverse mode?    
+    if (REG_AO_MODE == 1)
+        out_data = ((dmax-dmin)*(1.0-percent_val)) + dmin;
+    else
+        out_data = ((dmax-dmin)*percent_val) + dmin;
 
-	// write to DAC
-	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); //mask the ICRRDY interrupt
-	I2C_MASTER_MODE;
-	I2C_START_CLR;
-	I2C_RM_OFF;
-	I2C_STOP_SET;
-	I2C_CNT_3BYTE;
-	I2C_Wait_To_Send();
+    /// set Slave Address ////////////////////////////////////////
+    i2cRegs->ICSAR = CSL_FMK(I2C_ICSAR_SADDR,I2C_SLAVE_ADDR_DAC);
+    //////////////////////////////////////////////////////////////  
 
-	/// clear all flags and interrupts
-	while (CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
-	is_missing_DAC = TRUE;
-	
-	/// start
-	setStart();
+    // write to DAC
+    I2C_MASTER_MODE;
+    CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); //mask the ICRRDY interrupt
+    I2C_START_CLR;
+    I2C_RM_OFF;
+    I2C_STOP_SET;
+    I2C_CNT_3BYTE;
 
-	/// set config register 
-	i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D,I2C_CTRL_BYTE_WL);	// control byte: write&load operation
-	I2C_Wait_For_Ack();
-	I2C_Wait_To_Send();
+    if (I2C_Wait_For_Start())
+    {   //timeout - probably a slave device holding the SDA line
+        Reset_I2C(KEY, key);
+        return;
+    }
 
-	/// write msb
-	i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, ((out_data >> 8) & 0xFF));
-	I2C_Wait_For_Ack();
-	I2C_Wait_To_Send();
+    while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
+    I2C_START_SET;  // initiate sequence
+    is_missing_DAC = TRUE;
 
-	/// write lsb
-	i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, (out_data & 0xFF)); //LSB
-	I2C_Wait_For_Ack();
-	I2C_Wait_To_Send();
+    //Note: Nested if-statement used so that we abort the write process at the first sign of failure
+    if (!I2C_Wait_For_Start())
+    {
+        i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D,I2C_CTRL_BYTE_WL); // control byte: write&load operation
 
-	if (is_missing_DAC) // write attempt failed (timeout)
-	{	// clear all error flags resulting from the failed write attempt
-		CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_IRS,DISABLE);  //put i2c module in reset
+        if (!I2C_Wait_For_Ack())
+        {
+            if (!I2C_Wait_To_Send())
+            {
+                i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, ((out_data >> 8) & 0xFF) ); //MSB
 
-		i2cRegs->ICSTR = CSL_I2C_ICSTR_RESETVAL; //clear interrupt status register
+                if (!I2C_Wait_For_Ack())
+                {
+                    I2C_Wait_To_Send();
+                    i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, (out_data & 0xFF)); //LSB
+                    is_missing_DAC = FALSE;
+                }
+            }
+        }
+    }
 
-		while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //clear interrupt vector register
+    if (is_missing_DAC) // write attempt failed (timeout)
+    {   // clear all error flags resulting from the failed write attempt
+        CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_IRS,DISABLE);  //put i2c module in reset
+        i2cRegs->ICSTR = CSL_I2C_ICSTR_RESETVAL; //clear interrupt status register
+        while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //clear interrupt vector register
+        CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_IRS,ENABLE);  //take i2c module out of reset
+    }
+    else
+    {
+        I2C_START_CLR;
+        I2C_STOP_SET;
+        I2C_Wait_For_Stop();
 
-		CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_IRS,ENABLE);  //take i2c module out of reset
-	}
-	else
-	{
-		setStop();
+     	///////////// Read back the DAC value and control byte (disabled)//////////////
+        I2C_RX_MODE;    //put I2C in RX mode
+        I2C_CNT_3BYTE;
+        CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // ICRRDY interrupt
+        while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
+        I2C_STOP_SET;
+        I2C_START_SET;
+        I2C_Wait_For_Start();
+        I2C_Wait_To_Receive();
+        in_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8; //MSB
+        I2C_Wait_To_Receive();
+        in_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);     //LSB
+        I2C_Wait_To_Receive();
+        ctrl_byte = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);   //config
+        I2C_Wait_For_Stop();
+        ////////////////////////////////////////////////////////////////////*/
+    }
 
-		///////////// Read back the DAC value and control byte (disabled)//////////////
-		I2C_RX_MODE; 	//put I2C in RX mode
-		I2C_CNT_3BYTE;
-		CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // ICRRDY interrupt
+    I2C_TX_MODE; // put I2C back in TX mode
+    I2C_MASTER_MODE;
+    CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); // mask the ICRRDY interrupt
+    i2cRegs->ICSAR = CSL_FMK(I2C_ICSAR_SADDR,I2C_SLAVE_ADDR_XPANDR); // set slave address to 0x20
+    CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_STP,CLEAR); // clear stop bit;
+    I2C_RM_ON; // enable repeated start mode
+    Swi_restore(key);
 
-		while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
+    /// START NEXT I2C CLOCK
+    startNextI2cClock(I2C_ADC_Read_Temp_Clock);
 
-        /// start
-        setStart(); 
-        (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryDens = 0);
+    //read ICIVR until it's cleared of all flags
+    while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
 
-		/// read msb
-		in_val = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D) << 8;
-        (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryDens = 0);
-
-		/// read lsb
-		in_val |= CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D);
-        (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryDens = 0);
-
-		/// read config
-		ctrl_byte = CSL_FEXT(i2cRegs->ICDRR,I2C_ICDRR_D); 
-        (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryDens = 0);
-
-		setStop();
-	}
-
-	/// set LCD expander
-	setLcdExpander();
-
-    /// start next i2c clock
-	startNextI2cClock(I2C_ADC_Read_Temp_Clock);
-
-	Swi_restore(key);
-
-	//read ICIVR until it's cleared of all flags
-	while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
-
-	// send start condition to LCD expander
-	I2C_START_SET; 
+    // send start condition to LCD expander
+    I2C_START_SET;
 }
+
+
 
 void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr)
 {
