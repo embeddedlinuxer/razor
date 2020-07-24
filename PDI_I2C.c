@@ -213,7 +213,7 @@ void Reset_I2C(Uint8 isKey, Uint32 I2C_KEY)
 	//////////////////////////////////////////
 	// Stop any and all I2C-related clocks
 	//////////////////////////////////////////
-	/// TEMP -> VREF -> R_RTC -> DENS -> (W_RTC) -> AO
+	/// TEMPERATURE -> VREF -> Read_RTC -> DENSITY -> (Write_RTC) -> AO
 
 	// stop AI Temperature
 	Clock_stop(I2C_ADC_Read_Temp_Callback_Clock_Retry);
@@ -1717,7 +1717,8 @@ void I2C_ADC_Read_Density_Callback(void)
 	setLcdExpander();
 
     /// start next i2c clock 
-	startNextI2cClock(I2C_DS1340_Write_RTC_Clock);
+	if (isWriteRTC) startNextI2cClock(I2C_DS1340_Write_RTC_Clock);
+	else startNextI2cClock(I2C_Update_AO_Clock);
 
 	// is analog input mode?
 	if (REG_OIL_DENS_CORR_MODE == 1)  		
@@ -2073,7 +2074,7 @@ void startNextI2cClock(Clock_Handle handle)
         else if (!isVREFDead) Clock_start(I2C_ADC_Read_VREF_Clock);
         else if (!isRTCDead) Clock_start(I2C_DS1340_Read_RTC_Clock);
         else if (!isDENSDead) Clock_start(I2C_ADC_Read_Density_Clock);
-        else if (!isRTCDead && isWriteRTC) Clock_start(I2C_DS1340_Write_RTC_Clock);
+        else if (!isRTCDead) Clock_start(I2C_DS1340_Write_RTC_Clock);
         else if (!isAODead) Clock_start(I2C_Update_AO_Clock);  /// if this fails then all I2C slaves are totally dead
     }
     else if (handle == I2C_ADC_Read_VREF_Clock)
@@ -2081,7 +2082,7 @@ void startNextI2cClock(Clock_Handle handle)
              if (!isVREFDead) Clock_start(I2C_ADC_Read_VREF_Clock);
         else if (!isRTCDead) Clock_start(I2C_DS1340_Read_RTC_Clock);
         else if (!isDENSDead) Clock_start(I2C_ADC_Read_Density_Clock);
-        else if (!isRTCDead && isWriteRTC) Clock_start(I2C_DS1340_Write_RTC_Clock);
+        else if (!isRTCDead) Clock_start(I2C_DS1340_Write_RTC_Clock);
         else if (!isAODead) Clock_start(I2C_Update_AO_Clock);  /// if this fails then all I2C slaves are totally dead
         else if (!isTEMPDead) Clock_start(I2C_ADC_Read_Temp_Clock);
     }
@@ -2089,7 +2090,7 @@ void startNextI2cClock(Clock_Handle handle)
     {
              if (!isRTCDead) Clock_start(I2C_DS1340_Read_RTC_Clock);
         else if (!isDENSDead) Clock_start(I2C_ADC_Read_Density_Clock);
-        else if (!isRTCDead && isWriteRTC) Clock_start(I2C_DS1340_Write_RTC_Clock);
+        else if (!isRTCDead) Clock_start(I2C_DS1340_Write_RTC_Clock);
         else if (!isAODead) Clock_start(I2C_Update_AO_Clock);  /// if this fails then all I2C slaves are totally dead
         else if (!isTEMPDead) Clock_start(I2C_ADC_Read_Temp_Clock);
         else if (!isVREFDead) Clock_start(I2C_ADC_Read_VREF_Clock);
@@ -2097,7 +2098,7 @@ void startNextI2cClock(Clock_Handle handle)
     else if (handle == I2C_ADC_Read_Density_Clock)
     {
              if (!isDENSDead) Clock_start(I2C_ADC_Read_Density_Clock);
-        else if (!isRTCDead && isWriteRTC) Clock_start(I2C_DS1340_Write_RTC_Clock);
+        else if (!isRTCDead) Clock_start(I2C_DS1340_Write_RTC_Clock);
         else if (!isAODead) Clock_start(I2C_Update_AO_Clock);  /// if this fails then all I2C slaves are totally dead
         else if (!isTEMPDead) Clock_start(I2C_ADC_Read_Temp_Clock);
         else if (!isVREFDead) Clock_start(I2C_ADC_Read_VREF_Clock);
@@ -2105,7 +2106,7 @@ void startNextI2cClock(Clock_Handle handle)
     }
     else if (handle == I2C_DS1340_Write_RTC_Clock)
     {
-             if (!isRTCDead && isWriteRTC) Clock_start(I2C_DS1340_Write_RTC_Clock);
+             if (!isRTCDead) Clock_start(I2C_DS1340_Write_RTC_Clock);
         else if (!isAODead) Clock_start(I2C_Update_AO_Clock);  /// if this fails then all I2C slaves are totally dead
         else if (!isTEMPDead) Clock_start(I2C_ADC_Read_Temp_Clock);
         else if (!isVREFDead) Clock_start(I2C_ADC_Read_VREF_Clock);
@@ -2119,7 +2120,7 @@ void startNextI2cClock(Clock_Handle handle)
         else if (!isVREFDead) Clock_start(I2C_ADC_Read_VREF_Clock);
         else if (!isRTCDead) Clock_start(I2C_DS1340_Read_RTC_Clock);
         else if (!isDENSDead) Clock_start(I2C_ADC_Read_Density_Clock);
-        else if (!isRTCDead && isWriteRTC) Clock_start(I2C_DS1340_Write_RTC_Clock);
+        else if (!isRTCDead) Clock_start(I2C_DS1340_Write_RTC_Clock);
     }
     else return;
 }
@@ -2154,7 +2155,7 @@ void
 setTx(void)
 {
 	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); //mask the ICRRDY interrupt
-   	I2C_TX_MODE; // I2C in TX MODE
+    	I2C_TX_MODE; // I2C in TX MODE
 	I2C_RM_ON;
 	I2C_MASTER_MODE;
 }
@@ -2162,7 +2163,7 @@ setTx(void)
 void
 setRx(void)
 {
-   	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
+    	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
 	I2C_RX_MODE; // I2C in RX mode 
 	I2C_RM_OFF;
 	I2C_MASTER_MODE;

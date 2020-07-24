@@ -32,9 +32,8 @@
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 #define USB_INSTANCE        0
-#define MAX_DATA_BUF_SIZE   160 
-#define MAX_DATA_SIZE       4096 
-#define MIN_DISK_SPACE      10240 // 10MB
+#define MAX_DATA_SIZE   	200 
+#define MAX_BUF_SIZE       	4096 
 #define MAX_USB_DELAY		500
 
 unsigned int g_ulMSCInstance = 0;
@@ -43,7 +42,7 @@ static USB_Params usb_host_params;
 static FIL fileWriteObject;
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static Uint8 current_day = 99;
-static char LOG_BUF[MAX_DATA_SIZE];
+static char LOG_BUF[MAX_BUF_SIZE];
 static Uint8 try = 0;
 static Uint8 try2 = 0;
 static Uint8 try3 = 0;
@@ -270,7 +269,6 @@ void stopAccessingUsb(FRESULT fr)
 void logUsbFxn(void)
 {
     FRESULT fresult;
-	int i;
 
     if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) 
     {
@@ -445,16 +443,12 @@ void logUsbFxn(void)
             	return;
         	}
 
-			for (i=0;i<MAX_USB_DELAY;i++);
-
         	fresult = f_sync(&fileWriteObject);
         	if (fresult != FR_OK)
         	{
             	stopAccessingUsb(fresult);
             	return;
         	}
-
-			for (i=0;i<MAX_USB_DELAY;i++);
 
         	/// close file
         	fresult = f_close(&fileWriteObject);
@@ -464,19 +458,17 @@ void logUsbFxn(void)
             	return;
         	}
 
-			for (i=0;i<MAX_USB_DELAY;i++);
-
         	/// flush LOG_BUF 
         	LOG_BUF[0] = '\0';
 
         	return;
     	}   
 
-    	char DATA_BUF[MAX_DATA_BUF_SIZE];
+    	char DATA_BUF[MAX_DATA_SIZE];
     	sprintf(DATA_BUF,"\n%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-    	/// fill data upto MAX_DATA_BUF_SIZE
-    	if (MAX_DATA_SIZE - strlen(LOG_BUF) > MAX_DATA_BUF_SIZE) 
+    	/// fill data upto MAX_DATA_SIZE
+    	if (MAX_BUF_SIZE - strlen(LOG_BUF) > MAX_DATA_SIZE) 
     	{
         	strcat(LOG_BUF,DATA_BUF);
         	return;
@@ -505,8 +497,6 @@ void logUsbFxn(void)
         	return;
     	}
 
-		for (i=0;i<MAX_USB_DELAY;i++);
-
     	/// sync with usb drive
     	fresult = f_sync(&fileWriteObject);
     	if (fresult != FR_OK)
@@ -515,8 +505,6 @@ void logUsbFxn(void)
         	return;
     	}
    
-		for (i=0;i<MAX_USB_DELAY;i++);
-
     	/// close file
     	fresult = f_close(&fileWriteObject);
     	if (fresult != FR_OK)
@@ -524,8 +512,6 @@ void logUsbFxn(void)
         	stopAccessingUsb(fresult);
         	return;
     	}
-
-		for (i=0;i<MAX_USB_DELAY;i++);
 
     	/// reset log buf
     	LOG_BUF[0] = '\0';
