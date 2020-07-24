@@ -454,7 +454,7 @@ void updateFirmware(void)
     /// Go to start of file
     if (f_lseek(&fPtr,0) != FR_OK) return;
 
-	displayLcd("    Readng...   ",1);
+	displayLcd("   Reading...  ",1);
 	/// read file	
 	for (;;) {
      	if (f_read(&fPtr, buffer, sizeof buffer, &br) != FR_OK) return;  /* Read a chunk of data from the source file */

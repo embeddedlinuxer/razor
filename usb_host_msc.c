@@ -266,6 +266,7 @@ void stopAccessingUsb(FRESULT fr)
     return;
 }
 
+
 void logUsbFxn(void)
 {
     FRESULT fresult;

@@ -3734,7 +3734,8 @@ fxnSecurityInfo_UpdateFirmware(const Uint16 input)
 			i++;
 			return FXN_SECURITYINFO_UPDATEFIRMWARE;
 		}
-	    logUsbFxn();
+
+		logUsbFxn();
 	}
 	else if (isResetPower) 
 	{
