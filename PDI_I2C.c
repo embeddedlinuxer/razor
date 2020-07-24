@@ -1831,8 +1831,10 @@ void I2C_DS1340_Write(int RTC_ADDR, int RTC_DATA)
 	setStop(); 
 }
 
+
 void I2C_Update_AO(void)
 {
+
 	if(I2C_TXBUF.n > 0)
     {
         Clock_start(I2C_Update_AO_Clock_Retry);
@@ -1879,7 +1881,7 @@ void I2C_Update_AO(void)
         dmin = (4-REG_AO_TRIMLO)*(DMAX-DMIN)/(20.0-REG_AO_TRIMLO) + DMIN;
     }
 
-    // is active error && alarm notificaion enabled?
+// is active error && alarm notificaion enabled?
     if ((DIAGNOSTICS > 0) && (REG_AO_ALARM_MODE > 0))
     {
         if (REG_AO_ALARM_MODE == 1)
@@ -1919,7 +1921,7 @@ void I2C_Update_AO(void)
         return;
     }
 
-    while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
+while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
     I2C_START_SET;  // initiate sequence
     is_missing_DAC = TRUE;
 
@@ -1951,13 +1953,13 @@ void I2C_Update_AO(void)
         while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //clear interrupt vector register
         CSL_FINST(i2cRegs->ICMDR,I2C_ICMDR_IRS,ENABLE);  //take i2c module out of reset
     }
-    else
-    {
+	else
+	{
         I2C_START_CLR;
         I2C_STOP_SET;
         I2C_Wait_For_Stop();
 
-     	///////////// Read back the DAC value and control byte (disabled)//////////////
+        ///////////// Read back the DAC value and control byte (disabled)//////////////
         I2C_RX_MODE;    //put I2C in RX mode
         I2C_CNT_3BYTE;
         CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // ICRRDY interrupt
@@ -1984,13 +1986,14 @@ void I2C_Update_AO(void)
     Swi_restore(key);
 
     /// START NEXT I2C CLOCK
-    startNextI2cClock(I2C_ADC_Read_Temp_Clock);
+    Clock_start(I2C_ADC_Read_Temp_Clock);
 
     //read ICIVR until it's cleared of all flags
     while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE);
 
     // send start condition to LCD expander
     I2C_START_SET;
+
 }
 
 
