@@ -35,6 +35,7 @@
 #define MAX_DATA_BUF_SIZE   160 
 #define MAX_DATA_SIZE       4096 
 #define MIN_DISK_SPACE      10240 // 10MB
+#define MAX_USB_DELAY		500
 
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
@@ -43,7 +44,6 @@ static FIL fileWriteObject;
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static Uint8 current_day = 99;
 static char LOG_BUF[MAX_DATA_SIZE];
-static char LOG_HEADER[110];
 static Uint8 try = 0;
 static Uint8 try2 = 0;
 static Uint8 try3 = 0;
@@ -65,7 +65,6 @@ static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
 void usbHostIntrConfig(USB_Params* usbParams);
 void MSCCallback(uint32_t ulInstance, uint32_t ulEvent, void *pvData);
 void usbCoreIntrHandler(uint32_t* pUsbParam);
-void checkFreeSpace(void);
 
 /*****************************************************************************
 *
@@ -230,25 +229,8 @@ void usbCoreIntrHandler(uint32_t* pUsbParam)
     USB_coreIrqHandler(((USB_Params*)pUsbParam)->usbHandle, (USB_Params*)pUsbParam);
 }
 
-/*********************************************
-*
-*   Check remaining free USB drive space
-*
-**********************************************/
-void
-checkFreeSpace(void)
-{
-    uint32_t totalSize = 0U;
-    FATFS *pFatFs;
 
-    f_getfree("0:", (DWORD *)&totalSize, &pFatFs);
-    if ((totalSize*pFatFs->csize)/2 < MIN_DISK_SPACE) 
-    {
-        COIL_LOG_ENABLE.val = FALSE;
-    }
-}
-
-void disableUsbLogging(FRESULT fr)
+void stopAccessingUsb(FRESULT fr)
 {
 	/// reset triggers 
 	try = 0;
@@ -257,6 +239,7 @@ void disableUsbLogging(FRESULT fr)
 	try4 = 0;
 
     /// stop usb logging if logging process fails for any reasons
+	isFirmwareUpgrade = FALSE;
     isLogging = FALSE;
     COIL_LOG_ENABLE.val = FALSE;
     current_day = 99;
@@ -286,6 +269,7 @@ void disableUsbLogging(FRESULT fr)
 void logUsbFxn(void)
 {
     FRESULT fresult;
+	int i;
 
     if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) 
     {
@@ -296,7 +280,7 @@ void logUsbFxn(void)
 
 		if (try4 > REG_USB_TRY)
 		{
-            disableUsbLogging(FR_INVALID_DRIVE);
+            stopAccessingUsb(FR_INVALID_DRIVE);
 		}
 		else
 		{
@@ -319,7 +303,7 @@ void logUsbFxn(void)
 
 				if (try > REG_USB_TRY)
 				{
-                	disableUsbLogging(FR_INVALID_DRIVE);
+                	stopAccessingUsb(FR_INVALID_DRIVE);
 				}
 				else
 				{
@@ -343,7 +327,7 @@ void logUsbFxn(void)
             		{
                 		if (try2 > REG_USB_TRY) 
                 		{
-                    		disableUsbLogging(FR_INVALID_DRIVE);
+                    		stopAccessingUsb(FR_INVALID_DRIVE);
                 		}
                 		else
                 		{
@@ -363,7 +347,7 @@ void logUsbFxn(void)
 
         	if (try3 > REG_USB_TRY) 
         	{
-            	disableUsbLogging(FR_INVALID_DRIVE);
+            	stopAccessingUsb(FR_INVALID_DRIVE);
         	}
         	else
         	{
@@ -426,89 +410,60 @@ void logUsbFxn(void)
 
         	logFile[0] = '\0';
 
-        	// mkdir PDI
-        	fresult = f_mkdir("/PDI");
+        	/// mkdir PDI
+        	fresult = f_mkdir("0:PDI");
         	if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
         	{
-            	disableUsbLogging(fresult);
+            	stopAccessingUsb(fresult);
             	return;
         	}
 
-        	// get a file name
+        	/// get file name
         	sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
-		if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
-		{
-			fresult = f_close(&fileWriteObject);
-			if (fresult == FR_OK) return;
-		}
+			if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
+			{
+				fresult = f_close(&fileWriteObject);
+				if (fresult == FR_OK) return;
+			}
 
 			/// open file
         	fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
         	if (fresult != FR_OK) 
         	{
-            	disableUsbLogging(fresult);
+            	stopAccessingUsb(fresult);
             	return;
         	}
 
-        	/// write header1
-			sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
+        	/// write header
+			sprintf(LOG_BUF,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n", FIRMWARE_VERSION, REG_SN_PIPE);
 
-        	if (f_puts(LOG_HEADER,&fileWriteObject) == EOF) 
+        	if (f_puts(LOG_BUF,&fileWriteObject) == EOF) 
         	{
-            	disableUsbLogging(FR_DISK_ERR);
+            	stopAccessingUsb(FR_DISK_ERR);
             	return;
         	}
+
+			for (i=0;i<MAX_USB_DELAY;i++);
 
         	fresult = f_sync(&fileWriteObject);
         	if (fresult != FR_OK)
         	{
-            	disableUsbLogging(fresult);
+            	stopAccessingUsb(fresult);
             	return;
         	}
 
-        	/// write header2
-        	sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
-
-        	if (f_puts(LOG_HEADER,&fileWriteObject) == EOF) 
-        	{
-            	disableUsbLogging(FR_DISK_ERR);
-            	return;
-        	}
-
-        	fresult = f_sync(&fileWriteObject);
-        	if (fresult != FR_OK)
-        	{
-            	disableUsbLogging(fresult);
-            	return;
-        	}
-
-        	/// write header3
-        	sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
-
-        	if (f_puts(LOG_HEADER,&fileWriteObject) == EOF) 
-        	{
-            	disableUsbLogging(FR_DISK_ERR);
-            	return;
-        	}
-
-        	fresult = f_sync(&fileWriteObject);
-        	if (fresult != FR_OK)
-        	{
-            	disableUsbLogging(fresult);
-            	return;
-        	}
+			for (i=0;i<MAX_USB_DELAY;i++);
 
         	/// close file
         	fresult = f_close(&fileWriteObject);
         	if (fresult != FR_OK)
         	{
-            	disableUsbLogging(fresult);
+            	stopAccessingUsb(fresult);
             	return;
         	}
 
-        	/// check remaining disk space
-        	checkFreeSpace();
+			for (i=0;i<MAX_USB_DELAY;i++);
 
         	/// flush LOG_BUF 
         	LOG_BUF[0] = '\0';
@@ -526,14 +481,11 @@ void logUsbFxn(void)
         	return;
     	}
 
-    	/// fill out the entry point with ","
-    	while (MAX_DATA_SIZE > strlen(LOG_BUF)) strcat (LOG_BUF,",");
-
     	/// open file
     	fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
     	if (fresult != FR_OK)
     	{
-        	disableUsbLogging(fresult);
+        	stopAccessingUsb(fresult);
         	return;
     	}
 
@@ -541,32 +493,38 @@ void logUsbFxn(void)
     	fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
     	if (fresult != FR_OK)
     	{
-        	disableUsbLogging(fresult);
+        	stopAccessingUsb(fresult);
         	return;
     	}
 
     	/// write
     	if (f_puts(LOG_BUF,&fileWriteObject) == EOF) 
     	{
-        	disableUsbLogging(FR_DISK_ERR);
+        	stopAccessingUsb(FR_DISK_ERR);
         	return;
     	}
+
+		for (i=0;i<MAX_USB_DELAY;i++);
 
     	/// sync with usb drive
     	fresult = f_sync(&fileWriteObject);
     	if (fresult != FR_OK)
     	{
-        	disableUsbLogging(fresult);
+        	stopAccessingUsb(fresult);
         	return;
     	}
    
+		for (i=0;i<MAX_USB_DELAY;i++);
+
     	/// close file
     	fresult = f_close(&fileWriteObject);
     	if (fresult != FR_OK)
     	{
-        	disableUsbLogging(fresult);
+        	stopAccessingUsb(fresult);
         	return;
     	}
+
+		for (i=0;i<MAX_USB_DELAY;i++);
 
     	/// reset log buf
     	LOG_BUF[0] = '\0';

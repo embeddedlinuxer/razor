@@ -1180,9 +1180,6 @@ void I2C_ADC_Read_Temp(void)
 
 	Uint32 key;
 
-    /// usb data logging
-	if (isLogging) logUsbFxn();
-
 	key = Swi_disable();
 
 	/// stop

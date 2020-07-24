@@ -193,6 +193,9 @@ Process_Menu(void)
             _c_int00();
 		}
 
+		/// data logging
+		if (isLogging) logUsbFxn();
+
 		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post
 		needRelayClick 	= FALSE; 							// this is a great place for a breakpoint!
 		nextState 		= MENU.state;						// check next state
