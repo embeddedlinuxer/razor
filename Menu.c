@@ -43,8 +43,10 @@
 
 #define USB_UPGRADE_DELAY 	100
 
+static int fw_trigger = 0;
 static int y = 0;
 static int blinker = 0;             // MENU ID BLINKER 
+static BOOL isFwMenu = FALSE;       // Menu 3.8 
 static BOOL isOn = FALSE;           // LINE1 BLINKER
 static BOOL isMessage = FALSE;      // Message to display? 
 static Uint8 isPowerCycled = TRUE;  // loadUsbDriver only 1 time after power cycle
@@ -565,7 +567,8 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
     if (iregister != NULL_INT)
     {
         int ivalue = atoi(val);
-        if ((ivalue <= (int)max) && (ivalue >= (int)min))
+        if ((ivalue <= (int)max) && (ivalue >= (int)min) && ((ivalue != 1343) && (iregister != REG_PASSWORD)))
+        //if ((ivalue <= (int)max) && (ivalue >= (int)min))
         {
             *iregister = ivalue;
    	        Swi_post(Swi_writeNand);
@@ -3445,6 +3448,7 @@ mnuSecurityInfo_AccessTech(const Uint16 input)
 			isUpdateDisplay = TRUE;
 			if (COIL_UNLOCKED.val)
 			{
+				isFwMenu = FALSE;	
 				COIL_UNLOCKED.val = FALSE;
                 Swi_post(Swi_writeNand);
                 return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, CHANGE_SUCCESS);
@@ -3474,6 +3478,23 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
 				COIL_UNLOCKED.val = TRUE;
                 Swi_post(Swi_writeNand);
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
+			}
+			else if (atoi(lcdLine1) == 1343)
+			{
+				if (fw_trigger == 1) 
+				{
+					isFwMenu = TRUE;	
+					if (fw_trigger > 100) fw_trigger = 0;
+					COIL_UNLOCKED.val = TRUE;
+                	Swi_post(Swi_writeNand);
+					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
+				}
+				else
+				{
+					isFwMenu = FALSE;
+					fw_trigger++;
+					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
+				}
 			}
 			else
 			{
@@ -3652,8 +3673,7 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 
 	switch (input)	
 	{
-        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
-        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
+        case BTN_VALUE 	: return (isFwMenu) ? onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE) : onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;
