@@ -27,7 +27,6 @@
 void resetGlobalVars(void)
 {
     CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
-    //CSL_FINS(usbRegs->POWER, USB_OTG_POWER_HSEN, 1); // Enable high-speed
 
     isWriteRTC = FALSE;
     isLogging = FALSE;

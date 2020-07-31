@@ -3484,7 +3484,6 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
 				if (fw_trigger == 1) 
 				{
 					isFwMenu = TRUE;	
-					if (fw_trigger > 100) fw_trigger = 0;
 					COIL_UNLOCKED.val = TRUE;
                 	Swi_post(Swi_writeNand);
 					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
@@ -3493,6 +3492,7 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
 				{
 					isFwMenu = FALSE;
 					fw_trigger++;
+					if (fw_trigger > 10) fw_trigger = 0;
 					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
 				}
 			}
