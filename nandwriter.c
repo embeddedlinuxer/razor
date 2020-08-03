@@ -402,9 +402,12 @@ void updateFirmware(void)
 	int loop = 0;
 	UINT br = 0;
 	BYTE buffer[4096] = 0;
+	
+    if (f_open(&fPtr, "0:phasedynamics_razor_firmware.ais", FA_READ) != FR_OK) return;
 
-	displayLcd("File opening...",1);
-    if (f_open(&fPtr, "0:boot.ais", FA_READ) != FR_OK) return;
+	isUpdateDisplay=TRUE;
+	updateDisplay("FIRMWARE UPGRADE","    OPEN FILE   ");
+
     UTIL_setCurrMemPtr(0);
 
     /// reset command
@@ -431,7 +434,6 @@ void updateFirmware(void)
     }
 
     /// Initialize NAND Flash
-	displayLcd("NAND opening...",1);
     hNandInfo = NAND_open((Uint32)NANDStart, DEVICE_BUSWIDTH_16BIT);
     if (hNandInfo == NULL) return E_FAIL;
 
@@ -454,7 +456,9 @@ void updateFirmware(void)
     /// Go to start of file
     if (f_lseek(&fPtr,0) != FR_OK) return;
 
-	displayLcd("   Reading...  ",1);
+	isUpdateDisplay=TRUE;
+	updateDisplay("FIRMWARE UPGRADE","   Flashing...  ");
+
 	/// read file	
 	for (;;) {
      	if (f_read(&fPtr, buffer, sizeof buffer, &br) != FR_OK) return;  /* Read a chunk of data from the source file */
@@ -471,15 +475,13 @@ void updateFirmware(void)
 	/// close
     if (f_close (&fPtr) != FR_OK) return;
 
-    /// GLOBAL NAND ERASE
-	displayLcd("   Flashing...  ",1);
-
 	/// unload usb driver
 	unloadUsbDriver();
 
 	Swi_disable();
 	Hwi_disable();
 
+	/// global erase
     if (NAND_globalErase(hNandInfo) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*20;i++);
 
@@ -490,5 +492,13 @@ void updateFirmware(void)
 	Hwi_enable();
 	Swi_enable();
 
- 	isResetPower = TRUE;
+	isUpdateDisplay=TRUE;
+	updateDisplay("FIRMWARE UPGRADE","   REMOVE USB   ");
+	while (1) {
+		static Uint32 i = 0;
+		i++;
+    	if (i < 500)       displayLcd("   REMOVE USB   ", 1);
+		else if (i < 1000) displayLcd("                ", 1);
+		else i = 0;
+	}
 }

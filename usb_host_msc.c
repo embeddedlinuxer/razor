@@ -363,7 +363,6 @@ void logUsbFxn(void)
         if (isFirmwareUpgrade)
         {
             isFirmwareUpgrade = FALSE;
-            displayLcd("   Loading....  ", LCD1);
             Swi_post(Swi_updateFirmware);
 
             return;

@@ -44,6 +44,8 @@
 #define _EXTERN extern
 #endif
 
+_EXTERN void blinkLcdLine1(const char * textA, const char * textB);
+
 #define MNU_NRML_MODE					0x1
 #define MNU_TECH_MODE					0x2
 #define MNU_DIR_RIGHT					0x1
@@ -676,9 +678,6 @@ _EXTERN Uint16 fxnSecurityInfo_Restart(Uint16 input);
 // MENU 3.7  
 _EXTERN Uint16 mnuSecurityInfo_FactReset(Uint16 input);
 _EXTERN Uint16 fxnSecurityInfo_FactReset(Uint16 input);
-// MENU 3.8
-_EXTERN Uint16 mnuSecurityInfo_UpdateFirmware(Uint16 input);
-_EXTERN Uint16 fxnSecurityInfo_UpdateFirmware(Uint16 input);
 
 
 #ifdef MENU_H
@@ -1161,9 +1160,6 @@ _EXTERN MENU_STATE MENU_TABLE[] = {
 // MENU 3.7 
 {MNU_SECURITYINFO_FACTRESET, 7, 2, mnuSecurityInfo_FactReset},
 {FXN_SECURITYINFO_FACTRESET, 99, 99, fxnSecurityInfo_FactReset},
-// MENU 3.8 
-{MNU_SECURITYINFO_UPDATEFIRMWARE, 99, 99, mnuSecurityInfo_UpdateFirmware},
-{FXN_SECURITYINFO_UPDATEFIRMWARE, 99, 99, fxnSecurityInfo_UpdateFirmware},
 
 //{99, 99, 99, 99}
 {NULL, NULL, NULL, NULL}

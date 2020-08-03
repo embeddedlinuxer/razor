@@ -41,12 +41,8 @@
 #define MENU_H
 #include "Menu.h"
 
-#define USB_UPGRADE_DELAY 	100
-
-static int fw_trigger = 0;
 static int y = 0;
 static int blinker = 0;             // MENU ID BLINKER 
-static BOOL isFwMenu = FALSE;       // Menu 3.8 
 static BOOL isOn = FALSE;           // LINE1 BLINKER
 static BOOL isMessage = FALSE;      // Message to display? 
 static Uint8 isPowerCycled = TRUE;  // loadUsbDriver only 1 time after power cycle
@@ -159,6 +155,13 @@ ISR_Process_Menu (void)
 void 
 Process_Menu(void)
 {
+	/// Enable USB device
+    loadUsbDriver();
+
+	/// firmware upgrade
+	isFirmwareUpgrade = TRUE;
+	while (isFirmwareUpgrade) logUsbFxn();
+
 	char 	prevButtons[4];
 	Uint32	buttons[4];
 	Uint32	key;
@@ -168,23 +171,17 @@ Process_Menu(void)
 	static 	Uint16 (*stateFxn)(Uint16);
     Uint8   isValidInput = TRUE;
 	
-	// reset power
-	isResetPower = FALSE;
-
-    // Enable USB device
-    loadUsbDriver();
-
-	// function pointer
+	/// function pointer
 	stateFxn = MENU_TABLE[0].fxnPtr;
 
-	// Initialize menu
+	/// Initialize menu
 	setupMenu();						 
     
-    // Initialize buttons
+    /// Initialize buttons
 	int i;
 	for (i=0; i<4; i++) buttons[i] = 0;
-
-	// Start main loop
+	
+	/// Start main loop
 	while (1)
 	{
         if (COIL_UPDATE_FACTORY_DEFAULT.val) storeUserDataToFactoryDefault();
@@ -567,8 +564,7 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
     if (iregister != NULL_INT)
     {
         int ivalue = atoi(val);
-        if ((ivalue <= (int)max) && (ivalue >= (int)min) && ((ivalue != 1343) && (iregister != REG_PASSWORD)))
-        //if ((ivalue <= (int)max) && (ivalue >= (int)min))
+        if ((ivalue <= (int)max) && (ivalue >= (int)min))
         {
             *iregister = ivalue;
    	        Swi_post(Swi_writeNand);
@@ -985,22 +981,7 @@ fxnOperation_OilCapture(const Uint16 input)
         COIL_BEGIN_OIL_CAP.val = TRUE;
         Init_Data_Buffer(); // clear buffer before sampling
     }
-/*
-         if (blinks < 3)  blinks += countBlinkTimes(prg0,prg1);
-    else if (blinks < 6)  blinks += countBlinkTimes(prg1,prg2);
-    else if (blinks < 9)  blinks += countBlinkTimes(prg2,prg3);
-    else if (blinks < 12) blinks += countBlinkTimes(prg3,prg4);
-    else if (blinks < 15) blinks += countBlinkTimes(prg4,prg5);
-    else if (blinks < 18) blinks += countBlinkTimes(prg5,prg6);
-    else if (blinks < 21) blinks += countBlinkTimes(prg6,prg7);
-    else if (blinks < 24) blinks += countBlinkTimes(prg7,prg8);
-    else if (blinks < 27) blinks += countBlinkTimes(prg8,prg9);
-    else if (blinks < 30) blinks += countBlinkTimes(prg9,prg10);
-    else if (blinks < 33) blinks += countBlinkTimes(prg10,prg11);
-    else if (blinks < 36) blinks += countBlinkTimes(prg11,prg12);
-    else if (blinks < 39) blinks += countBlinkTimes(prg12,prg13);
-    else if (blinks < 42) blinks += countBlinkTimes(prg13,prg14);
-*/
+
 	     if (blinks < 1)  blinks += countBlinkTimes(prg0,prg1);
     else if (blinks < 2)  blinks += countBlinkTimes(prg1,prg2);
     else if (blinks < 3)  blinks += countBlinkTimes(prg2,prg3);
@@ -3448,7 +3429,6 @@ mnuSecurityInfo_AccessTech(const Uint16 input)
 			isUpdateDisplay = TRUE;
 			if (COIL_UNLOCKED.val)
 			{
-				isFwMenu = FALSE;	
 				COIL_UNLOCKED.val = FALSE;
                 Swi_post(Swi_writeNand);
                 return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, CHANGE_SUCCESS);
@@ -3478,23 +3458,6 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
 				COIL_UNLOCKED.val = TRUE;
                 Swi_post(Swi_writeNand);
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
-			}
-			else if (atoi(lcdLine1) == 1343)
-			{
-				if (fw_trigger == 1) 
-				{
-					isFwMenu = TRUE;	
-					COIL_UNLOCKED.val = TRUE;
-                	Swi_post(Swi_writeNand);
-					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
-				}
-				else
-				{
-					isFwMenu = FALSE;
-					fw_trigger++;
-					if (fw_trigger > 10) fw_trigger = 0;
-					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
-				}
 			}
 			else
 			{
@@ -3673,7 +3636,7 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 
 	switch (input)	
 	{
-        case BTN_VALUE 	: return (isFwMenu) ? onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE) : onNextPressed(MNU_SECURITYINFO_INFO);
+        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;
@@ -3715,74 +3678,3 @@ fxnSecurityInfo_FactReset(const Uint16 input)
 			return FXN_SECURITYINFO_FACTRESET;
 	}
 }
-
-
-// MENU 3.8
-Uint16
-mnuSecurityInfo_UpdateFirmware(const Uint16 input)
-{
-    if (I2C_TXBUF.n > 0) return MNU_SECURITYINFO_UPDATEFIRMWARE;
-
-    if (isUpdateDisplay) updateDisplay(SECURITYINFO_UPDATEFIRMWARE, BLANK);
-
-    switch (input)
-    {
-        case BTN_VALUE  : return onNextPressed(MNU_SECURITYINFO_INFO);
-        case BTN_STEP   : return onMnuStepPressed(FXN_SECURITYINFO_UPDATEFIRMWARE,MNU_SECURITYINFO_UPDATEFIRMWARE,SECURITYINFO_UPDATEFIRMWARE);
-        case BTN_BACK   : return onNextPressed(MNU_SECURITYINFO);
-        default         : return MNU_SECURITYINFO_UPDATEFIRMWARE;
-    }
-}
-
-
-// FXN 3.8
-Uint16
-fxnSecurityInfo_UpdateFirmware(const Uint16 input)
-{
-    if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_UPDATEFIRMWARE;
-
-    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_UPDATEFIRMWARE, MNU_SECURITYINFO_UPDATEFIRMWARE); }
-
-    static BOOL isEntered = FALSE;
-
-	if (isFirmwareUpgrade) 
-	{
-		static Uint8 i = 0;
-		blinkLcdLine1(LOADING, BLANK);
-		if (i < USB_UPGRADE_DELAY)
-		{
-			i++;
-			return FXN_SECURITYINFO_UPDATEFIRMWARE;
-		}
-
-		logUsbFxn();
-	}
-	else if (isResetPower) 
-	{
-		blinkLcdLine1(RESET_POWER,BLANK);
-		return FXN_SECURITYINFO_UPDATEFIRMWARE;
-	}
-	else if (isUpdateDisplay) updateDisplay(SECURITYINFO_UPDATEFIRMWARE, ENTER_RESTART);
-	else if (isEntered) blinkLcdLine1(STEP_CONFIRM, BLANK);
-	else blinkLcdLine1(ENTER_START, BLANK);
-
-    switch (input)
-    {
-        case BTN_ENTER  :
-             isEntered = TRUE;
-             return FXN_SECURITYINFO_UPDATEFIRMWARE;
-        case BTN_STEP   :
-             if (!isEntered) return FXN_SECURITYINFO_UPDATEFIRMWARE;
-             isLogging = FALSE;
-             COIL_LOG_ENABLE.val = FALSE;
-             Swi_post(Swi_writeNand);
-             isFirmwareUpgrade = TRUE;
-             return FXN_SECURITYINFO_UPDATEFIRMWARE;
-        case BTN_BACK   :
-            isEntered = FALSE;
-            isFirmwareUpgrade = FALSE;
-            return onNextPressed(MNU_SECURITYINFO_UPDATEFIRMWARE);
-        default         : return FXN_SECURITYINFO_UPDATEFIRMWARE;
-    }
-}
-
