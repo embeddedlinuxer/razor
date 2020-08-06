@@ -134,14 +134,21 @@ _EXTERN unsigned int phase_rollover_count;   		/*phase hold over RS*/
 _EXTERN int TEMP_STREAM;
 _EXTERN char lcdLine0[MAX_LCD_WIDTH];
 _EXTERN char lcdLine1[MAX_LCD_WIDTH];
+_EXTERN char CSV_FILE_LIST[4096];
+_EXTERN char * CSV_FILES[100];
 _EXTERN int usbStatus;
+_EXTERN int csvFiles;
 _EXTERN Uint32 counter;
 _EXTERN Uint32 delayTimer;
 _EXTERN BOOL isUpdateDisplay;
+_EXTERN BOOL isScanFile;
 _EXTERN BOOL isWriteRTC;
 _EXTERN BOOL isLogging;
 _EXTERN BOOL isFirmwareUpgrade;
+_EXTERN BOOL isDownloadCsv;
+_EXTERN BOOL isUploadCsv;
 _EXTERN BOOL isResetPower;
+_EXTERN BOOL isCsvSuccess;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

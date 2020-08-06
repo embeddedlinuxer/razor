@@ -44,8 +44,6 @@
 #define _EXTERN extern
 #endif
 
-_EXTERN void blinkLcdLine1(const char * textA, const char * textB);
-
 #define MNU_NRML_MODE					0x1
 #define MNU_TECH_MODE					0x2
 #define MNU_DIR_RIGHT					0x1
@@ -212,8 +210,8 @@ _EXTERN void blinkLcdLine1(const char * textA, const char * textB);
 #define FXN_SECURITYINFO_RESTART 			360 	// Node function
 #define MNU_SECURITYINFO_FACTRESET 			37		// 3.7 Reset Fact.
 #define FXN_SECURITYINFO_FACTRESET			370		// Node function
-#define MNU_SECURITYINFO_UPDATEFIRMWARE 	38		// 3.8 Update firmeware.
-#define FXN_SECURITYINFO_UPDATEFIRMWARE	    380		// Node function
+#define MNU_SECURITYINFO_PROFILE 			38		// 3.8 Profile.
+#define FXN_SECURITYINFO_PROFILE	    	380		// Node function
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -678,6 +676,9 @@ _EXTERN Uint16 fxnSecurityInfo_Restart(Uint16 input);
 // MENU 3.7  
 _EXTERN Uint16 mnuSecurityInfo_FactReset(Uint16 input);
 _EXTERN Uint16 fxnSecurityInfo_FactReset(Uint16 input);
+// MENU 3.8
+_EXTERN Uint16 mnuSecurityInfo_Profile(Uint16 input);
+_EXTERN Uint16 fxnSecurityInfo_Profile(Uint16 input);
 
 
 #ifdef MENU_H
@@ -745,6 +746,10 @@ _EXTERN char ERROR[]							= "           Error";
 _EXTERN char NO_ERROR[]							= "        No Error";
 _EXTERN char NONE[]								= "            None";
 _EXTERN char EVEN[]								= "            Even";
+_EXTERN char DOWNLOAD_SUCCESS[]					= "Download Success";
+_EXTERN char UPLOAD_SUCCESS[]					= "  Upload Success";
+_EXTERN char UPLOAD[]							= "          Upload";
+_EXTERN char DOWNLOAD[]							= "        Download";
 _EXTERN char HARD_RESET[]						= "   HARD RESET   ";
 _EXTERN char COPY_DATA[]						= " COPY USER DATA ";
 _EXTERN char STOP[]						        = " !!! S T O P !!!";
@@ -892,7 +897,7 @@ _EXTERN char SECURITYINFO_DIAGNOSTICS[]			= "3.4 Diagnostics";
 _EXTERN char SECURITYINFO_CHANGEPASSWORD[]		= "3.5 Change Paswd";
 _EXTERN char SECURITYINFO_RESTART[]				= "3.6 Restart";
 _EXTERN char SECURITYINFO_FACTRESET[]			= "3.7 Fact. Reset";
-_EXTERN char SECURITYINFO_UPDATEFIRMWARE[]		= "3.8 Update F/W";
+_EXTERN char SECURITYINFO_PROFILE[]				= "3.8 Profile";
 
 
 #endif
@@ -1160,6 +1165,9 @@ _EXTERN MENU_STATE MENU_TABLE[] = {
 // MENU 3.7 
 {MNU_SECURITYINFO_FACTRESET, 7, 2, mnuSecurityInfo_FactReset},
 {FXN_SECURITYINFO_FACTRESET, 99, 99, fxnSecurityInfo_FactReset},
+// MENU 3.8 
+{MNU_SECURITYINFO_PROFILE, 99, 99, mnuSecurityInfo_Profile},
+{FXN_SECURITYINFO_PROFILE, 99, 99, fxnSecurityInfo_Profile},
 
 //{99, 99, 99, 99}
 {NULL, NULL, NULL, NULL}

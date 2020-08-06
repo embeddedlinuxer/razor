@@ -88,7 +88,6 @@ static const char * densityMode[4] 	 = {DISABLE, ANALOG_INPUT, MODBUS, MANUAL};
 static const char * densityIndex[8]  = {KG_M3, KG_M3_15C, API, API_60F, LBS_FT3, LBS_FT3_60F, SG, SG_15C}; 
 static const Uint8 densityUnit[8] 	 = {u_mpv_kg_cm, u_mpv_kg_cm_15C, u_mpv_deg_API, u_mpv_deg_API_60F, u_mpv_lbs_cf, u_mpv_lbs_cf_60F, u_mpv_sg, u_mpv_sg_15C};
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 /////
@@ -97,16 +96,15 @@ static const Uint8 densityUnit[8] 	 = {u_mpv_kg_cm, u_mpv_kg_cm_15C, u_mpv_deg_A
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-void 
-setupMenu (void)
+void setupMenu (void)
 {
 	MENU.state			= MNU_HOMESCREEN_WTC; // set initial screen to Water Cut
 	MENU.dir 			= MNU_DIR_RIGHT;
 	MENU.debounceDone 	= TRUE;
 	MENU.isPressAndHold	= FALSE;
 	MENU.isHomeScreen 	= FALSE;			  // trigger to homescreen
-	MENU.col 		= NULL;
-	MENU.row 		= NULL;
+	MENU.col 			= NULL;
+	MENU.row 			= NULL;
 	MENU.curStat 		= LCD_CURS_OFF | LCD_CURS_NOBLINK;
 }
 
@@ -180,7 +178,7 @@ Process_Menu(void)
     /// Initialize buttons
 	int i;
 	for (i=0; i<4; i++) buttons[i] = 0;
-	
+
 	/// Start main loop
 	while (1)
 	{
@@ -192,8 +190,8 @@ Process_Menu(void)
             _c_int00();
 		}
 
-		/// data logging
-		if (isLogging) logUsbFxn();
+		/// access usb drive
+		//if (isLogging || isDownloadCsv || isUploadCsv) logUsbFxn();
 
 		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post
 		needRelayClick 	= FALSE; 							// this is a great place for a breakpoint!
@@ -3636,7 +3634,8 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 
 	switch (input)	
 	{
-        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
+        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
+        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_PROFILE);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;
@@ -3676,5 +3675,84 @@ fxnSecurityInfo_FactReset(const Uint16 input)
 			return MNU_SECURITYINFO_FACTRESET;
 		default			:
 			return FXN_SECURITYINFO_FACTRESET;
+	}
+}
+
+// MENU 3.8
+Uint16 
+mnuSecurityInfo_Profile(const Uint16 input)
+{
+	if (I2C_TXBUF.n > 0) return MNU_SECURITYINFO_PROFILE;
+
+	if (isUpdateDisplay) updateDisplay(SECURITYINFO_PROFILE, BLANK);
+
+	switch (input)	
+	{
+        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
+		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_PROFILE,MNU_SECURITYINFO_PROFILE,SECURITYINFO_PROFILE);
+		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
+		default			: return MNU_SECURITYINFO_PROFILE;
+	}
+}
+
+
+// FXN 3.8
+Uint16 
+fxnSecurityInfo_Profile(const Uint16 input)
+{
+	if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_PROFILE;
+
+    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_PROFILE, MNU_SECURITYINFO_PROFILE); }
+
+	static BOOL isDownload = TRUE;
+	static BOOL isCsvList = FALSE;
+	static int csvIndex = 0;
+
+	if (isUpdateDisplay) 
+	{
+		isScanFile = FALSE;
+		isCsvSuccess = FALSE;
+		isDownload = TRUE;
+		updateDisplay(SECURITYINFO_PROFILE, BLANK);
+	}
+
+	if (isCsvList) blinkLcdLine1(CSV_FILE_LIST[csvIndex],BLANK);
+	else if (isCsvSuccess) (isDownload) ? blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK) : blinkLcdLine1(UPLOAD_SUCCESS,BLANK);
+	else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
+
+	switch (input)	
+	{
+		case BTN_VALUE 	:
+			if (isCsvList) 
+			{
+				if (csvIndex < csvFiles) csvIndex++;
+				else csvIndex = 0;
+			}
+			else 
+			{
+				isDownload = !isDownload;
+			}
+			return FXN_SECURITYINFO_PROFILE;
+		case BTN_ENTER 	:
+			if (isDownload) 
+			{
+				isDownloadCsv = TRUE; 
+				isUploadCsv = FALSE;
+				isFirmwareUpgrade = FALSE;
+				isLogging = FALSE;
+			}
+			else 
+			{
+				isCsvList = TRUE;
+				isUploadCsv = TRUE;
+				isDownloadCsv = FALSE; 
+				isLogging = FALSE;
+				isFirmwareUpgrade = FALSE;
+			}
+			return FXN_SECURITYINFO_PROFILE;
+		case BTN_BACK 	: 
+			isCsvSuccess = FALSE;
+			return onNextPressed(MNU_SECURITYINFO_PROFILE);
+		default			: return FXN_SECURITYINFO_PROFILE;
 	}
 }

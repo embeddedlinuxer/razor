@@ -93,9 +93,6 @@ static inline void Init_All(void)
 	// INITIALIZE HARDWARES 
 	initHardwareObjects();
 
-	// INITIALIZE MENU SYSTEM
-	setupMenu();
-
 	// INITIALIZE TIMER COUNTER
 	Init_Counter_3();
 

@@ -402,11 +402,8 @@ void updateFirmware(void)
 	int loop = 0;
 	UINT br = 0;
 	BYTE buffer[4096] = 0;
-	
-    if (f_open(&fPtr, "0:phasedynamics_razor_firmware.ais", FA_READ) != FR_OK) return;
 
-	isUpdateDisplay=TRUE;
-	updateDisplay("FIRMWARE UPGRADE","    OPEN FILE   ");
+    if (f_open(&fPtr, "0:pdi_razor_firmware.ais", FA_READ) != FR_OK) return;
 
     UTIL_setCurrMemPtr(0);
 
@@ -474,6 +471,9 @@ void updateFirmware(void)
 
 	/// close
     if (f_close (&fPtr) != FR_OK) return;
+
+	/// download csv
+	if(!downloadCsv()) return;
 
 	/// unload usb driver
 	unloadUsbDriver();

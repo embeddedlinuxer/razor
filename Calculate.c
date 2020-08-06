@@ -80,10 +80,13 @@ void Poll(void)
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
 
-    // Read DIAGNOSTICS
+	/// access usb drive
+    if (isLogging || isDownloadCsv || isUploadCsv) logUsbFxn();
+
+    /// Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;
 
-    // Read RTC
+    /// Read RTC
     Read_RTC(&CAL_RTC_SEC, &CAL_RTC_MIN, &CAL_RTC_HR, &CAL_RTC_DAY, &CAL_RTC_MON, &CAL_RTC_YR);
 
 	// Read Frequency
