@@ -104,6 +104,9 @@
 #define MAX_DAMP_DELAY				50		// max damping period 50 secs
 #define MAX_WATER_PHASE				100		// Watercut in water phase always 100% in water phase
 #define PASSWORD_LENGTH				4
+#define CSV_MAX_COL					50
+#define CSV_MAX_ROW					30
+
 
 _EXTERN int REG_RTC_SEC;		// RTC read-only: seconds
 _EXTERN int REG_RTC_MIN;		// RTC read-only: minutes
@@ -134,10 +137,33 @@ _EXTERN unsigned int phase_rollover_count;   		/*phase hold over RS*/
 _EXTERN int TEMP_STREAM;
 _EXTERN char lcdLine0[MAX_LCD_WIDTH];
 _EXTERN char lcdLine1[MAX_LCD_WIDTH];
-_EXTERN char CSV_FILE_LIST[4096];
-_EXTERN char * CSV_FILES[100];
+_EXTERN char CSV_ARRAY[2048];
+_EXTERN char CSV_FILE0[50];
+_EXTERN char CSV_FILE1[50];
+_EXTERN char CSV_FILE2[50];
+_EXTERN char CSV_FILE3[50];
+_EXTERN char CSV_FILE4[50];
+_EXTERN char CSV_FILE5[50];
+_EXTERN char CSV_FILE6[50];
+_EXTERN char CSV_FILE7[50];
+_EXTERN char CSV_FILE8[50];
+_EXTERN char CSV_FILE9[50];
+_EXTERN char CSV_FILE10[50];
+_EXTERN char CSV_FILE11[50];
+_EXTERN char CSV_FILE12[50];
+_EXTERN char CSV_FILE13[50];
+_EXTERN char CSV_FILE14[50];
+_EXTERN char CSV_FILE15[50];
+_EXTERN char CSV_FILE16[50];
+_EXTERN char CSV_FILE17[50];
+_EXTERN char CSV_FILE18[50];
+_EXTERN char CSV_FILE19[50];
+_EXTERN char CSV_FILE20[50];
+_EXTERN char CSV_FILE21[50];
+_EXTERN char CSV_FILE22[50];
+_EXTERN char CSV_FILE23[50];
 _EXTERN int usbStatus;
-_EXTERN int csvFiles;
+_EXTERN int csvCounter;
 _EXTERN Uint32 counter;
 _EXTERN Uint32 delayTimer;
 _EXTERN BOOL isUpdateDisplay;
@@ -149,6 +175,7 @@ _EXTERN BOOL isDownloadCsv;
 _EXTERN BOOL isUploadCsv;
 _EXTERN BOOL isResetPower;
 _EXTERN BOOL isCsvSuccess;
+_EXTERN BOOL isCsvScanned;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

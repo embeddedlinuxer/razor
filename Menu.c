@@ -26,7 +26,8 @@
 * HISTORY:
 *       Aug-20-2019 : Daniel Koh : Created Ver 1.0.0 
 *------------------------------------------------------------------------*/
-
+#include <string.h>
+#include <stdio.h>
 #include <time.h>
 #include <ti/sysbios/hal/Seconds.h>
 #include "Globals.h"
@@ -37,7 +38,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
-
 #define MENU_H
 #include "Menu.h"
 
@@ -3705,27 +3705,53 @@ fxnSecurityInfo_Profile(const Uint16 input)
     if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_PROFILE, MNU_SECURITYINFO_PROFILE); }
 
 	static BOOL isDownload = TRUE;
-	static BOOL isCsvList = FALSE;
+	static BOOL isCsvScan = TRUE;
+	static char* files[100];
 	static int csvIndex = 0;
+	static char** CSV_FILES;
 
 	if (isUpdateDisplay) 
 	{
-		isScanFile = FALSE;
+		isCsvScanned = FALSE;
+		isCsvScan = TRUE;
 		isCsvSuccess = FALSE;
 		isDownload = TRUE;
+		csvIndex = 0;
 		updateDisplay(SECURITYINFO_PROFILE, BLANK);
 	}
 
-	if (isCsvList) blinkLcdLine1(CSV_FILE_LIST[csvIndex],BLANK);
+	if (isCsvScanned) 
+	{ /*
+		if (isCsvScan)
+		{
+			isCsvScan = FALSE;
+			char* tok;
+			char* delimiter = ".csv";
+			csvIndex = 0;
+	
+			tok = strtok(CSV_ARRAY,delimiter); 
+    		while (tok != 0) { 
+				files[csvIndex][0] = '\0';
+                files[csvIndex] = tok;
+                strcat(files[csvIndex],delimiter);
+        		printf("%s\n",files[csvIndex]); 
+        		tok = strtok(NULL,".csv"); 
+				csvIndex++;
+    		} 
+		} */
+		printf("%s\n",CSV_ARRAY);
+		isCsvScanned = FALSE;
+		//blinkLcdLine1(files[csvIndex],BLANK);
+	}
 	else if (isCsvSuccess) (isDownload) ? blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK) : blinkLcdLine1(UPLOAD_SUCCESS,BLANK);
 	else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
 
 	switch (input)	
 	{
 		case BTN_VALUE 	:
-			if (isCsvList) 
+			if (isCsvScanned) 
 			{
-				if (csvIndex < csvFiles) csvIndex++;
+				if (csvIndex < csvCounter) csvIndex++;
 				else csvIndex = 0;
 			}
 			else 
@@ -3743,8 +3769,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 			}
 			else 
 			{
-				isCsvList = TRUE;
-				isUploadCsv = TRUE;
+				scanCsvFiles(CSV_FILES);
 				isDownloadCsv = FALSE; 
 				isLogging = FALSE;
 				isFirmwareUpgrade = FALSE;
