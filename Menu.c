@@ -157,8 +157,8 @@ Process_Menu(void)
     loadUsbDriver();
 
 	/// firmware upgrade
-	isFirmwareUpgrade = TRUE;
-	while (isFirmwareUpgrade) logUsbFxn();
+	isUpgradeFirmware = TRUE;
+	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
 	char 	prevButtons[4];
 	Uint32	buttons[4];
@@ -189,9 +189,6 @@ Process_Menu(void)
             unloadUsbDriver();
             _c_int00();
 		}
-
-		/// access usb drive
-		//if (isLogging || isDownloadCsv || isUploadCsv) logUsbFxn();
 
 		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post
 		needRelayClick 	= FALSE; 							// this is a great place for a breakpoint!
@@ -1660,7 +1657,7 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
             if (COIL_LOG_ENABLE.val) 
 			{
                 usbStatus = isEnabled;
-				isLogging = TRUE;
+				isLogData = TRUE;
 				if (!isPowerCycled) resetUsbDriver();
                 else isPowerCycled = FALSE;
 			}
@@ -3672,7 +3669,7 @@ fxnSecurityInfo_FactReset(const Uint16 input)
 		case BTN_BACK 	:
 			isEntered = FALSE;
             isUpdateDisplay = TRUE;
-			return MNU_SECURITYINFO_FACTRESET;
+			return onFxnBackPressed(FXN_SECURITYINFO_FACTRESET);
 		default			:
 			return FXN_SECURITYINFO_FACTRESET;
 	}
@@ -3704,44 +3701,41 @@ fxnSecurityInfo_Profile(const Uint16 input)
 
     if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_PROFILE, MNU_SECURITYINFO_PROFILE); }
 
+	const char delim[] = ".csv";
+	char csv_file[MAX_NAME_LENGTH];
 	static BOOL isDownload = TRUE;
-	static BOOL isCsvScan = TRUE;
-	static char* files[100];
 	static int csvIndex = 0;
-	static char** CSV_FILES;
 
 	if (isUpdateDisplay) 
 	{
-		isCsvScanned = FALSE;
-		isCsvScan = TRUE;
-		isCsvSuccess = FALSE;
-		isDownload = TRUE;
 		csvIndex = 0;
+		isDownload = TRUE;
+		isScanCsvFiles = FALSE;
+		isDownloadCsv = FALSE;
+		isUploadCsv = FALSE;
+		isCsvScanned = FALSE;
+		isCsvSuccess = FALSE;
+
 		updateDisplay(SECURITYINFO_PROFILE, BLANK);
 	}
-
-	if (isCsvScanned) 
-	{ /*
-		if (isCsvScan)
+	if (isUploadCsv)
+	{
+	}
+	else if (isCsvScanned) 
+	{ 
+		int i = 0;
+		csv_files[0] = '\0';
+		csv_file[0] = '\0';
+		strcpy(csv_files, CSV_FILES);
+		char *ptr = strtok(csv_files, delim);
+		while (ptr != NULL)
 		{
-			isCsvScan = FALSE;
-			char* tok;
-			char* delimiter = ".csv";
-			csvIndex = 0;
-	
-			tok = strtok(CSV_ARRAY,delimiter); 
-    		while (tok != 0) { 
-				files[csvIndex][0] = '\0';
-                files[csvIndex] = tok;
-                strcat(files[csvIndex],delimiter);
-        		printf("%s\n",files[csvIndex]); 
-        		tok = strtok(NULL,".csv"); 
-				csvIndex++;
-    		} 
-		} */
-		printf("%s\n",CSV_ARRAY);
-		isCsvScanned = FALSE;
-		//blinkLcdLine1(files[csvIndex],BLANK);
+		    if (csvIndex == i) sprintf(csv_file, "%s", ptr);
+			ptr = strtok(NULL, delim);
+			i++;
+		}
+
+		blinkLcdLine1(csv_file,BLANK);
 	}
 	else if (isCsvSuccess) (isDownload) ? blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK) : blinkLcdLine1(UPLOAD_SUCCESS,BLANK);
 	else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
@@ -3749,35 +3743,19 @@ fxnSecurityInfo_Profile(const Uint16 input)
 	switch (input)	
 	{
 		case BTN_VALUE 	:
-			if (isCsvScanned) 
-			{
-				if (csvIndex < csvCounter) csvIndex++;
-				else csvIndex = 0;
-			}
-			else 
-			{
-				isDownload = !isDownload;
-			}
+			if (isCsvScanned) (csvIndex < (csvCounter-1)) ? (csvIndex++) : (csvIndex = 0);
+			else (isDownload = !isDownload);
 			return FXN_SECURITYINFO_PROFILE;
 		case BTN_ENTER 	:
-			if (isDownload) 
+			isDownloadCsv = isScanCsvFiles = isLogData = isUpgradeFirmware = FALSE; 
+			if (isCsvScanned)
 			{
-				isDownloadCsv = TRUE; 
-				isUploadCsv = FALSE;
-				isFirmwareUpgrade = FALSE;
-				isLogging = FALSE;
+				isCsvScanned = FALSE;
+				isUploadCsv = TRUE;
 			}
-			else 
-			{
-				scanCsvFiles(CSV_FILES);
-				isDownloadCsv = FALSE; 
-				isLogging = FALSE;
-				isFirmwareUpgrade = FALSE;
-			}
+			else (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
 			return FXN_SECURITYINFO_PROFILE;
-		case BTN_BACK 	: 
-			isCsvSuccess = FALSE;
-			return onNextPressed(MNU_SECURITYINFO_PROFILE);
+		case BTN_BACK 	: return onFxnBackPressed(FXN_SECURITYINFO_PROFILE);
 		default			: return FXN_SECURITYINFO_PROFILE;
 	}
 }

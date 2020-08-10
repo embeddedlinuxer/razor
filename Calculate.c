@@ -81,7 +81,10 @@ void Poll(void)
 	Uint8 err_d = FALSE;	// density correction error
 
 	/// access usb drive
-    if (isLogging || isDownloadCsv || isUploadCsv) logUsbFxn();
+    if (isLogData) Swi_post(Swi_logData);
+    else if (isDownloadCsv) Swi_post(Swi_downloadCsv);
+    else if (isScanCsvFiles) Swi_post(Swi_scanCsvFiles);
+	else if (isUploadCsv) Swi_post(Swi_uploadCsv);
 
     /// Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;

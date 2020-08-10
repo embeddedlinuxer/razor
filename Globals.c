@@ -29,7 +29,7 @@ void resetGlobalVars(void)
     CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 
     isWriteRTC = FALSE;
-    isLogging = FALSE;
+    isLogData = FALSE;
     usbStatus = 0;
 
     THROW_ERROR 	                    = 0;
@@ -145,10 +145,10 @@ void reloadFactoryDefault(void)
 	char model_code[MAX_LCD_WIDTH];
 	int* model_code_int;
 
-    isFirmwareUpgrade = FALSE;
+    isUpgradeFirmware = FALSE;
     isScanFile = FALSE;
     isDownloadCsv = FALSE;
-    isUploadCsv = FALSE;
+    isScanCsvFiles = FALSE;
     isResetPower = FALSE;
     isCsvSuccess = FALSE;
 

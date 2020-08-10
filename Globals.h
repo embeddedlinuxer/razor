@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.1"
+#define FIRMWARE_VERSION 		"1.2.9"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -104,9 +104,16 @@
 #define MAX_DAMP_DELAY				50		// max damping period 50 secs
 #define MAX_WATER_PHASE				100		// Watercut in water phase always 100% in water phase
 #define PASSWORD_LENGTH				4
-#define CSV_MAX_COL					50
-#define CSV_MAX_ROW					30
+#define MAX_NAME_LENGTH				20
+#define MAX_CSV_ARRAY_LENGTH		2048	
 
+//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+///
+/// GLOBAL VARS
+///
+//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 _EXTERN int REG_RTC_SEC;		// RTC read-only: seconds
 _EXTERN int REG_RTC_MIN;		// RTC read-only: minutes
@@ -122,14 +129,6 @@ _EXTERN int REG_RTC_MON_IN;		// RTC read-only: month
 _EXTERN int REG_RTC_YR_IN;		// RTC read-only: year
 _EXTERN int REG_DIAGNOSTICS;	// diagnostics 
 
-//////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////
-///
-/// GLOBAL VARS
-///
-//////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////
-
 _EXTERN unsigned int cycles;             		    /*phase hold over RS*/
 _EXTERN unsigned int previous_phase;         		/*phase hold over RS*/
 _EXTERN unsigned int phase;                  		/*phase hold over RS*/
@@ -137,41 +136,20 @@ _EXTERN unsigned int phase_rollover_count;   		/*phase hold over RS*/
 _EXTERN int TEMP_STREAM;
 _EXTERN char lcdLine0[MAX_LCD_WIDTH];
 _EXTERN char lcdLine1[MAX_LCD_WIDTH];
-_EXTERN char CSV_ARRAY[2048];
-_EXTERN char CSV_FILE0[50];
-_EXTERN char CSV_FILE1[50];
-_EXTERN char CSV_FILE2[50];
-_EXTERN char CSV_FILE3[50];
-_EXTERN char CSV_FILE4[50];
-_EXTERN char CSV_FILE5[50];
-_EXTERN char CSV_FILE6[50];
-_EXTERN char CSV_FILE7[50];
-_EXTERN char CSV_FILE8[50];
-_EXTERN char CSV_FILE9[50];
-_EXTERN char CSV_FILE10[50];
-_EXTERN char CSV_FILE11[50];
-_EXTERN char CSV_FILE12[50];
-_EXTERN char CSV_FILE13[50];
-_EXTERN char CSV_FILE14[50];
-_EXTERN char CSV_FILE15[50];
-_EXTERN char CSV_FILE16[50];
-_EXTERN char CSV_FILE17[50];
-_EXTERN char CSV_FILE18[50];
-_EXTERN char CSV_FILE19[50];
-_EXTERN char CSV_FILE20[50];
-_EXTERN char CSV_FILE21[50];
-_EXTERN char CSV_FILE22[50];
-_EXTERN char CSV_FILE23[50];
-_EXTERN int usbStatus;
+_EXTERN char CSV_FILES[MAX_CSV_ARRAY_LENGTH];
+_EXTERN char csv_files[MAX_CSV_ARRAY_LENGTH];
+_EXTERN char CSV_FILE[MAX_NAME_LENGTH];
 _EXTERN int csvCounter;
+_EXTERN int usbStatus;
 _EXTERN Uint32 counter;
 _EXTERN Uint32 delayTimer;
 _EXTERN BOOL isUpdateDisplay;
 _EXTERN BOOL isScanFile;
 _EXTERN BOOL isWriteRTC;
-_EXTERN BOOL isLogging;
-_EXTERN BOOL isFirmwareUpgrade;
+_EXTERN BOOL isLogData;
+_EXTERN BOOL isUpgradeFirmware;
 _EXTERN BOOL isDownloadCsv;
+_EXTERN BOOL isScanCsvFiles;
 _EXTERN BOOL isUploadCsv;
 _EXTERN BOOL isResetPower;
 _EXTERN BOOL isCsvSuccess;
@@ -190,7 +168,7 @@ _EXTERN float Round_N_Float (float v, int n);
 _EXTERN double sigfig (double v, int n);
 _EXTERN double truncate (double v, int n);
 _EXTERN void setupMenu (void);
-_EXTERN void logUsbFxn(void);
+_EXTERN void logData(void);
 _EXTERN void loadUsbDriver(void);
 _EXTERN void resetUsbDriver(void);
 _EXTERN void resetGlobalVars(void);

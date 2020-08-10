@@ -388,8 +388,11 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
 }
 
 
-void updateFirmware(void)
+void upgradeFirmware(void)
 {
+	if (!isUsbActive()) return;
+	isUpgradeFirmware = FALSE;
+
     NAND_InfoHandle hNandInfo;
 	Uint32 numPagesAIS;
     Uint8 *aisPtr;
@@ -466,7 +469,7 @@ void updateFirmware(void)
       		aisPtr[index] = buffer[loop];
 			index++;
    		}
-   		for(i=0;i<ACCESS_DELAY*20;i++);
+   		for (i=0;i<ACCESS_DELAY*20;i++);
     }
 
 	/// close
