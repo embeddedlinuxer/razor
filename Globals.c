@@ -146,11 +146,11 @@ void reloadFactoryDefault(void)
 	int* model_code_int;
 
     isUpgradeFirmware = FALSE;
-    isScanFile = FALSE;
     isDownloadCsv = FALSE;
     isScanCsvFiles = FALSE;
     isResetPower = FALSE;
-    isCsvSuccess = FALSE;
+    isCsvDownloadSuccess = FALSE;
+    isCsvUploadSuccess = FALSE;
 
 	sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
 	model_code_int = (int*)model_code;
@@ -1247,7 +1247,7 @@ void initializeAllRegisters(void)
 	COIL_Initialize(&COIL_UPDATE_FACTORY_DEFAULT, FALSE, 0);
 	COIL_Initialize(&COIL_UNLOCKED_FACTORY_DEFAULT, FALSE, 0);
 
-	setDemoValues(); // from SN8563
+	setDemoValues(); // SN:0000
 }
 
 void setDemoValues(void)
@@ -1259,7 +1259,7 @@ void setDemoValues(void)
 	DIAGNOSTICS = 0;
 	LOCK_FACTORY = TRUE;
 
-    REG_SN_PIPE = 8409;
+    REG_SN_PIPE = 0000;
 
     const double DEMO_P0 = +2.0000e+00;
     const double DEMO_P1 = +0.0000e-00;

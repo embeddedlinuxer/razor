@@ -3708,20 +3708,13 @@ fxnSecurityInfo_Profile(const Uint16 input)
 
 	if (isUpdateDisplay) 
 	{
-		csvIndex = 0;
 		isDownload = TRUE;
-		isScanCsvFiles = FALSE;
-		isDownloadCsv = FALSE;
-		isUploadCsv = FALSE;
-		isCsvScanned = FALSE;
-		isCsvSuccess = FALSE;
-
+		csvIndex = 0;
+		resetCsvStaticVars();
 		updateDisplay(SECURITYINFO_PROFILE, BLANK);
 	}
-	if (isUploadCsv)
-	{
-	}
-	else if (isCsvScanned) 
+
+	if (isScanSuccess) 
 	{ 
 		int i = 0;
 		csv_files[0] = '\0';
@@ -3737,20 +3730,23 @@ fxnSecurityInfo_Profile(const Uint16 input)
 
 		blinkLcdLine1(csv_file,BLANK);
 	}
-	else if (isCsvSuccess) (isDownload) ? blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK) : blinkLcdLine1(UPLOAD_SUCCESS,BLANK);
+	else if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
+	else if (isCsvUploadSuccess) blinkLcdLine1(UPLOAD_SUCCESS,BLANK);
 	else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
 
 	switch (input)	
 	{
 		case BTN_VALUE 	:
-			if (isCsvScanned) (csvIndex < (csvCounter-1)) ? (csvIndex++) : (csvIndex = 0);
+			if (isScanSuccess) (csvIndex < (csvCounter-1)) ? (csvIndex++) : (csvIndex = 0);
 			else (isDownload = !isDownload);
 			return FXN_SECURITYINFO_PROFILE;
 		case BTN_ENTER 	:
-			isDownloadCsv = isScanCsvFiles = isLogData = isUpgradeFirmware = FALSE; 
-			if (isCsvScanned)
+			isDownloadCsv = isScanCsvFiles = isLogData = isUpgradeFirmware = isUploadCsv = FALSE; 
+			if (isScanSuccess)
 			{
-				isCsvScanned = FALSE;
+				isScanSuccess = FALSE;
+				CSV_FILES[0] = '\0';
+				sprintf(CSV_FILES,csv_file);
 				isUploadCsv = TRUE;
 			}
 			else (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);

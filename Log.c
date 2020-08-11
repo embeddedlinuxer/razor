@@ -285,17 +285,24 @@ void loadUsbDriver(void)
     usb_osalDelayMs(500);
 }
 
-void blockUsbAccess(void)
+void resetCsvStaticVars(void)
 {
-	/// disable usb access flags
-	COIL_LOG_ENABLE.val = FALSE;
+	isUpdateDisplay = FALSE;
+	isWriteRTC = FALSE;
 	isLogData = FALSE;
-	isScanCsvFiles = FALSE;
+	isUpgradeFirmware = FALSE;
 	isDownloadCsv = FALSE;
+	isScanCsvFiles = FALSE;
 	isUploadCsv = FALSE;
-    isUpgradeFirmware = FALSE;
+	isResetPower = FALSE;
+	isCsvUploadSuccess = FALSE;
+	isCsvDownloadSuccess = FALSE;
+	isScanSuccess = FALSE;
+
+	/// disable usb access flags
 	CSV_FILES[0] = '\0';
 	csv_files[0] = '\0';
+	CSV_BUF[0] = '\0'; 
 	csvCounter = 0;
 }
 
@@ -307,7 +314,9 @@ void resetUsbStaticVars(void)
 	try3 = 0;
 	try4 = 0;
 
-	CSV_BUF[0] = '\0'; 
+	COIL_LOG_ENABLE.val = FALSE;
+	isLogData = FALSE;
+
 	LOG_HEADER[0] = '\0';
 	LOG_BUF[0] = '\0';
 	LOG_BUF1[0] = '\0';
@@ -315,7 +324,7 @@ void resetUsbStaticVars(void)
 	LOG_BUF3[0] = '\0';
 	LOG_BUF4[0] = '\0';
 
-	blockUsbAccess();
+	resetCsvStaticVars();
 }
 
 void stopAccessingUsb(FRESULT fr)
@@ -754,7 +763,7 @@ BOOL downloadCsv(void)
 {
 	if (!isUsbActive()) return;
 
-	blockUsbAccess();
+	resetCsvStaticVars();
 
 	FIL csvWriteObject;
 	CSV_BUF[0] = '\0';
@@ -762,7 +771,7 @@ BOOL downloadCsv(void)
     if (f_open(&csvWriteObject, csvFile, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return FALSE;
 
     /// REG_SN_PIPE
-    sprintf(CSV_BUF,"Serial,,201,int,1,RW,1,%d\n",REG_SN_PIPE); 
+    sprintf(CSV_BUF,"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
 
     /// REG_OIL_P0
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P0,,39,float,1,RW,1,%15.7f\n",REG_OIL_P0.calc_val); 
@@ -859,9 +868,10 @@ BOOL downloadCsv(void)
     if (f_sync(&csvWriteObject) != FR_OK) return FALSE;
     if (f_close(&csvWriteObject) != FR_OK) return FALSE;
 
-    /// set global var true
-    isCsvSuccess = TRUE;
-
+	/// set global var true
+    isCsvDownloadSuccess = TRUE;
+    isCsvUploadSuccess = FALSE;
+    
     return TRUE;
 }
 
@@ -869,8 +879,7 @@ BOOL downloadCsv(void)
 void scanCsvFiles(void)
 {
 	if (!isUsbActive()) return;
-
-	blockUsbAccess();
+	resetCsvStaticVars();
 
 	FRESULT res;
     static DIR dir;
@@ -878,7 +887,6 @@ void scanCsvFiles(void)
 	const char path[] = "0:";
 	csvCounter = 0;
 	CSV_FILES[0] = '\0';
-	isCsvScanned = FALSE;
 
 	if (f_opendir(&dir, path) != FR_OK) return;
 
@@ -892,8 +900,7 @@ void scanCsvFiles(void)
 			{
 				strcat(CSV_FILES,fno.fname);
 				csvCounter++;
-				isCsvScanned = TRUE;
-				isCsvSuccess = TRUE;
+				isScanSuccess = TRUE;
 			}
         }
     }
@@ -903,9 +910,159 @@ void scanCsvFiles(void)
     return;
 }
 
-void uploadCsv(void)
+
+BOOL uploadCsv(void)
 {
 	if (!isUsbActive()) return;
 
-	blockUsbAccess();
+	FIL fil;
+	FRESULT result;
+	char line[250];
+	char csvFileToUpload[50];
+
+	/// make the file name
+	csvFileToUpload[0] = '\0';
+	strcat(csvFileToUpload,"0:");
+	strcat(csvFileToUpload,CSV_FILES);
+	strcat(csvFileToUpload,".csv");
+
+	/// clean buffers
+	resetCsvStaticVars();
+
+	/// open csv file to upload
+	if (f_open(&fil, csvFileToUpload, FA_READ) != FR_OK) return;
+
+	/// read line
+    while (f_gets(line, sizeof(line), &fil)) 
+	{
+		int i = 0; 
+		char* regid;
+		char* regval;
+		char* regval1;
+		char* regval2;
+		char* regval3;
+		char* regval4;
+		char* regval5;
+		char* regval6;
+		char* regval7;
+		char* regval8;
+		char* regval9;
+
+		/// remove trailing \n
+		line[strcspn( line, "\n" )] = '\0';
+
+		/// split line
+        char* ptr = strtok(line, ",");
+        while (ptr != NULL)
+        {   
+			/// register id 
+			if (i==1) regid = ptr;
+
+			/// corresponding value
+			else if (i==6) regval = ptr;
+			else if (i==7) regval1 = ptr;
+			else if (i==8) regval2 = ptr;
+			else if (i==9) regval3 = ptr;
+			else if (i==10) regval4 = ptr;
+			else if (i==11) regval5 = ptr;
+			else if (i==12) regval6 = ptr;
+			else if (i==13) regval7 = ptr;
+			else if (i==14) regval8 = ptr;
+			else if (i==15) regval9 = ptr;
+
+			/// next 
+            ptr = strtok(NULL, ",");
+            i++; 
+        } 
+
+    	/// upload 
+		if      (strstr(regid, "201") != NULL) REG_SN_PIPE = atoi(regval);
+		else if (strstr(regid, "39") != NULL) VAR_Update(&REG_OIL_P0,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "41") != NULL) VAR_Update(&REG_OIL_P1,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "43") != NULL) VAR_Update(&REG_OIL_FREQ_LOW,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "45") != NULL) VAR_Update(&REG_OIL_FREQ_HIGH,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "69") != NULL) REG_OIL_PHASE_CUTOFF = atof(regval);
+		else if (strstr(regid, "107") != NULL) REG_AO_TRIMLO = atof(regval);
+		else if (strstr(regid, "109") != NULL) REG_AO_TRIMHI = atof(regval);
+		else if (strstr(regid, "117") != NULL) VAR_Update(&REG_DENSITY_D3,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "119") != NULL) VAR_Update(&REG_DENSITY_D2,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "121") != NULL) VAR_Update(&REG_DENSITY_D1,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "123") != NULL) VAR_Update(&REG_DENSITY_D0,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "169") != NULL) REG_AI_TRIMLO = atof(regval);
+		else if (strstr(regid, "171") != NULL) REG_AI_TRIMHI = atof(regval);
+		else if (strstr(regid, "179") != NULL) VAR_Update(&REG_OIL_T0,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "181") != NULL) VAR_Update(&REG_OIL_T1,atof(regval),CALC_UNIT);
+		else if (strstr(regid, "781") != NULL) PDI_TEMP_ADJ = atof(regval);
+		else if (strstr(regid, "783") != NULL) PDI_FREQ_F0 = atof(regval);
+		else if (strstr(regid, "785") != NULL) PDI_FREQ_F1 = atof(regval);
+		else if (strstr(regid, "60001") != NULL) REG_TEMP_OIL_NUM_CURVES = atof(regval); 
+		else if (strstr(regid, "60003") != NULL) 
+		{
+			REG_TEMPS_OIL[0] = atof(regval);
+			REG_TEMPS_OIL[1] = atof(regval1);
+			REG_TEMPS_OIL[2] = atof(regval2);
+			REG_TEMPS_OIL[3] = atof(regval3);
+			REG_TEMPS_OIL[4] = atof(regval4);
+			REG_TEMPS_OIL[5] = atof(regval5);
+			REG_TEMPS_OIL[6] = atof(regval6);
+			REG_TEMPS_OIL[7] = atof(regval7);
+			REG_TEMPS_OIL[8] = atof(regval8);
+			REG_TEMPS_OIL[9] = atof(regval9);
+		}
+		else if (strstr(regid, "60023") != NULL) 
+		{
+			REG_COEFFS_TEMP_OIL[0][0] = atof(regval);
+			REG_COEFFS_TEMP_OIL[0][1] = atof(regval1);
+			REG_COEFFS_TEMP_OIL[0][2] = atof(regval2);
+			REG_COEFFS_TEMP_OIL[0][3] = atof(regval3);
+		}
+		else if (strstr(regid, "60031") != NULL) 
+		{
+			REG_COEFFS_TEMP_OIL[1][0] = atof(regval);
+			REG_COEFFS_TEMP_OIL[1][1] = atof(regval1);
+			REG_COEFFS_TEMP_OIL[1][2] = atof(regval2);
+			REG_COEFFS_TEMP_OIL[1][3] = atof(regval3);
+		}	
+		else if (strstr(regid, "60039") != NULL)
+		{
+			REG_COEFFS_TEMP_OIL[2][0] = atof(regval);
+			REG_COEFFS_TEMP_OIL[2][1] = atof(regval1);
+			REG_COEFFS_TEMP_OIL[2][2] = atof(regval2);
+			REG_COEFFS_TEMP_OIL[2][3] = atof(regval3);
+		}
+		else if (strstr(regid, "60047") != NULL)
+		{
+			REG_COEFFS_TEMP_OIL[3][0] = atof(regval);
+			REG_COEFFS_TEMP_OIL[3][1] = atof(regval1);
+			REG_COEFFS_TEMP_OIL[3][2] = atof(regval2);
+			REG_COEFFS_TEMP_OIL[3][3] = atof(regval3);
+		}
+		else if (strstr(regid, "60055") != NULL)
+		{
+			REG_COEFFS_TEMP_OIL[4][0] = atof(regval);
+			REG_COEFFS_TEMP_OIL[4][1] = atof(regval1);
+			REG_COEFFS_TEMP_OIL[4][2] = atof(regval2);
+			REG_COEFFS_TEMP_OIL[4][3] = atof(regval3);
+		}
+		else if (strstr(regid, "60063") != NULL)
+		{
+			REG_COEFFS_TEMP_OIL[5][0] = atof(regval);
+			REG_COEFFS_TEMP_OIL[5][1] = atof(regval1);
+			REG_COEFFS_TEMP_OIL[5][2] = atof(regval2);
+			REG_COEFFS_TEMP_OIL[5][3] = atof(regval3);
+		}
+
+		line[0] = '\0';
+	}
+
+	f_close(&fil);
+
+	/// set global var true
+    isCsvUploadSuccess = TRUE;
+    isCsvDownloadSuccess = FALSE;
+
+	/// write to flash
+	Swi_post(Swi_writeNand);	
+
+    return;
 }
