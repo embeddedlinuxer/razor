@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <xdc/std.h>
 #include <xdc/cfg/global.h>
@@ -37,8 +39,6 @@
 #define MAX_BUF_SIZE   	4096*2
 
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
-static char csvFile[] = "0:pdi_razor_profile.csv";
-static char aisFile[] = "0:pdi_razor_firmware.ais";
 
 static Uint8 try = 0;
 static Uint8 try2 = 0;
@@ -301,7 +301,6 @@ void resetCsvStaticVars(void)
 
 	/// disable usb access flags
 	CSV_FILES[0] = '\0';
-	csv_files[0] = '\0';
 	CSV_BUF[0] = '\0'; 
 	csvCounter = 0;
 }
@@ -767,8 +766,18 @@ BOOL downloadCsv(void)
 
 	FIL csvWriteObject;
 	CSV_BUF[0] = '\0';
+	char * csvFileName[16];
 
-    if (f_open(&csvWriteObject, csvFile, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return FALSE;
+    if (isPdiRazorProfile)
+	{
+		isPdiRazorProfile = FALSE;
+		if (f_open(&csvWriteObject, PDI_RAZOR_PROFILE, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return FALSE;
+	}
+	else  
+	{
+		sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
+		if (f_open(&csvWriteObject, csvFileName, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return FALSE;
+	}
 
     /// REG_SN_PIPE
     sprintf(CSV_BUF,"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
@@ -925,12 +934,23 @@ BOOL uploadCsv(void)
 	strcat(csvFileToUpload,"0:");
 	strcat(csvFileToUpload,CSV_FILES);
 	strcat(csvFileToUpload,".csv");
-
-	/// clean buffers
-	resetCsvStaticVars();
-
+	
 	/// open csv file to upload
-	if (f_open(&fil, csvFileToUpload, FA_READ) != FR_OK) return;
+	if (isPdiRazorProfile) 
+	{
+		isPdiRazorProfile = FALSE;
+		if (f_open(&fil, PDI_RAZOR_PROFILE, FA_READ) != FR_OK) 
+		{
+			f_close(&fil);
+			return;
+		}
+		displayLcd(" UPLOAD PROFILE ",0);
+	}
+	else
+	{
+		/// open csv file in normal mode
+		if (f_open(&fil, csvFileToUpload, FA_READ) != FR_OK) return;
+	}
 
 	/// read line
     while (f_gets(line, sizeof(line), &fil)) 
@@ -949,16 +969,14 @@ BOOL uploadCsv(void)
 		char* regval9;
 
 		/// remove trailing \n
-		line[strcspn( line, "\n" )] = '\0';
+		line[strcspn( line,"\n")] = '\0';
 
 		/// split line
         char* ptr = strtok(line, ",");
         while (ptr != NULL)
         {   
-			/// register id 
+			/// get value
 			if (i==1) regid = ptr;
-
-			/// corresponding value
 			else if (i==6) regval = ptr;
 			else if (i==7) regval1 = ptr;
 			else if (i==8) regval2 = ptr;
@@ -976,27 +994,27 @@ BOOL uploadCsv(void)
         } 
 
     	/// upload 
-		if      (strstr(regid, "201") != NULL) REG_SN_PIPE = atoi(regval);
-		else if (strstr(regid, "39") != NULL) VAR_Update(&REG_OIL_P0,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "41") != NULL) VAR_Update(&REG_OIL_P1,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "43") != NULL) VAR_Update(&REG_OIL_FREQ_LOW,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "45") != NULL) VAR_Update(&REG_OIL_FREQ_HIGH,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "69") != NULL) REG_OIL_PHASE_CUTOFF = atof(regval);
-		else if (strstr(regid, "107") != NULL) REG_AO_TRIMLO = atof(regval);
-		else if (strstr(regid, "109") != NULL) REG_AO_TRIMHI = atof(regval);
-		else if (strstr(regid, "117") != NULL) VAR_Update(&REG_DENSITY_D3,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "119") != NULL) VAR_Update(&REG_DENSITY_D2,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "121") != NULL) VAR_Update(&REG_DENSITY_D1,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "123") != NULL) VAR_Update(&REG_DENSITY_D0,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "169") != NULL) REG_AI_TRIMLO = atof(regval);
-		else if (strstr(regid, "171") != NULL) REG_AI_TRIMHI = atof(regval);
-		else if (strstr(regid, "179") != NULL) VAR_Update(&REG_OIL_T0,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "181") != NULL) VAR_Update(&REG_OIL_T1,atof(regval),CALC_UNIT);
-		else if (strstr(regid, "781") != NULL) PDI_TEMP_ADJ = atof(regval);
-		else if (strstr(regid, "783") != NULL) PDI_FREQ_F0 = atof(regval);
-		else if (strstr(regid, "785") != NULL) PDI_FREQ_F1 = atof(regval);
-		else if (strstr(regid, "60001") != NULL) REG_TEMP_OIL_NUM_CURVES = atof(regval); 
-		else if (strstr(regid, "60003") != NULL) 
+		if      (strcmp(regid, "201") == 0) REG_SN_PIPE = atoi(regval);
+		else if (strcmp(regid, "39") == 0) VAR_Update(&REG_OIL_P0,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "41") == 0) VAR_Update(&REG_OIL_P1,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "43") == 0) VAR_Update(&REG_OIL_FREQ_LOW,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "45") == 0) VAR_Update(&REG_OIL_FREQ_HIGH,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "69") == 0) REG_OIL_PHASE_CUTOFF = atof(regval);
+		else if (strcmp(regid, "107") == 0) REG_AO_TRIMLO = atof(regval);
+		else if (strcmp(regid, "109") == 0) REG_AO_TRIMHI = atof(regval);
+		else if (strcmp(regid, "117") == 0) VAR_Update(&REG_DENSITY_D3,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "119") == 0) VAR_Update(&REG_DENSITY_D2,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "121") == 0) VAR_Update(&REG_DENSITY_D1,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "123") == 0) VAR_Update(&REG_DENSITY_D0,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "169") == 0) REG_AI_TRIMLO = atof(regval);
+		else if (strcmp(regid, "171") == 0) REG_AI_TRIMHI = atof(regval);
+		else if (strcmp(regid, "179") == 0) VAR_Update(&REG_OIL_T0,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "181") == 0) VAR_Update(&REG_OIL_T1,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "781") == 0) PDI_TEMP_ADJ = atof(regval);
+		else if (strcmp(regid, "783") == 0) PDI_FREQ_F0 = atof(regval);
+		else if (strcmp(regid, "785") == 0) PDI_FREQ_F1 = atof(regval);
+		else if (strcmp(regid, "60001") == 0) REG_TEMP_OIL_NUM_CURVES = atof(regval); 
+		else if (strcmp(regid, "60003") == 0) 
 		{
 			REG_TEMPS_OIL[0] = atof(regval);
 			REG_TEMPS_OIL[1] = atof(regval1);
@@ -1009,42 +1027,42 @@ BOOL uploadCsv(void)
 			REG_TEMPS_OIL[8] = atof(regval8);
 			REG_TEMPS_OIL[9] = atof(regval9);
 		}
-		else if (strstr(regid, "60023") != NULL) 
+		else if (strcmp(regid, "60023") == 0) 
 		{
 			REG_COEFFS_TEMP_OIL[0][0] = atof(regval);
 			REG_COEFFS_TEMP_OIL[0][1] = atof(regval1);
 			REG_COEFFS_TEMP_OIL[0][2] = atof(regval2);
 			REG_COEFFS_TEMP_OIL[0][3] = atof(regval3);
 		}
-		else if (strstr(regid, "60031") != NULL) 
+		else if (strcmp(regid, "60031") == 0) 
 		{
 			REG_COEFFS_TEMP_OIL[1][0] = atof(regval);
 			REG_COEFFS_TEMP_OIL[1][1] = atof(regval1);
 			REG_COEFFS_TEMP_OIL[1][2] = atof(regval2);
 			REG_COEFFS_TEMP_OIL[1][3] = atof(regval3);
 		}	
-		else if (strstr(regid, "60039") != NULL)
+		else if (strcmp(regid, "60039") == 0)
 		{
 			REG_COEFFS_TEMP_OIL[2][0] = atof(regval);
 			REG_COEFFS_TEMP_OIL[2][1] = atof(regval1);
 			REG_COEFFS_TEMP_OIL[2][2] = atof(regval2);
 			REG_COEFFS_TEMP_OIL[2][3] = atof(regval3);
 		}
-		else if (strstr(regid, "60047") != NULL)
+		else if (strcmp(regid, "60047") == 0)
 		{
 			REG_COEFFS_TEMP_OIL[3][0] = atof(regval);
 			REG_COEFFS_TEMP_OIL[3][1] = atof(regval1);
 			REG_COEFFS_TEMP_OIL[3][2] = atof(regval2);
 			REG_COEFFS_TEMP_OIL[3][3] = atof(regval3);
 		}
-		else if (strstr(regid, "60055") != NULL)
+		else if (strcmp(regid, "60055") == 0)
 		{
 			REG_COEFFS_TEMP_OIL[4][0] = atof(regval);
 			REG_COEFFS_TEMP_OIL[4][1] = atof(regval1);
 			REG_COEFFS_TEMP_OIL[4][2] = atof(regval2);
 			REG_COEFFS_TEMP_OIL[4][3] = atof(regval3);
 		}
-		else if (strstr(regid, "60063") != NULL)
+		else if (strcmp(regid, "60063") == 0)
 		{
 			REG_COEFFS_TEMP_OIL[5][0] = atof(regval);
 			REG_COEFFS_TEMP_OIL[5][1] = atof(regval1);
@@ -1064,5 +1082,8 @@ BOOL uploadCsv(void)
 	/// write to flash
 	Swi_post(Swi_writeNand);	
 
-    return;
+	/// delete PDI_RAZOR_PROFILE
+	f_unlink(PDI_RAZOR_PROFILE);
+
+    for(;;) displayLcd("   POWER CYCLE  ", 1);
 }

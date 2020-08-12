@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.9"
+#define FIRMWARE_VERSION 		"1.2.0"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -106,6 +106,8 @@
 #define PASSWORD_LENGTH				4
 #define MAX_NAME_LENGTH				20
 #define MAX_CSV_ARRAY_LENGTH		2048	
+#define PDI_RAZOR_PROFILE 			"0:pdi_razor_profile.csv"
+#define PDI_RAZOR_FIRMWARE 			"0:pdi_razor_firmware.ais"
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
@@ -137,7 +139,6 @@ _EXTERN int TEMP_STREAM;
 _EXTERN char lcdLine0[MAX_LCD_WIDTH];
 _EXTERN char lcdLine1[MAX_LCD_WIDTH];
 _EXTERN char CSV_FILES[MAX_CSV_ARRAY_LENGTH];
-_EXTERN char csv_files[MAX_CSV_ARRAY_LENGTH];
 _EXTERN int csvCounter;
 _EXTERN int usbStatus;
 _EXTERN Uint32 counter;
@@ -153,6 +154,7 @@ _EXTERN BOOL isResetPower;
 _EXTERN BOOL isCsvUploadSuccess;
 _EXTERN BOOL isCsvDownloadSuccess;
 _EXTERN BOOL isScanSuccess;
+_EXTERN BOOL isPdiRazorProfile;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

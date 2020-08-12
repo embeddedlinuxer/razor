@@ -47,6 +47,8 @@ static BOOL isOn = FALSE;           // LINE1 BLINKER
 static BOOL isMessage = FALSE;      // Message to display? 
 static Uint8 isPowerCycled = TRUE;  // loadUsbDriver only 1 time after power cycle
 
+extern void blinkLcdLine1(const char * textA, const char * textB);
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ///	
@@ -156,7 +158,11 @@ Process_Menu(void)
 	/// Enable USB device
     loadUsbDriver();
 
-	/// firmware upgrade
+	/// upload standard profile if exists
+	isPdiRazorProfile = TRUE;
+	while (isPdiRazorProfile) Swi_post(Swi_uploadCsv);
+
+	/// firmware upgrade if exists
 	isUpgradeFirmware = TRUE;
 	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
@@ -3710,6 +3716,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 	{
 		isDownload = TRUE;
 		csvIndex = 0;
+		isPdiRazorProfile = FALSE;
 		resetCsvStaticVars();
 		updateDisplay(SECURITYINFO_PROFILE, BLANK);
 	}
@@ -3717,6 +3724,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 	if (isScanSuccess) 
 	{ 
 		int i = 0;
+		char csv_files[MAX_CSV_ARRAY_LENGTH];
 		csv_files[0] = '\0';
 		csv_file[0] = '\0';
 		strcpy(csv_files, CSV_FILES);
@@ -3731,7 +3739,6 @@ fxnSecurityInfo_Profile(const Uint16 input)
 		blinkLcdLine1(csv_file,BLANK);
 	}
 	else if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
-	else if (isCsvUploadSuccess) blinkLcdLine1(UPLOAD_SUCCESS,BLANK);
 	else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
 
 	switch (input)	

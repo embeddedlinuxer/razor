@@ -393,10 +393,13 @@ void upgradeFirmware(void)
 	if (!isUsbActive()) return;
 	isUpgradeFirmware = FALSE;
 
-    NAND_InfoHandle hNandInfo;
+	FILINFO fno;
+    if (f_stat(PDI_RAZOR_FIRMWARE, &fno) != FR_OK) return;
+
+	NAND_InfoHandle hNandInfo;
 	Uint32 numPagesAIS;
     Uint8 *aisPtr;
-    Int32 i=0, status, bytesRead, aisAllocSize, aisFileSize = 0;
+    Int32 i, status, bytesRead, aisAllocSize, aisFileSize = 0;
     VUint16 *addr_flash;
     ASYNC_MEM_InfoHandle dummy;
 	FIL fPtr;
@@ -406,7 +409,7 @@ void upgradeFirmware(void)
 	UINT br = 0;
 	BYTE buffer[4096] = 0;
 
-    if (f_open(&fPtr, "0:pdi_razor_firmware.ais", FA_READ) != FR_OK) return;
+    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
 
     UTIL_setCurrMemPtr(0);
 
@@ -461,22 +464,24 @@ void upgradeFirmware(void)
 
 	/// read file	
 	for (;;) {
-     	if (f_read(&fPtr, buffer, sizeof buffer, &br) != FR_OK) return;  /* Read a chunk of data from the source file */
-   		for(i=0;i<ACCESS_DELAY*20;i++);
+     	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;  /* Read a chunk of data from the source file */
+   		for (i=0;i<ACCESS_DELAY*20;i++);
         if (br == 0) break; /* error or eof */
 
-		for(loop = 0; loop < sizeof buffer; loop++) {
+		for (loop = 0; loop < sizeof(buffer); loop++) {
       		aisPtr[index] = buffer[loop];
 			index++;
    		}
    		for (i=0;i<ACCESS_DELAY*20;i++);
+		buffer[0] = '\0';
     }
 
 	/// close
     if (f_close (&fPtr) != FR_OK) return;
 
-	/// download csv
-	if(!downloadCsv()) return;
+	/// download existing csv
+	isPdiRazorProfile = TRUE;
+	downloadCsv();
 
 	/// unload usb driver
 	unloadUsbDriver();
@@ -500,8 +505,9 @@ void upgradeFirmware(void)
 	while (1) {
 		static Uint32 i = 0;
 		i++;
+		displayLcd("FIRMWARE UPGRADE",0);
     	if (i < 500)       displayLcd("   REMOVE USB   ", 1);
-		else if (i < 1000) displayLcd("                ", 1);
+		else if (i < 900) displayLcd("                ", 1);
 		else i = 0;
 	}
 }

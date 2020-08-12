@@ -151,6 +151,7 @@ void reloadFactoryDefault(void)
     isResetPower = FALSE;
     isCsvDownloadSuccess = FALSE;
     isCsvUploadSuccess = FALSE;
+    isPdiRazorProfile = FALSE;
 
 	sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
 	model_code_int = (int*)model_code;
@@ -1348,104 +1349,6 @@ void setDemoValues(void)
     sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
 	model_code_int = (int*)model_code;
 	for (i=0;i<4;i++) REG_MODEL_CODE[i] = model_code_int[i];
-/*
-    REG_SN_PIPE = 8563 ;
-
-    Uint16 i,j;
-	char model_code[MAX_LCD_WIDTH];
-	int* model_code_int;
-
-	DIAGNOSTICS = 0;
-	LOCK_FACTORY = TRUE;
-
-    const double DEMO_P0 = +1.01625e+01;
-    const double DEMO_P1 = -3.25000e-02;
-    const double DEMO_T0 = -1.69060e-01;
-    const double DEMO_T1 = +4.48400e-03;
-
-    const double DEMO_FL = +2.53000e+02;
-    const double DEMO_FH = +1.00000e+03;
-
-    const double DEMO_CUTOFF = 1.00000e+02;
-
-    const double DEMO_AO_LO = +4.0880000e+00;
-    const double DEMO_AO_HI = +2.0362000e+01;
-    const double DEMO_AI_LO = +9.9370870e+00;
-    const double DEMO_AI_HI = +4.9848736e+01;
-
-    const double DEMO_REG_TEMPS_OIL[10] = {15,37,60,15,37,60,0,0,0,0};
-	const double DEMO_REG_COEFFS_TEMP_OIL[10][4] = {	
-		{+2.5079020E+04,-2.7060879E+02,+9.8012943E-01,-1.1907706E-03},
-		{+2.5079020E+04,-2.7060879E+02,+9.8012943E-01,-1.1907706E-03},
-		{+2.5079020E+04,-2.7060879E+02,+9.8012943E-01,-1.1907706E-03},
-		{+2.5079020E+04,-2.7060879E+02,+9.8012943E-01,-1.1907706E-03},
-		{+2.5079020E+04,-2.7060879E+02,+9.8012943E-01,-1.1907706E-03},
-		{+2.5079020E+04,-2.7060879E+02,+9.8012943E-01,-1.1907706E-03},
-		{0.00,0.00,0.00,0.00},
-		{0.00,0.00,0.00,0.00},
-		{0.00,0.00,0.00,0.00},
-		{0.00,0.00,0.00,0.00}
-	}; // curves modified from SN8563
-
-    // P0 and P1 - FACTORY/USER
-	VAR_Update(&FCT_OIL_P0, DEMO_P0, CALC_UNIT);
-	VAR_Update(&FCT_OIL_P1, DEMO_P1, CALC_UNIT);
-	VAR_Update(&REG_OIL_P0, DEMO_P0, CALC_UNIT);
-	VAR_Update(&REG_OIL_P1, DEMO_P1, CALC_UNIT);
-
-    // T0 and T1 - FACTORY/USER
-    VAR_Update(&FCT_OIL_T0, DEMO_T0, CALC_UNIT);
-	VAR_Update(&FCT_OIL_T1, DEMO_T1, CALC_UNIT);
-    VAR_Update(&REG_OIL_T0, DEMO_T0, CALC_UNIT);
-	VAR_Update(&REG_OIL_T1, DEMO_T1, CALC_UNIT);
-
-    // OIL_FREQ_LOW - FACTORY/USER
-	VAR_Update(&REG_OIL_FREQ_LOW, DEMO_FL, CALC_UNIT);
-	VAR_Update(&FCT_OIL_FREQ_LOW, DEMO_FL, CALC_UNIT);
-
-    // OIL_FREQ_HIGH - FACTORY/USER
-	VAR_Update(&REG_OIL_FREQ_HIGH, DEMO_FH, CALC_UNIT);
-	VAR_Update(&FCT_OIL_FREQ_HIGH, DEMO_FH, CALC_UNIT);
-
-    // OIL_PHASE_CUTOFF - FACTORY/USER
-	REG_OIL_PHASE_CUTOFF = DEMO_CUTOFF;
-	FCT_OIL_PHASE_CUTOFF = DEMO_CUTOFF;
-
-    // AO TRIM LO
-    REG_AO_TRIMLO = DEMO_AO_LO;
-    FCT_AO_TRIMLO = DEMO_AO_LO;
-
-    // AO TRIM HI
-    REG_AO_TRIMHI = DEMO_AO_HI;
-    FCT_AO_TRIMHI = DEMO_AO_HI;
-
-    // AI TRIM LO
-    REG_AI_TRIMLO = DEMO_AI_LO;
-    FCT_AI_TRIMLO = DEMO_AI_LO;
-
-    // AI TRIM HI
-    REG_AI_TRIMHI = DEMO_AI_HI;
-    FCT_AI_TRIMHI = DEMO_AI_HI;
-
-	// set up temperature curve ranges
-	for(i=0;i<10;i++) 
-    {
-        REG_TEMPS_OIL[i] = DEMO_REG_TEMPS_OIL[i];
-    }
-
-	// set up oil temperature curves
-	for(i=0;i<10;i++) 
-    {
-        for(j=0;j<4;j++) REG_COEFFS_TEMP_OIL[i][j] = DEMO_REG_COEFFS_TEMP_OIL[i][j];
-    }
-
-	// default value for dual-curve is '5' (0 through 5, so 6 in total)
-	REG_TEMP_OIL_NUM_CURVES = 5;
-
-    sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
-	model_code_int = (int*)model_code;
-	for (i=0;i<4;i++) REG_MODEL_CODE[i] = model_code_int[i];
-*/
 }
 
 double Round_N(double v, int n)
