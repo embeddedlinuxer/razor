@@ -155,17 +155,17 @@ ISR_Process_Menu (void)
 void 
 Process_Menu(void)
 {
-	resetUsbStaticVars();
-
 	/// Enable USB device
     loadUsbDriver();
 
 	/// upload profile if exists
 	isPdiRazorProfile = TRUE;
-	while (isPdiRazorProfile) Swi_post(Swi_uploadCsv);
+	isUploadCsv = TRUE;
+	while (isUploadCsv) Swi_post(Swi_uploadCsv);
 
 	/// upgrade firmware if exists
 	isUpgradeFirmware = TRUE;
+	isPdiRazorProfile = TRUE;
 	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
 	char 	prevButtons[4];
@@ -1607,8 +1607,7 @@ Uint16
 mnuConfig_DataLogger_EnableLogger(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_DATALOGGER_ENABLELOGGER;
-	if (isUpdateDisplay) (COIL_LOG_ENABLE.val) ? updateDisplay(CFG_DATALOGGER_ENABLELOGGER, ENABLED) : updateDisplay(CFG_DATALOGGER_ENABLELOGGER, DISABLED);
-	//(COIL_LOG_ENABLE.val) ? displayLcd(ENABLED, LCD1) : displayLcd(DISABLED, LCD1);
+	if (isUpdateDisplay) (isLogData) ? updateDisplay(CFG_DATALOGGER_ENABLELOGGER, ENABLED) : updateDisplay(CFG_DATALOGGER_ENABLELOGGER, DISABLED);
 
     if (usbStatus == 0) displayLcd(DISABLED, LCD1);
     else if (usbStatus == 1) displayLcd(ENABLED, LCD1);
@@ -1661,16 +1660,16 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
             isEnabled = !isEnabled;
             return FXN_CFG_DATALOGGER_ENABLELOGGER;
         case BTN_ENTER  : 
-            COIL_LOG_ENABLE.val = isEnabled;
-            if (COIL_LOG_ENABLE.val) 
+			isLogData = isEnabled;
+			if (isLogData) 
 			{
                 usbStatus = isEnabled;
-				isLogData = TRUE;
 				if (!isPowerCycled) resetUsbDriver();
                 else isPowerCycled = FALSE;
 			}
             else
             {
+				resetUsbStaticVars();
                 usbStatus = 0;
             }
             return onNextMessagePressed(FXN_CFG_DATALOGGER_ENABLELOGGER,CHANGE_SUCCESS);
@@ -3724,43 +3723,46 @@ fxnSecurityInfo_Profile(const Uint16 input)
 	}
 
 	if (isScanSuccess) 
-	{ 
-		int i = 0;
-		char csv_files[MAX_CSV_ARRAY_LENGTH];
-		csv_files[0] = '\0';
-		csv_file[0] = '\0';
-		strcpy(csv_files, CSV_FILES);
-		char *ptr = strtok(csv_files, delim);
-		while (ptr != NULL)
-		{
-		    if (csvIndex == i) sprintf(csv_file, "%s", ptr);
-			ptr = strtok(NULL, delim);
-			i++;
-		}
+    {    
+        int i = 0; 
+        char csv_files[MAX_CSV_ARRAY_LENGTH];
+        csv_files[0] = '\0';
+        csv_file[0] = '\0';
+        strcpy(csv_files, CSV_FILES);
+        char *ptr = strtok(csv_files, delim);
+        while (ptr != NULL)
+        {
+            if (csvIndex == i) sprintf(csv_file, "%s", ptr);
+            ptr = strtok(NULL, delim);
+            i++;
+        }
 
-		blinkLcdLine1(csv_file,BLANK);
-	}
-	else if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
-	else (isDownload) ? blinkLcdLine1(DOWNLOAD, STEP_START) : blinkLcdLine1(UPLOAD, STEP_START); 
+        blinkLcdLine1(csv_file,BLANK);
+    }    
+    else if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
+    else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
 
-	switch (input)	
-	{
-		case BTN_VALUE 	:
-			if (isScanSuccess) (csvIndex < (csvCounter-1)) ? (csvIndex++) : (csvIndex = 0);
-			else (isDownload = !isDownload);
-			return FXN_SECURITYINFO_PROFILE;
-		case BTN_STEP 	:
-			isDownloadCsv = isScanCsvFiles = isLogData = isUpgradeFirmware = isUploadCsv = FALSE; 
-			if (isScanSuccess)
-			{
-				isScanSuccess = FALSE;
-				CSV_FILES[0] = '\0';
-				sprintf(CSV_FILES,csv_file);
-				isUploadCsv = TRUE;
-			}
-			else (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
-			return FXN_SECURITYINFO_PROFILE;
-		case BTN_BACK 	: return onFxnBackPressed(FXN_SECURITYINFO_PROFILE);
-		default			: return FXN_SECURITYINFO_PROFILE;
-	}
+    switch (input)  
+    {    
+        case BTN_VALUE  :
+            if (isScanSuccess) (csvIndex < (csvCounter-1)) ? (csvIndex++) : (csvIndex = 0);
+            else (isDownload = !isDownload);
+            return FXN_SECURITYINFO_PROFILE;
+        case BTN_STEP  :
+            isDownloadCsv = isPdiRazorProfile = isScanCsvFiles = isLogData = isUpgradeFirmware = isUploadCsv = FALSE; 
+            if (isScanSuccess)
+            {
+                isScanSuccess = FALSE;
+                CSV_FILES[0] = '\0';
+                sprintf(CSV_FILES,csv_file);
+                isUploadCsv = TRUE;
+            }
+            return FXN_SECURITYINFO_PROFILE;
+		case BTN_ENTER  :
+            isDownloadCsv = isScanCsvFiles = isLogData = isUpgradeFirmware = isUploadCsv = FALSE; 
+            (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
+            return FXN_SECURITYINFO_PROFILE;
+        case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_PROFILE);
+        default         : return FXN_SECURITYINFO_PROFILE;
+    } 
 }

@@ -36,7 +36,8 @@
 #define USB_INSTANCE    0
 #define MAX_DATA_SIZE   160 
 #define MAX_HEADER_SIZE 110 
-#define MAX_BUF_SIZE   	4096*2
+//#define MAX_BUF_SIZE   	4096*2
+#define MAX_BUF_SIZE   	512
 
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 
@@ -288,7 +289,6 @@ void resetCsvStaticVars(void)
 {
 	isUpdateDisplay = FALSE;
 	isWriteRTC = FALSE;
-	isLogData = FALSE;
 	isUpgradeFirmware = FALSE;
 	isDownloadCsv = FALSE;
 	isScanCsvFiles = FALSE;
@@ -298,6 +298,7 @@ void resetCsvStaticVars(void)
 	isCsvDownloadSuccess = FALSE;
 	isScanSuccess = FALSE;
 	isPdiRazorProfile = FALSE;
+	isLogData = FALSE;
 
 	/// disable usb access flags
 	CSV_FILES[0] = '\0';
@@ -313,21 +314,17 @@ void resetUsbStaticVars(void)
 	try3 = 0;
 	try4 = 0;
 
-	COIL_LOG_ENABLE.val = FALSE;
-	isLogData = FALSE;
-
 	LOG_HEADER[0] = '\0';
 	LOG_BUF[0] = '\0';
 	LOG_BUF1[0] = '\0';
 	LOG_BUF2[0] = '\0';
 	LOG_BUF3[0] = '\0';
 	LOG_BUF4[0] = '\0';
-
-	resetCsvStaticVars();
 }
 
 void stopAccessingUsb(FRESULT fr)
 {
+	resetCsvStaticVars();
 	resetUsbStaticVars();
 
     /// find out why it failed
@@ -427,14 +424,6 @@ void logData(void)
 
     FRESULT fresult;
 	static int buf_index = 0;
-
-  	/// stop logging 	
-   	if (!COIL_LOG_ENABLE.val)
-  	{
-      	isLogData = FALSE;
-		current_day = 99;
-   		return;
-   	}
 
    	/// read rtc
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
@@ -922,18 +911,13 @@ void scanCsvFiles(void)
 BOOL uploadCsv(void)
 {
 	if (!isUsbActive()) return FALSE;
+	isUploadCsv = FALSE;
 
 	FIL fil;
 	FRESULT result;
 	char line[250];
 	char csvFileToUpload[50];
 
-	/// make the file name
-	csvFileToUpload[0] = '\0';
-	strcat(csvFileToUpload,"0:");
-	strcat(csvFileToUpload,CSV_FILES);
-	strcat(csvFileToUpload,".csv");
-	
 	/// open csv file to upload
 	if (isPdiRazorProfile) 
 	{
@@ -945,11 +929,15 @@ BOOL uploadCsv(void)
 		}
 		displayLcd(" UPLOAD PROFILE ",0);
 	}
-	else
-	{
-		/// open csv file in normal mode
-		if (f_open(&fil, csvFileToUpload, FA_READ) != FR_OK) return FALSE;
-	}
+
+	/// make the file name
+	csvFileToUpload[0] = '\0';
+	strcat(csvFileToUpload,"0:");
+	strcat(csvFileToUpload,CSV_FILES);
+	strcat(csvFileToUpload,".csv");
+	
+	/// open csv file in normal mode
+	if (f_open(&fil, csvFileToUpload, FA_READ) != FR_OK) return FALSE;
 
 	/// read line
     while (f_gets(line, sizeof(line), &fil)) 
