@@ -393,9 +393,6 @@ void upgradeFirmware(void)
 	if (!isUsbActive()) return;
 	isUpgradeFirmware = FALSE;
 
-	FILINFO fno;
-    if (f_stat(PDI_RAZOR_FIRMWARE, &fno) != FR_OK) return;
-
 	NAND_InfoHandle hNandInfo;
 	Uint32 numPagesAIS;
     Uint8 *aisPtr;
@@ -407,7 +404,7 @@ void upgradeFirmware(void)
 	int index=0;
 	int loop = 0;
 	UINT br = 0;
-	BYTE buffer[4096] = 0;
+	BYTE buffer[512] = 0;
 
     if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
 
@@ -460,34 +457,25 @@ void upgradeFirmware(void)
     if (f_lseek(&fPtr,0) != FR_OK) return;
 
 	isUpdateDisplay=TRUE;
-	updateDisplay("FIRMWARE UPGRADE","   Flashing...  ");
+	updateDisplay("FIRMWARE UPGRADE","   Loading...   ");
 
 	/// read file	
 	for (;;) {
      	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;  /* Read a chunk of data from the source file */
    		for (i=0;i<ACCESS_DELAY*20;i++);
+
         if (br == 0) break; /* error or eof */
 
-		for (loop = 0; loop < sizeof(buffer); loop++) {
+		for (loop = 0; loop<sizeof(buffer); loop++) 
+		{
       		aisPtr[index] = buffer[loop];
 			index++;
    		}
    		for (i=0;i<ACCESS_DELAY*20;i++);
-		buffer[0] = '\0';
     }
 
 	/// close
     if (f_close (&fPtr) != FR_OK) return;
-
-	/// download existing csv
-	isPdiRazorProfile = TRUE;
-	downloadCsv();
-
-	/// unload usb driver
-	unloadUsbDriver();
-
-	Swi_disable();
-	Hwi_disable();
 
 	/// global erase
     if (NAND_globalErase(hNandInfo) != E_PASS) return;
@@ -497,16 +485,19 @@ void upgradeFirmware(void)
     if (USB_writeData(hNandInfo, aisPtr, numPagesAIS) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*100;i++);
 
-	Hwi_enable();
-	Swi_enable();
+	/// download existing csv
+	isPdiRazorProfile = TRUE;
+	isDownloadCsv = TRUE;
+	updateDisplay("FIRMWARE UPGRADE","Downloading CSV ");
+	while (isDownloadCsv) downloadCsv();
 
 	isUpdateDisplay=TRUE;
-	updateDisplay("FIRMWARE UPGRADE","   REMOVE USB   ");
+	updateDisplay("FIRMWARE UPGRADE","  Power Cycle   ");
 	while (1) {
 		static Uint32 i = 0;
 		i++;
 		displayLcd("FIRMWARE UPGRADE",0);
-    	if (i < 500)       displayLcd("   REMOVE USB   ", 1);
+    	if (i < 500)      displayLcd("  Power Cycle   ", 1);
 		else if (i < 900) displayLcd("                ", 1);
 		else i = 0;
 	}

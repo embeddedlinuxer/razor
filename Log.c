@@ -210,7 +210,6 @@ MSCCallback(uint32_t ulInstance, uint32_t ulEvent, void *pvData)
         {
             // Proceed to the enumeration state.
             g_eState = STATE_DEVICE_ENUM;
-			resetUsbStaticVars();
 
             break;
         }
@@ -298,6 +297,7 @@ void resetCsvStaticVars(void)
 	isCsvUploadSuccess = FALSE;
 	isCsvDownloadSuccess = FALSE;
 	isScanSuccess = FALSE;
+	isPdiRazorProfile = FALSE;
 
 	/// disable usb access flags
 	CSV_FILES[0] = '\0';
@@ -761,8 +761,7 @@ void logData(void)
 BOOL downloadCsv(void) 
 {
 	if (!isUsbActive()) return;
-
-	resetCsvStaticVars();
+	isDownloadCsv = FALSE;
 
 	FIL csvWriteObject;
 	CSV_BUF[0] = '\0';
@@ -888,7 +887,7 @@ BOOL downloadCsv(void)
 void scanCsvFiles(void)
 {
 	if (!isUsbActive()) return;
-	resetCsvStaticVars();
+	isScanCsvFiles = FALSE;
 
 	FRESULT res;
     static DIR dir;
@@ -922,7 +921,7 @@ void scanCsvFiles(void)
 
 BOOL uploadCsv(void)
 {
-	if (!isUsbActive()) return;
+	if (!isUsbActive()) return FALSE;
 
 	FIL fil;
 	FRESULT result;
@@ -942,14 +941,14 @@ BOOL uploadCsv(void)
 		if (f_open(&fil, PDI_RAZOR_PROFILE, FA_READ) != FR_OK) 
 		{
 			f_close(&fil);
-			return;
+			return FALSE;
 		}
 		displayLcd(" UPLOAD PROFILE ",0);
 	}
 	else
 	{
 		/// open csv file in normal mode
-		if (f_open(&fil, csvFileToUpload, FA_READ) != FR_OK) return;
+		if (f_open(&fil, csvFileToUpload, FA_READ) != FR_OK) return FALSE;
 	}
 
 	/// read line
@@ -1085,5 +1084,7 @@ BOOL uploadCsv(void)
 	/// delete PDI_RAZOR_PROFILE
 	f_unlink(PDI_RAZOR_PROFILE);
 
-    for(;;) displayLcd("   POWER CYCLE  ", 1);
+    for(;;) displayLcd("   Remove USB   ", 1);
+
+	return TRUE;
 }

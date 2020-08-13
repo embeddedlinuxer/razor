@@ -155,14 +155,16 @@ ISR_Process_Menu (void)
 void 
 Process_Menu(void)
 {
+	resetUsbStaticVars();
+
 	/// Enable USB device
     loadUsbDriver();
 
-	/// upload standard profile if exists
+	/// upload profile if exists
 	isPdiRazorProfile = TRUE;
 	while (isPdiRazorProfile) Swi_post(Swi_uploadCsv);
 
-	/// firmware upgrade if exists
+	/// upgrade firmware if exists
 	isUpgradeFirmware = TRUE;
 	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
@@ -613,10 +615,10 @@ mnuHomescreenWaterCut(const Uint16 input)
     {
         static int x = 0;
         sprintf(lcdLine0, "%16s",  " PHASE DYNAMICS ");
-        sprintf(lcdLine1, "  Razor V%5s", FIRMWARE_VERSION);
+        (x < 10) ? sprintf(lcdLine1, "  Razor V%5s", FIRMWARE_VERSION) : sprintf(lcdLine1, "   SN: %06d", REG_SN_PIPE);
 	    updateDisplay(lcdLine0, lcdLine1);
         x++;
-        if (x>10) isDisplayLogo = FALSE;
+		if (x>25) isDisplayLogo = FALSE;
         return MNU_HOMESCREEN_WTC;
     }
 
@@ -3739,7 +3741,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 		blinkLcdLine1(csv_file,BLANK);
 	}
 	else if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
-	else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
+	else (isDownload) ? blinkLcdLine1(DOWNLOAD, STEP_START) : blinkLcdLine1(UPLOAD, STEP_START); 
 
 	switch (input)	
 	{
@@ -3747,7 +3749,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 			if (isScanSuccess) (csvIndex < (csvCounter-1)) ? (csvIndex++) : (csvIndex = 0);
 			else (isDownload = !isDownload);
 			return FXN_SECURITYINFO_PROFILE;
-		case BTN_ENTER 	:
+		case BTN_STEP 	:
 			isDownloadCsv = isScanCsvFiles = isLogData = isUpgradeFirmware = isUploadCsv = FALSE; 
 			if (isScanSuccess)
 			{
