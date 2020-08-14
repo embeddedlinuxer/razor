@@ -36,8 +36,7 @@
 #define USB_INSTANCE    0
 #define MAX_DATA_SIZE   160 
 #define MAX_HEADER_SIZE 110 
-//#define MAX_BUF_SIZE   	4096*2
-#define MAX_BUF_SIZE   	512
+#define MAX_BUF_SIZE   	4096*2
 
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 
@@ -422,7 +421,9 @@ void logData(void)
 {
 	if (!isUsbActive()) return;
 
+	FIL logReadObject;
     FRESULT fresult;
+	int write_file_size = 0;
 	static int buf_index = 0;
 
    	/// read rtc
@@ -554,7 +555,7 @@ void logData(void)
         if ((MAX_BUF_SIZE - strlen(LOG_BUF)) > strlen(DATA_BUF))
         {
             strcat(LOG_BUF,DATA_BUF);
-             return;
+            return;
         }
 
         /// open file
@@ -724,9 +725,9 @@ void logData(void)
             return;
         }
 
-            /// reset log buf
-            LOG_BUF[0] = '\0';
-            buf_index = 0;
+        /// reset log buf
+        LOG_BUF[0] = '\0';
+        buf_index = 0;
     }
 
     /// sync with usb drive
@@ -737,6 +738,9 @@ void logData(void)
         return;
     }
 
+	/// update file size before closing
+	write_file_size = f_size(&fileWriteObject);
+
     /// close file
     fresult = f_close(&fileWriteObject);
     if (fresult != FR_OK)
@@ -744,6 +748,17 @@ void logData(void)
         stopAccessingUsb(fresult);
         return;
     }
+
+	/// verify the written file in USB
+	f_open(&logReadObject,logFile,FA_READ);
+	if (f_size(&logReadObject) != write_file_size)
+	{
+		f_close(&logReadObject); 
+		stopAccessingUsb(FR_DISK_ERR);
+		return;
+	}
+
+	f_close(&logReadObject); 
 }
 
 
@@ -751,10 +766,11 @@ BOOL downloadCsv(void)
 {
 	if (!isUsbActive()) return;
 	isDownloadCsv = FALSE;
-
+	
+	FRESULT fr;	
 	FIL csvWriteObject;
 	CSV_BUF[0] = '\0';
-	char * csvFileName[16];
+	char csvFileName[16] = 0;
 
     if (isPdiRazorProfile)
 	{
@@ -860,10 +876,38 @@ BOOL downloadCsv(void)
     /// REG_AO_URV
     sprintf(CSV_BUF+strlen(CSV_BUF),"Density Adj,,111,float,1,RW,1,%15.7f\0",REG_DENSITY_ADJ);
 
-    //int k = strlen(CSV_BUF);
-    if (f_puts(CSV_BUF,&csvWriteObject) == EOF) return FALSE;
-    if (f_sync(&csvWriteObject) != FR_OK) return FALSE;
-    if (f_close(&csvWriteObject) != FR_OK) return FALSE;
+	UINT bw;
+	fr = f_write(&csvWriteObject,CSV_BUF,strlen(CSV_BUF),&bw);
+	if (fr != FR_OK) 
+	{
+		stopAccessingUsb(fr);
+		return FALSE;
+	}
+
+	fr = f_sync(&csvWriteObject);
+	if (fr != FR_OK)
+	{
+		stopAccessingUsb(fr);
+		return FALSE;
+	}
+
+	fr = f_close(&csvWriteObject);
+	if (fr != FR_OK)
+	{
+		stopAccessingUsb(fr);
+		return FALSE;
+	}
+
+	FIL csvReadObject;
+	f_open(&csvReadObject,csvFileName,FA_READ);
+	if (f_size(&csvReadObject) != strlen(CSV_BUF))
+	{
+		f_close(&csvReadObject); 
+		stopAccessingUsb(FR_DISK_ERR);
+		return FALSE;
+	}
+
+	f_close(&csvReadObject); 
 
 	/// set global var true
     isCsvDownloadSuccess = TRUE;
@@ -911,8 +955,8 @@ void scanCsvFiles(void)
 BOOL uploadCsv(void)
 {
 	if (!isUsbActive()) return FALSE;
-	isUploadCsv = FALSE;
-
+	if (!isPdiRazorProfile) isUploadCsv = FALSE;
+	
 	FIL fil;
 	FRESULT result;
 	char line[250];

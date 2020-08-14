@@ -400,6 +400,7 @@ void upgradeFirmware(void)
     VUint16 *addr_flash;
     ASYNC_MEM_InfoHandle dummy;
 	FIL fPtr;
+	FILINFO fno;
 
 	int index=0;
 	int loop = 0;
@@ -477,6 +478,9 @@ void upgradeFirmware(void)
 	/// close
     if (f_close (&fPtr) != FR_OK) return;
 
+	Swi_disable();
+    Hwi_disable();
+
 	/// global erase
     if (NAND_globalErase(hNandInfo) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*20;i++);
@@ -485,19 +489,27 @@ void upgradeFirmware(void)
     if (USB_writeData(hNandInfo, aisPtr, numPagesAIS) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*100;i++);
 
+	Hwi_enable();
+    Swi_enable();
+
 	/// download existing csv
 	isPdiRazorProfile = TRUE;
 	isDownloadCsv = TRUE;
 	updateDisplay("FIRMWARE UPGRADE","Downloading CSV ");
 	while (isDownloadCsv) downloadCsv();
+	if ((f_stat(PDI_RAZOR_PROFILE, &fno) != FR_OK) || (fno.fsize == 0))
+	{
+		updateDisplay("FIRMWARE UPGRADE","Downloading Fail");
+		return;
+	}
 
 	isUpdateDisplay=TRUE;
-	updateDisplay("FIRMWARE UPGRADE","  Power Cycle   ");
+	updateDisplay("FIRMWARE UPGRADE","  POWER  CYCLE  ");
 	while (1) {
 		static Uint32 i = 0;
 		i++;
 		displayLcd("FIRMWARE UPGRADE",0);
-    	if (i < 500)      displayLcd("  Power Cycle   ", 1);
+    	if (i < 500)      displayLcd("  POWER  CYCLE  ", 1);
 		else if (i < 900) displayLcd("                ", 1);
 		else i = 0;
 	}

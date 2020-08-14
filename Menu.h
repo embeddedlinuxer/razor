@@ -768,6 +768,8 @@ _EXTERN char STEP_CONFIRM[]						= " STEP = CONFIRM ";
 _EXTERN char STEP_CHANGE[]						= "  STEP = CHANGE ";
 _EXTERN char VALUE_CHANGE[]						= " VALUE = CHANGE ";
 _EXTERN char READY[]							= "           READY";
+_EXTERN char REMOVE_USB[]						= "   REMOVE USB   ";
+_EXTERN char POWER_CYCLE[]						= "  POWER  CYCLE  ";
 _EXTERN char NOT_READY[]						= "       NOT READY";
 _EXTERN char AO_ALARM_HIGH[]                    = "          21.0mA";
 _EXTERN char AO_ALARM_LOW[]                     = "           3.8mA";	

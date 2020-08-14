@@ -46,7 +46,6 @@ void resetGlobalVars(void)
     COIL_AVGTEMP_RESET.val              = FALSE;
 	COIL_AO_TRIM_MODE.val               = FALSE; 
 	COIL_AI_TRIM_MODE.val               = FALSE;
-	COIL_LOG_ENABLE.val                 = FALSE;
 	COIL_LOCKED_SOFT_FACTORY_RESET.val  = TRUE;
 	COIL_LOCKED_HARD_FACTORY_RESET.val  = TRUE;
     COIL_UPDATE_FACTORY_DEFAULT.val     = FALSE;

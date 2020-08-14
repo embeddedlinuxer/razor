@@ -158,15 +158,25 @@ Process_Menu(void)
 	/// Enable USB device
     loadUsbDriver();
 
-	/// upload profile if exists
-	isPdiRazorProfile = TRUE;
-	isUploadCsv = TRUE;
-	while (isUploadCsv) Swi_post(Swi_uploadCsv);
+	/// upgrade firmware if "1343" enabled
+	if (COIL_LOG_ENABLE.val)
+	{
+		COIL_LOG_ENABLE.val = FALSE;
+		Swi_post(Swi_writeNand);
 
-	/// upgrade firmware if exists
-	isUpgradeFirmware = TRUE;
-	isPdiRazorProfile = TRUE;
-	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
+		/// download current csv
+		while (isDownloadCsv) Swi_post(Swi_downloadCsv);
+
+		/// upload profile if exists
+		isPdiRazorProfile = TRUE;
+		while (isPdiRazorProfile ) Swi_post(Swi_uploadCsv);
+
+		/// upgrade firmware if exists
+		isUpgradeFirmware = TRUE;
+		while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
+
+		while(1) displayLcd(POWER_CYCLE,LCD1);	
+	}
 
 	char 	prevButtons[4];
 	Uint32	buttons[4];
@@ -567,7 +577,8 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
     if (iregister != NULL_INT)
     {
         int ivalue = atoi(val);
-        if ((ivalue <= (int)max) && (ivalue >= (int)min))
+		if ((*iregister == REG_PASSWORD) && (ivalue == 1343)){}
+        else if ((ivalue <= (int)max) && (ivalue >= (int)min))
         {
             *iregister = ivalue;
    	        Swi_post(Swi_writeNand);
@@ -591,7 +602,8 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
 
     // INVALID INPUT, STAY IN CURRENT FXN AND RETRY
     isUpdateDisplay = FALSE;
-    sprintf(lcdLine1, "%16s", INVALID);
+	if (*iregister == REG_PASSWORD) sprintf(lcdLine1, "Illegal Password");
+    else sprintf(lcdLine1, "%16s", INVALID);
 
     return currentId;
 }
@@ -3461,6 +3473,12 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
                 Swi_post(Swi_writeNand);
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
 			}
+			else if (atoi(lcdLine1) == 1343)
+			{
+				COIL_LOG_ENABLE.val = TRUE;
+				Swi_post(Swi_writeNand);
+				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, "Illegal Password");
+			}	
 			else
 			{
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
@@ -3712,11 +3730,12 @@ fxnSecurityInfo_Profile(const Uint16 input)
 	char csv_file[MAX_NAME_LENGTH];
 	static BOOL isDownload = TRUE;
 	static int csvIndex = 0;
-
+    
 	if (isUpdateDisplay) 
 	{
 		isDownload = TRUE;
 		csvIndex = 0;
+		usbStatus = 0;
 		isPdiRazorProfile = FALSE;
 		resetCsvStaticVars();
 		updateDisplay(SECURITYINFO_PROFILE, BLANK);
@@ -3740,7 +3759,25 @@ fxnSecurityInfo_Profile(const Uint16 input)
         blinkLcdLine1(csv_file,BLANK);
     }    
     else if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
-    else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
+    else 
+	{
+    		 if (usbStatus == 2) blinkLcdLine1(USB_ERROR2,BLANK);
+    	else if (usbStatus == 3) blinkLcdLine1(USB_ERROR3,BLANK);
+    	else if (usbStatus == 4) blinkLcdLine1(USB_ERROR4,BLANK);
+    	else if (usbStatus == 5) blinkLcdLine1(USB_ERROR5,BLANK);
+    	else if (usbStatus == 6) blinkLcdLine1(USB_ERROR6,BLANK);
+    	else if (usbStatus == 7) blinkLcdLine1(USB_ERROR7,BLANK);
+    	else if (usbStatus == 8) blinkLcdLine1(USB_ERROR8,BLANK);
+    	else if (usbStatus == 9) blinkLcdLine1(USB_ERROR9,BLANK);
+    	else if (usbStatus == 10) blinkLcdLine1(USB_ERROR10,BLANK);
+    	else if (usbStatus == 11) blinkLcdLine1(USB_ERROR11,BLANK);
+    	else if (usbStatus == 12) blinkLcdLine1(USB_ERROR12,BLANK);
+    	else if (usbStatus == 13) blinkLcdLine1(USB_ERROR13,BLANK);
+    	else if (usbStatus == 14) blinkLcdLine1(USB_ERROR14,BLANK);
+    	else if (usbStatus == 15) blinkLcdLine1(USB_ERROR15,BLANK);
+    	else if (usbStatus == 16) blinkLcdLine1(USB_ERROR16,BLANK);
+		else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
+	}
 
     switch (input)  
     {    
@@ -3749,7 +3786,6 @@ fxnSecurityInfo_Profile(const Uint16 input)
             else (isDownload = !isDownload);
             return FXN_SECURITYINFO_PROFILE;
         case BTN_STEP  :
-            isDownloadCsv = isPdiRazorProfile = isScanCsvFiles = isLogData = isUpgradeFirmware = isUploadCsv = FALSE; 
             if (isScanSuccess)
             {
                 isScanSuccess = FALSE;
@@ -3759,7 +3795,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
             }
             return FXN_SECURITYINFO_PROFILE;
 		case BTN_ENTER  :
-            isDownloadCsv = isScanCsvFiles = isLogData = isUpgradeFirmware = isUploadCsv = FALSE; 
+			if (isScanSuccess) return FXN_SECURITYINFO_PROFILE;
             (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
             return FXN_SECURITYINFO_PROFILE;
         case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_PROFILE);
