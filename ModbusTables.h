@@ -313,7 +313,7 @@ const Uint32 MB_TBL_COIL[][4] = {
 	3	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_RELAY[2],				    //unused; hardware not implemented
 	4	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_RELAY[3],				    //unused; hardware not implemented
 	5	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_BEGIN_OIL_CAP,		    //begins oil capture process
-	6	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_LOG_ENABLE,			    //enable USB logging (basic)
+	6	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPGRADE_ENABLE,			    //enable USB logging (basic)
 	7	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_LOG_ALARMS,			    //enable USB logging for alarms
 	8	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_LOG_ERRORS,			    //enable USB logging for errors
 	9	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_LOG_ACTIVITY,			    //enable USB logging for configuration changes by user

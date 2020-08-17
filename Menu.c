@@ -158,25 +158,26 @@ Process_Menu(void)
 	/// Enable USB device
     loadUsbDriver();
 
-	/// upgrade firmware if "1343" enabled
-	if (COIL_LOG_ENABLE.val)
-	{
-		COIL_LOG_ENABLE.val = FALSE;
-		Swi_post(Swi_writeNand);
+	/// enable upgrade mode
+	isPdiUpgradeMode = TRUE;
 
-		/// download current csv
-		while (isDownloadCsv) Swi_post(Swi_downloadCsv);
+	/// set flags
+	isUploadCsv = TRUE;
+	isDownloadCsv = TRUE;
+	isUpgradeFirmware = TRUE;
 
-		/// upload profile if exists
-		isPdiRazorProfile = TRUE;
-		while (isPdiRazorProfile ) Swi_post(Swi_uploadCsv);
+	/// upload saved profile if exists
+	while (isUploadCsv) uploadCsv(PDI_RAZOR_PROFILE);
 
-		/// upgrade firmware if exists
-		isUpgradeFirmware = TRUE;
-		while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
+	/// upgrade firmware if exists
+	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
-		while(1) displayLcd(POWER_CYCLE,LCD1);	
-	}
+	/// disable upgrade mode 
+	isPdiUpgradeMode = FALSE;
+
+	/// reset usb driver
+	resetCsvStaticVars();
+    resetUsbStaticVars();
 
 	char 	prevButtons[4];
 	Uint32	buttons[4];
@@ -195,8 +196,7 @@ Process_Menu(void)
     
     /// Initialize buttons
 	int i;
-	for (i=0; i<4; i++) buttons[i] = 0;
-
+	for (i=0; i<4; i++) buttons[i] = 0; 
 	/// Start main loop
 	while (1)
 	{
@@ -577,7 +577,11 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
     if (iregister != NULL_INT)
     {
         int ivalue = atoi(val);
-		if ((*iregister == REG_PASSWORD) && (ivalue == 1343)){}
+		if ((*iregister == REG_PASSWORD) && (ivalue == 1343))
+		{
+			sprintf(lcdLine1, "%16s", "Reserved Passwd ");
+    		return currentId;
+		}
         else if ((ivalue <= (int)max) && (ivalue >= (int)min))
         {
             *iregister = ivalue;
@@ -602,7 +606,7 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
 
     // INVALID INPUT, STAY IN CURRENT FXN AND RETRY
     isUpdateDisplay = FALSE;
-	if (*iregister == REG_PASSWORD) sprintf(lcdLine1, "Illegal Password");
+	if (*iregister == REG_PASSWORD) sprintf(lcdLine1, " System Password");
     else sprintf(lcdLine1, "%16s", INVALID);
 
     return currentId;
@@ -630,7 +634,7 @@ mnuHomescreenWaterCut(const Uint16 input)
         (x < 10) ? sprintf(lcdLine1, "  Razor V%5s", FIRMWARE_VERSION) : sprintf(lcdLine1, "   SN: %06d", REG_SN_PIPE);
 	    updateDisplay(lcdLine0, lcdLine1);
         x++;
-		if (x>25) isDisplayLogo = FALSE;
+		if (x>20) isDisplayLogo = FALSE;
         return MNU_HOMESCREEN_WTC;
     }
 
@@ -3473,16 +3477,14 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
                 Swi_post(Swi_writeNand);
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
 			}
-			else if (atoi(lcdLine1) == 1343)
+			if (atoi(lcdLine1) == 1343)
 			{
-				COIL_LOG_ENABLE.val = TRUE;
-				Swi_post(Swi_writeNand);
-				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, "Illegal Password");
-			}	
-			else
-			{
-				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
+				isProfileMode = TRUE;
+				COIL_UNLOCKED.val = TRUE;
+                Swi_post(Swi_writeNand);
+				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, " Tech Mode Enbld");
 			}
+			else return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
         case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_ACCESSTECH);
 		default			: return FXN_SECURITYINFO_ACCESSTECH;
 	}
@@ -3657,7 +3659,8 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 	switch (input)	
 	{
         //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
-        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_PROFILE);
+        case BTN_VALUE 	: 
+		return (isProfileMode) ? onNextPressed(MNU_SECURITYINFO_PROFILE) : onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;
@@ -3736,47 +3739,56 @@ fxnSecurityInfo_Profile(const Uint16 input)
 		isDownload = TRUE;
 		csvIndex = 0;
 		usbStatus = 0;
-		isPdiRazorProfile = FALSE;
+		isPdiUpgradeMode = FALSE;
 		resetCsvStaticVars();
 		updateDisplay(SECURITYINFO_PROFILE, BLANK);
 	}
 
-	if (isScanSuccess) 
-    {    
-        int i = 0; 
-        char csv_files[MAX_CSV_ARRAY_LENGTH];
-        csv_files[0] = '\0';
-        csv_file[0] = '\0';
-        strcpy(csv_files, CSV_FILES);
-        char *ptr = strtok(csv_files, delim);
-        while (ptr != NULL)
-        {
-            if (csvIndex == i) sprintf(csv_file, "%s", ptr);
-            ptr = strtok(NULL, delim);
-            i++;
-        }
-
-        blinkLcdLine1(csv_file,BLANK);
-    }    
-    else if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
-    else 
+	if (isDownload)
 	{
-    		 if (usbStatus == 2) blinkLcdLine1(USB_ERROR2,BLANK);
-    	else if (usbStatus == 3) blinkLcdLine1(USB_ERROR3,BLANK);
-    	else if (usbStatus == 4) blinkLcdLine1(USB_ERROR4,BLANK);
-    	else if (usbStatus == 5) blinkLcdLine1(USB_ERROR5,BLANK);
-    	else if (usbStatus == 6) blinkLcdLine1(USB_ERROR6,BLANK);
-    	else if (usbStatus == 7) blinkLcdLine1(USB_ERROR7,BLANK);
-    	else if (usbStatus == 8) blinkLcdLine1(USB_ERROR8,BLANK);
-    	else if (usbStatus == 9) blinkLcdLine1(USB_ERROR9,BLANK);
-    	else if (usbStatus == 10) blinkLcdLine1(USB_ERROR10,BLANK);
-    	else if (usbStatus == 11) blinkLcdLine1(USB_ERROR11,BLANK);
-    	else if (usbStatus == 12) blinkLcdLine1(USB_ERROR12,BLANK);
-    	else if (usbStatus == 13) blinkLcdLine1(USB_ERROR13,BLANK);
-    	else if (usbStatus == 14) blinkLcdLine1(USB_ERROR14,BLANK);
-    	else if (usbStatus == 15) blinkLcdLine1(USB_ERROR15,BLANK);
-    	else if (usbStatus == 16) blinkLcdLine1(USB_ERROR16,BLANK);
-		else (isDownload) ? blinkLcdLine1(DOWNLOAD, BLANK) : blinkLcdLine1(UPLOAD, BLANK);
+		 if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
+		 else if (isDownloadCsv)
+		 {
+		 	if (usbStatus == 2) blinkLcdLine1(USB_ERROR2,BLANK);
+    		else if (usbStatus == 3) blinkLcdLine1(USB_ERROR3,BLANK);
+    		else if (usbStatus == 4) blinkLcdLine1(USB_ERROR4,BLANK);
+    		else if (usbStatus == 5) blinkLcdLine1(USB_ERROR5,BLANK);
+    		else if (usbStatus == 6) blinkLcdLine1(USB_ERROR6,BLANK);
+    		else if (usbStatus == 7) blinkLcdLine1(USB_ERROR7,BLANK);
+    		else if (usbStatus == 8) blinkLcdLine1(USB_ERROR8,BLANK);
+    		else if (usbStatus == 9) blinkLcdLine1(USB_ERROR9,BLANK);
+    		else if (usbStatus == 10) blinkLcdLine1(USB_ERROR10,BLANK);
+    		else if (usbStatus == 11) blinkLcdLine1(USB_ERROR11,BLANK);
+    		else if (usbStatus == 12) blinkLcdLine1(USB_ERROR12,BLANK);
+    		else if (usbStatus == 13) blinkLcdLine1(USB_ERROR13,BLANK);
+    		else if (usbStatus == 14) blinkLcdLine1(USB_ERROR14,BLANK);
+    		else if (usbStatus == 15) blinkLcdLine1(USB_ERROR15,BLANK);
+    		else if (usbStatus == 16) blinkLcdLine1(USB_ERROR16,BLANK);
+			else blinkLcdLine1("    Loading...  ",BLANK);
+		}
+		else blinkLcdLine1(DOWNLOAD, BLANK); 
+	}
+	else
+	{
+		if (isScanSuccess) 
+    	{    
+        	int i = 0; 
+        	char csv_files[MAX_CSV_ARRAY_LENGTH];
+        	csv_files[0] = '\0';
+        	csv_file[0] = '\0';
+        	strcpy(csv_files, CSV_FILES);
+        	char *ptr = strtok(csv_files, delim);
+        	while (ptr != NULL)
+        	{
+            	if (csvIndex == i) sprintf(csv_file, "%s", ptr);
+            	ptr = strtok(NULL, delim);
+            	i++;
+        	}
+
+        	blinkLcdLine1(csv_file,BLANK);
+    	}
+		else if (isUploadCsv) blinkLcdLine1("    Loading...  ",BLANK);
+		else blinkLcdLine1(UPLOAD, BLANK);
 	}
 
     switch (input)  

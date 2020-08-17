@@ -106,7 +106,7 @@
 #define PASSWORD_LENGTH				4
 #define MAX_NAME_LENGTH				20
 #define MAX_CSV_ARRAY_LENGTH		2048	
-#define PDI_RAZOR_PROFILE 			"0:pdi_razor_profile.csv"
+#define PDI_RAZOR_PROFILE 			"pdi_razor_profile"
 #define PDI_RAZOR_FIRMWARE 			"0:pdi_razor_firmware.ais"
 
 //////////////////////////////////////////////////////////
@@ -154,7 +154,8 @@ _EXTERN BOOL isResetPower;
 _EXTERN BOOL isCsvUploadSuccess;
 _EXTERN BOOL isCsvDownloadSuccess;
 _EXTERN BOOL isScanSuccess;
-_EXTERN BOOL isPdiRazorProfile;
+_EXTERN BOOL isPdiUpgradeMode;
+_EXTERN BOOL isProfileMode;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
@@ -930,8 +931,8 @@ typedef struct
 #pragma DATA_SECTION(COIL_BEGIN_OIL_CAP,"CFG")
 	_EXTERN far COIL COIL_BEGIN_OIL_CAP;
 
-#pragma DATA_SECTION(COIL_LOG_ENABLE,"CFG")
-	_EXTERN far COIL COIL_LOG_ENABLE;
+#pragma DATA_SECTION(COIL_UPGRADE_ENABLE,"CFG")
+	_EXTERN far COIL COIL_UPGRADE_ENABLE;
 
 #pragma DATA_SECTION(COIL_LOG_ALARMS,"CFG")
 	_EXTERN far COIL COIL_LOG_ALARMS;

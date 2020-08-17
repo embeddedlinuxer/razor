@@ -30,6 +30,7 @@ void resetGlobalVars(void)
 
     isWriteRTC = FALSE;
     isLogData = FALSE;
+	isProfileMode = FALSE;
     usbStatus = 0;
 
     THROW_ERROR 	                    = 0;
@@ -124,6 +125,7 @@ void storeUserDataToFactoryDefault(void)
     // dislable the trigger
     COIL_UPDATE_FACTORY_DEFAULT.val = FALSE;
     COIL_UNLOCKED_FACTORY_DEFAULT.val = FALSE;
+	COIL_UPGRADE_ENABLE.val = FALSE;
 
     // save to nand flash
     Swi_post(Swi_writeNand);
@@ -150,7 +152,7 @@ void reloadFactoryDefault(void)
     isResetPower = FALSE;
     isCsvDownloadSuccess = FALSE;
     isCsvUploadSuccess = FALSE;
-    isPdiRazorProfile = FALSE;
+    isPdiUpgradeMode = FALSE;
 
 	sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
 	model_code_int = (int*)model_code;
@@ -528,7 +530,6 @@ void reloadFactoryDefault(void)
 	COIL_Initialize(&COIL_RELAY[2], FALSE, 0);
 	COIL_Initialize(&COIL_RELAY[3], FALSE, 0);
 	COIL_Initialize(&COIL_BEGIN_OIL_CAP, FALSE, 0);
-	COIL_Initialize(&COIL_LOG_ENABLE, FALSE, 0);
     COIL_Initialize(&COIL_LOG_ALARMS, FALSE, 0);
 	COIL_Initialize(&COIL_LOG_ERRORS, FALSE, 0);
 	COIL_Initialize(&COIL_LOG_ACTIVITY, FALSE, 0);
@@ -551,12 +552,12 @@ void reloadFactoryDefault(void)
 	COIL_Initialize(&COIL_LOCKED_HARD_FACTORY_RESET, TRUE, 0);
 	COIL_Initialize(&COIL_UPDATE_FACTORY_DEFAULT, FALSE, 0);
 	COIL_Initialize(&COIL_UNLOCKED_FACTORY_DEFAULT, FALSE, 0);
+	COIL_Initialize(&COIL_UPGRADE_ENABLE, FALSE, 0);
 
 	CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 	THROW_ERROR 		= 0;
 	DIAGNOSTICS 		= 0;
 	DIAGNOSTICS_MASK 	= 0xFFFFFFFF;
-
 }
 
 
@@ -1223,7 +1224,7 @@ void initializeAllRegisters(void)
 	COIL_Initialize(&COIL_RELAY[2], FALSE, 0);
 	COIL_Initialize(&COIL_RELAY[3], FALSE, 0);
 	COIL_Initialize(&COIL_BEGIN_OIL_CAP, FALSE, 0);
-	COIL_Initialize(&COIL_LOG_ENABLE, FALSE, 0);
+	COIL_Initialize(&COIL_UPGRADE_ENABLE, FALSE, 0);
     COIL_Initialize(&COIL_LOG_ALARMS, FALSE, 0);
 	COIL_Initialize(&COIL_LOG_ERRORS, FALSE, 0);
 	COIL_Initialize(&COIL_LOG_ACTIVITY, FALSE, 0);

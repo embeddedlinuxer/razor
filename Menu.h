@@ -769,7 +769,8 @@ _EXTERN char STEP_CHANGE[]						= "  STEP = CHANGE ";
 _EXTERN char VALUE_CHANGE[]						= " VALUE = CHANGE ";
 _EXTERN char READY[]							= "           READY";
 _EXTERN char REMOVE_USB[]						= "   REMOVE USB   ";
-_EXTERN char POWER_CYCLE[]						= "  POWER  CYCLE  ";
+_EXTERN char POWER_CYCLE[]						= "   POWER CYCLE  ";
+_EXTERN char UPGRADE_FAIL[]						= "  UPGRADE FAIL  ";
 _EXTERN char NOT_READY[]						= "       NOT READY";
 _EXTERN char AO_ALARM_HIGH[]                    = "          21.0mA";
 _EXTERN char AO_ALARM_LOW[]                     = "           3.8mA";	
@@ -790,7 +791,7 @@ _EXTERN char ANALOG_INPUT[]						= "    Analog Input";
 
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
-/// DENSITY UNIT STRING  ///////////////////////////////////////////////////
+/// DENSITY UNIT STRING  ////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 _EXTERN char KG_M3[]						    = "Kg/m3";  

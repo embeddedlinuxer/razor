@@ -400,14 +400,15 @@ void upgradeFirmware(void)
     VUint16 *addr_flash;
     ASYNC_MEM_InfoHandle dummy;
 	FIL fPtr;
-	FILINFO fno;
 
 	int index=0;
 	int loop = 0;
 	UINT br = 0;
-	BYTE buffer[512] = 0;
+	BYTE buffer[4096*2] = 0;
 
     if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
+
+	if (!downloadCsv(PDI_RAZOR_PROFILE)) return;
 
     UTIL_setCurrMemPtr(0);
 
@@ -460,25 +461,25 @@ void upgradeFirmware(void)
 	isUpdateDisplay=TRUE;
 	updateDisplay("FIRMWARE UPGRADE","   Loading...   ");
 
+	/// disable all interrupt while accessing usb
+	Swi_disable();
+
 	/// read file	
 	for (;;) {
      	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;  /* Read a chunk of data from the source file */
-   		for (i=0;i<ACCESS_DELAY*20;i++);
-
         if (br == 0) break; /* error or eof */
-
+		for (i=0;i<ACCESS_DELAY*100;i++);
 		for (loop = 0; loop<sizeof(buffer); loop++) 
 		{
       		aisPtr[index] = buffer[loop];
 			index++;
    		}
-   		for (i=0;i<ACCESS_DELAY*20;i++);
+		for (i=0;i<ACCESS_DELAY*100;i++);
     }
 
 	/// close
     if (f_close (&fPtr) != FR_OK) return;
 
-	Swi_disable();
     Hwi_disable();
 
 	/// global erase
@@ -492,25 +493,7 @@ void upgradeFirmware(void)
 	Hwi_enable();
     Swi_enable();
 
-	/// download existing csv
-	isPdiRazorProfile = TRUE;
-	isDownloadCsv = TRUE;
-	updateDisplay("FIRMWARE UPGRADE","Downloading CSV ");
-	while (isDownloadCsv) downloadCsv();
-	if ((f_stat(PDI_RAZOR_PROFILE, &fno) != FR_OK) || (fno.fsize == 0))
-	{
-		updateDisplay("FIRMWARE UPGRADE","Downloading Fail");
-		return;
-	}
-
 	isUpdateDisplay=TRUE;
-	updateDisplay("FIRMWARE UPGRADE","  POWER  CYCLE  ");
-	while (1) {
-		static Uint32 i = 0;
-		i++;
-		displayLcd("FIRMWARE UPGRADE",0);
-    	if (i < 500)      displayLcd("  POWER  CYCLE  ", 1);
-		else if (i < 900) displayLcd("                ", 1);
-		else i = 0;
-	}
+	updateDisplay("FIRMWARE UPGRADE"," Upgrade Success");
+	while (1);
 }

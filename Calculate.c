@@ -75,16 +75,19 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 
 void Poll(void)
 {
-	float WC; 			// temp watercut value
+	float WC; 				// temp watercut value
 	Uint8 err_f = FALSE;	// frequency calculation error
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
 
 	/// access usb drive
-    if (isLogData) Swi_post(Swi_logData);
-    else if (isDownloadCsv) Swi_post(Swi_downloadCsv);
-    else if (isScanCsvFiles) Swi_post(Swi_scanCsvFiles);
-	else if (isUploadCsv) Swi_post(Swi_uploadCsv);
+	if (!isPdiUpgradeMode)
+	{
+   		if (isLogData) logData();
+   		else if (isDownloadCsv) downloadCsv(NULL);
+   		else if (isScanCsvFiles) scanCsvFiles();
+		else if (isUploadCsv) uploadCsv(CSV_FILES);
+	}
 
     /// Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;
