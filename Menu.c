@@ -579,7 +579,8 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
         int ivalue = atoi(val);
 		if ((*iregister == REG_PASSWORD) && (ivalue == 1343))
 		{
-			sprintf(lcdLine1, "%16s", "Reserved Passwd ");
+			sprintf(lcdLine1, "%16s", " Reserved Passwd");
+    		isUpdateDisplay = FALSE;
     		return currentId;
 		}
         else if ((ivalue <= (int)max) && (ivalue >= (int)min))
@@ -606,8 +607,7 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
 
     // INVALID INPUT, STAY IN CURRENT FXN AND RETRY
     isUpdateDisplay = FALSE;
-	if (*iregister == REG_PASSWORD) sprintf(lcdLine1, " System Password");
-    else sprintf(lcdLine1, "%16s", INVALID);
+    sprintf(lcdLine1, "%16s", INVALID);
 
     return currentId;
 }
@@ -3477,12 +3477,10 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
                 Swi_post(Swi_writeNand);
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
 			}
-			if (atoi(lcdLine1) == 1343)
+			else if (atoi(lcdLine1) == 1343)
 			{
 				isProfileMode = TRUE;
-				COIL_UNLOCKED.val = TRUE;
-                Swi_post(Swi_writeNand);
-				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, " Tech Mode Enbld");
+				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, "Tech Mode Enbld");
 			}
 			else return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
         case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_ACCESSTECH);
