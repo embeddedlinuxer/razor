@@ -490,9 +490,14 @@ void upgradeFirmware(void)
     if (USB_writeData(hNandInfo, aisPtr, numPagesAIS) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*100;i++);
 
+	/// re-enable interrupts
 	Hwi_enable();
     Swi_enable();
 
+	/// create factory default
+	storeUserDataToFactoryDefault();
+
+	/// success
 	isUpdateDisplay=TRUE;
 	updateDisplay("FIRMWARE UPGRADE"," Upgrade Success");
 	while (1);

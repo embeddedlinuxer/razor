@@ -3448,6 +3448,7 @@ mnuSecurityInfo_AccessTech(const Uint16 input)
 			if (COIL_UNLOCKED.val)
 			{
 				COIL_UNLOCKED.val = FALSE;
+				isProfileMode = FALSE;
                 Swi_post(Swi_writeNand);
                 return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, CHANGE_SUCCESS);
 			}
@@ -3656,9 +3657,9 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 
 	switch (input)	
 	{
-        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
-        case BTN_VALUE 	: 
-		return (isProfileMode) ? onNextPressed(MNU_SECURITYINFO_PROFILE) : onNextPressed(MNU_SECURITYINFO_INFO);
+        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_PROFILE);
+        //case BTN_VALUE 	: 
+		//return (isProfileMode) ? onNextPressed(MNU_SECURITYINFO_PROFILE) : onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;
@@ -3744,7 +3745,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 
 	if (isDownload)
 	{
-		 if (isCsvDownloadSuccess) blinkLcdLine1(DOWNLOAD_SUCCESS,BLANK);
+		 if (isCsvDownloadSuccess) blinkLcdLine1(LOAD_SUCCESS,BLANK);
 		 else if (isDownloadCsv)
 		 {
 		 	if (usbStatus == 2) blinkLcdLine1(USB_ERROR2,BLANK);
@@ -3762,7 +3763,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
     		else if (usbStatus == 14) blinkLcdLine1(USB_ERROR14,BLANK);
     		else if (usbStatus == 15) blinkLcdLine1(USB_ERROR15,BLANK);
     		else if (usbStatus == 16) blinkLcdLine1(USB_ERROR16,BLANK);
-			else blinkLcdLine1("    Loading...  ",BLANK);
+			else blinkLcdLine1(LOADING,BLANK);
 		}
 		else blinkLcdLine1(DOWNLOAD, BLANK); 
 	}
@@ -3785,7 +3786,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 
         	blinkLcdLine1(csv_file,BLANK);
     	}
-		else if (isUploadCsv) blinkLcdLine1("    Loading...  ",BLANK);
+		else if (isUploadCsv) blinkLcdLine1(LOADING,BLANK);
 		else blinkLcdLine1(UPLOAD, BLANK);
 	}
 

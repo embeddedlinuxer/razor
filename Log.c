@@ -635,6 +635,7 @@ BOOL downloadCsv(char* fname)
 	CSV_BUF[0] = '\0';
 	char csvFileName[50] = 0;
 	int csv_buf_delay;
+	int data_index;
 
 	/// get file name
 	(strcmp(PDI_RAZOR_PROFILE,fname)==0) ? sprintf(csvFileName,"0:%s.csv",fname) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
@@ -648,6 +649,7 @@ BOOL downloadCsv(char* fname)
 		return FALSE;
 	}
 
+	/// integer
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d,\n",REG_AO_DAMPEN); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Slave Address,,204,int,1,RW,1,%d,\n",REG_SLAVE_ADDRESS); 
@@ -665,49 +667,69 @@ BOOL downloadCsv(char* fname)
     sprintf(CSV_BUF+strlen(CSV_BUF),"Density Correction Mode,,231,int,1,RW,1,%d,\n",REG_OIL_DENS_CORR_MODE);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Mode,,232,int,1,RW,1,%d,\n",REG_RELAY_MODE); 
 
+	/// float or double
+	sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Adjust,,15,float,1,RW,1,%15.7f\n",REG_OIL_ADJUST.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Temp Adjust,,31,float,1,RW,1,%15.7f\n",REG_TEMP_ADJUST.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Proc Avg,,35,float,1,RW,1,%15.7f\n",REG_PROC_AVGING.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Index,,37,float,1,RW,1,%15.7f\n",REG_OIL_INDEX.calc_val);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P0,,39,float,1,RW,1,%15.7f\n",REG_OIL_P0.calc_val); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P1,,41,float,1,RW,1,%15.7f\n",REG_OIL_P1.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Low,,43,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_LOW.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil High,,45,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_HIGH.calc_val); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Sample Period,,47,float,1,RW,1,%5.1f,\n",REG_SAMPLE_PERIOD.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO LRV,,49,float,1,RW,1,%15.7f\n",REG_AO_LRV.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO URV,,51,float,1,RW,1,%15.7f\n",REG_AO_URV.calc_val);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Baud Rate,,55,float,1,RW,1,%10.1f,\n",REG_BAUD_RATE.calc_val); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Calc Max,,67,float,1,RW,1,%15.7f,\n",REG_OIL_CALC_MAX); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Dual Curve Cutoff,,69,float,1,RW,1,%15.7f\n",REG_OIL_PHASE_CUTOFF);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Stream,,73,float,1,RW,1,%10.1f,\n",REG_STREAM.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim Low,,107,float,1,RW,1,%15.7f\n",REG_AO_TRIMLO); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim High,,109,float,1,RW,1,%15.7f\n",REG_AO_TRIMHI); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Adj,,111,float,1,RW,1,%15.7f\n",REG_DENSITY_ADJ);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Density Unit,,113,float,1,RW,1,%10.1f,\n",REG_DENSITY_UNIT); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D3,,117,float,1,RW,1,%15.7f\n",REG_DENSITY_D3.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D2,,119,float,1,RW,1,%15.7f\n",REG_DENSITY_D2.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D1,,121,float,1,RW,1,%15.7f\n",REG_DENSITY_D1.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D0,,123,float,1,RW,1,%15.7f\n",REG_DENSITY_D0.calc_val);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Dens Calibration Val,,125,float,1,RW,1,%15.7f,\n",REG_DENSITY_CAL_VAL.calc_val); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Setpoint,,151,float,1,RW,1,%15.7f,\n",REG_RELAY_SETPOINT.calc_val); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density Manual,,161,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_MANUAL); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI LRV,,163,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_LRV.calc_val); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI URV,,165,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_URV.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T0,,179,float,1,RW,1,%15.7f\n",REG_OIL_T0.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T1,,181,float,1,RW,1,%15.7f\n",REG_OIL_T1.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Low,,43,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_LOW.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil High,,45,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_HIGH.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim Low,,107,float,1,RW,1,%15.7f\n",REG_AO_TRIMLO); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim High,,109,float,1,RW,1,%15.7f\n",REG_AO_TRIMHI); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim Low,,169,float,1,RW,1,%15.7f\n",REG_AI_TRIMLO); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim High,,171,float,1,RW,1,%15.7f\n",REG_AI_TRIMHI); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D3,,117,float,1,RW,1,%15.7f\n",REG_DENSITY_D3.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D2,,119,float,1,RW,1,%15.7f\n",REG_DENSITY_D2.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D1,,121,float,1,RW,1,%15.7f\n",REG_DENSITY_D1.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D0,,123,float,1,RW,1,%15.7f\n",REG_DENSITY_D0.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Dual Curve Cutoff,,69,float,1,RW,1,%15.7f\n",REG_OIL_PHASE_CUTOFF);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T0,,179,float,1,RW,1,%15.7f\n",REG_OIL_T0.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T1,,181,float,1,RW,1,%15.7f\n",REG_OIL_T1.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Temp Adj,,781,float,1,RW,1,%15.7f\n",PDI_TEMP_ADJ);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F0,,783,float,1,RW,1,%15.7f\n",PDI_FREQ_F0);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F1,,785,float,1,RW,1,%15.7f\n",PDI_FREQ_F1);
+
+	/// extended 60K
     sprintf(CSV_BUF+strlen(CSV_BUF),"Number of Oil Temperature Curves,,60001,float,1,RW,1,%15.7f\n",REG_TEMP_OIL_NUM_CURVES);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Temperature List,,60003,float,1,RW,10,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_TEMPS_OIL[0],REG_TEMPS_OIL[1],REG_TEMPS_OIL[2],REG_TEMPS_OIL[3],REG_TEMPS_OIL[4],REG_TEMPS_OIL[5],REG_TEMPS_OIL[6],REG_TEMPS_OIL[7],REG_TEMPS_OIL[8],REG_TEMPS_OIL[9]);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve0,,60023,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_COEFFS_TEMP_OIL[0][0],REG_COEFFS_TEMP_OIL[0][1],REG_COEFFS_TEMP_OIL[0][2],REG_COEFFS_TEMP_OIL[0][3])
-;
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve1,,60031,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_COEFFS_TEMP_OIL[1][0],REG_COEFFS_TEMP_OIL[1][1],REG_COEFFS_TEMP_OIL[1][2],REG_COEFFS_TEMP_OIL[1][3]);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve2,,60039,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_COEFFS_TEMP_OIL[2][0],REG_COEFFS_TEMP_OIL[2][1],REG_COEFFS_TEMP_OIL[2][2],REG_COEFFS_TEMP_OIL[2][3]);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve3,,60047,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_COEFFS_TEMP_OIL[3][0],REG_COEFFS_TEMP_OIL[3][1],REG_COEFFS_TEMP_OIL[3][2],REG_COEFFS_TEMP_OIL[3][3]);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve4,,60055,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_COEFFS_TEMP_OIL[4][0],REG_COEFFS_TEMP_OIL[4][1],REG_COEFFS_TEMP_OIL[4][2],REG_COEFFS_TEMP_OIL[4][3]);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve5,,60063,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_COEFFS_TEMP_OIL[5][0],REG_COEFFS_TEMP_OIL[5][1],REG_COEFFS_TEMP_OIL[5][2],REG_COEFFS_TEMP_OIL[5][3]);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Adjust,,15,float,1,RW,1,%15.7f\n",REG_OIL_ADJUST.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Temp Adjust,,31,float,1,RW,1,%15.7f\n",REG_TEMP_ADJUST.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Proc Avg,,35,float,1,RW,1,%15.7f\n",REG_PROC_AVGING.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Index,,37,float,1,RW,1,%15.7f\n",REG_OIL_INDEX.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO LRV,,49,float,1,RW,1,%15.7f\n",REG_AO_LRV.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO URV,,51,float,1,RW,1,%15.7f\n",REG_AO_URV.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Adj,,111,float,1,RW,1,%15.7f\0",REG_DENSITY_ADJ);
+
+	for (data_index=0;data_index<10;data_index++)
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve %d,,%d,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",data_index,60023+data_index*4,REG_COEFFS_TEMP_OIL[data_index][0],REG_COEFFS_TEMP_OIL[data_index][1],REG_COEFFS_TEMP_OIL[data_index][2],REG_COEFFS_TEMP_OIL[data_index][3]);
+
+	/// long int	
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Measurement Section,,301,long,1,RW,1,%d\n",REG_MEASSECTION_SN);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Back Board,,303,long,1,RW,1,%d\n",REG_BACKBOARD_SN);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Safety Barrier,,305,long,1,RW,1,%d\n",REG_SAFETYBARRIER_SN);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Power Supply,,307,long,1,RW,1,%d\n",REG_POWERSUPPLY_SN);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Processor Board,,309,long,1,RW,1,%d\n",REG_PROCESSOR_SN);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Display Board,,311,long,1,RW,1,%d\n",REG_DISPLAY_SN);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - RF Board,,313,long,1,RW,1,%d\n",REG_RF_SN);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Assembly,,315,long,1,RW,1,%d\n",REG_ASSEMBLY_SN);
+
+	/// hardware part serial number
+	for (data_index=0;data_index<8;data_index++)
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Electronic SN %d,,%d,long,1,RW,1,%d\n",data_index,317+2*data_index,REG_ELECTRONICS_SN[data_index]);
+
+	/// stream dependent data
+	for (data_index=0;data_index<60;data_index++)
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+2*data_index,STREAM_OIL_ADJUST[data_index]);
 	
-	//for (csv_buf_delay=0;csv_buf_delay < 1000000; csv_buf_delay++);
+	for (csv_buf_delay=0;csv_buf_delay < 1000000; csv_buf_delay++);
 
 	UINT bw;
 	fr = f_write(&csvWriteObject,CSV_BUF,strlen(CSV_BUF),&bw);
@@ -870,19 +892,66 @@ BOOL uploadCsv(char* fname)
             i++; 
         } 
 
-    	/// upload 
+    	///
+    	/// UPLOAD
+    	///
+	
+		/// integer	
 		if      (strcmp(regid, "201") == 0) REG_SN_PIPE = atoi(regval);
+		else if (strcmp(regid, "203") == 0) REG_AO_DAMPEN = atoi(regval);
+		else if (strcmp(regid, "204") == 0) REG_SLAVE_ADDRESS = atoi(regval);
+		else if (strcmp(regid, "205") == 0) REG_STOP_BITS = atoi(regval);
+		else if (strcmp(regid, "206") == 0) REG_DENSITY_MODE = atoi(regval);
+		else if (strcmp(regid, "219") == 0) REG_MODEL_CODE[0] = atoi(regval);
+		else if (strcmp(regid, "220") == 0) REG_MODEL_CODE[1] = atoi(regval);
+		else if (strcmp(regid, "221") == 0) REG_MODEL_CODE[2] = atoi(regval);
+		else if (strcmp(regid, "222") == 0) REG_MODEL_CODE[3] = atoi(regval);
+		else if (strcmp(regid, "223") == 0) REG_LOGGING_PERIOD = atoi(regval);
+		else if (strcmp(regid, "227") == 0) REG_AO_ALARM_MODE = atoi(regval);
+		else if (strcmp(regid, "228") == 0) REG_PHASE_HOLD_CYCLES = atoi(regval);
+		else if (strcmp(regid, "229") == 0) REG_RELAY_DELAY = atoi(regval);
+		else if (strcmp(regid, "230") == 0) REG_AO_MODE = atoi(regval);
+		else if (strcmp(regid, "231") == 0) REG_OIL_DENS_CORR_MODE = atoi(regval);
+		else if (strcmp(regid, "232") == 0) REG_RELAY_MODE = atoi(regval);
+
+		/// long int
+		else if (strcmp(regid, "301") == 0) REG_MEASSECTION_SN = atoi(regval);
+		else if (strcmp(regid, "303") == 0) REG_BACKBOARD_SN = atoi(regval);
+		else if (strcmp(regid, "305") == 0) REG_SAFETYBARRIER_SN = atoi(regval);
+		else if (strcmp(regid, "307") == 0) REG_POWERSUPPLY_SN = atoi(regval);
+		else if (strcmp(regid, "309") == 0) REG_PROCESSOR_SN = atoi(regval);
+		else if (strcmp(regid, "311") == 0) REG_DISPLAY_SN = atoi(regval);
+		else if (strcmp(regid, "313") == 0) REG_RF_SN = atoi(regval);
+		else if (strcmp(regid, "315") == 0) REG_ASSEMBLY_SN = atoi(regval);
+
+		/// float or double
+		else if (strcmp(regid, "15") == 0) VAR_Update(&REG_OIL_ADJUST,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "31") == 0) VAR_Update(&REG_TEMP_ADJUST,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "35") == 0) VAR_Update(&REG_PROC_AVGING,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "37") == 0) VAR_Update(&REG_OIL_INDEX,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "39") == 0) VAR_Update(&REG_OIL_P0,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "41") == 0) VAR_Update(&REG_OIL_P1,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "43") == 0) VAR_Update(&REG_OIL_FREQ_LOW,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "45") == 0) VAR_Update(&REG_OIL_FREQ_HIGH,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "47") == 0) VAR_Update(&REG_SAMPLE_PERIOD,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "49") == 0) VAR_Update(&REG_AO_URV,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "51") == 0) VAR_Update(&REG_AO_LRV,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "55") == 0) VAR_Update(&REG_BAUD_RATE,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "67") == 0) REG_OIL_CALC_MAX = atof(regval);
 		else if (strcmp(regid, "69") == 0) REG_OIL_PHASE_CUTOFF = atof(regval);
+		else if (strcmp(regid, "73") == 0) VAR_Update(&REG_STREAM,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "107") == 0) REG_AO_TRIMLO = atof(regval);
 		else if (strcmp(regid, "109") == 0) REG_AO_TRIMHI = atof(regval);
+		else if (strcmp(regid, "111") == 0) REG_DENSITY_ADJ = atof(regval);
 		else if (strcmp(regid, "117") == 0) VAR_Update(&REG_DENSITY_D3,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "119") == 0) VAR_Update(&REG_DENSITY_D2,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "121") == 0) VAR_Update(&REG_DENSITY_D1,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "123") == 0) VAR_Update(&REG_DENSITY_D0,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "125") == 0) VAR_Update(&REG_DENSITY_CAL_VAL,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "151") == 0) VAR_Update(&REG_RELAY_SETPOINT,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "161") == 0) REG_OIL_DENSITY_MANUAL = atof(regval);
+		else if (strcmp(regid, "163") == 0) VAR_Update(&REG_OIL_DENSITY_AI_LRV,atof(regval),CALC_UNIT);
+		else if (strcmp(regid, "165") == 0) VAR_Update(&REG_OIL_DENSITY_AI_URV,atof(regval),CALC_UNIT);
 		else if (strcmp(regid, "169") == 0) REG_AI_TRIMLO = atof(regval);
 		else if (strcmp(regid, "171") == 0) REG_AI_TRIMHI = atof(regval);
 		else if (strcmp(regid, "179") == 0) VAR_Update(&REG_OIL_T0,atof(regval),CALC_UNIT);
@@ -890,6 +959,8 @@ BOOL uploadCsv(char* fname)
 		else if (strcmp(regid, "781") == 0) PDI_TEMP_ADJ = atof(regval);
 		else if (strcmp(regid, "783") == 0) PDI_FREQ_F0 = atof(regval);
 		else if (strcmp(regid, "785") == 0) PDI_FREQ_F1 = atof(regval);
+
+		/// extended
 		else if (strcmp(regid, "60001") == 0) REG_TEMP_OIL_NUM_CURVES = atof(regval); 
 		else if (strcmp(regid, "60003") == 0) 
 		{
@@ -947,6 +1018,68 @@ BOOL uploadCsv(char* fname)
 			REG_COEFFS_TEMP_OIL[5][3] = atof(regval3);
 		}
 
+		/// stream dependent data
+		else if (strcmp(regid, "63647") == 0) STREAM_OIL_ADJUST[0] = atof(regval);
+		else if (strcmp(regid, "63649") == 0) STREAM_OIL_ADJUST[1] = atof(regval);
+		else if (strcmp(regid, "63651") == 0) STREAM_OIL_ADJUST[2] = atof(regval);
+		else if (strcmp(regid, "63653") == 0) STREAM_OIL_ADJUST[3] = atof(regval);
+		else if (strcmp(regid, "63655") == 0) STREAM_OIL_ADJUST[4] = atof(regval);
+		else if (strcmp(regid, "63657") == 0) STREAM_OIL_ADJUST[5] = atof(regval);
+		else if (strcmp(regid, "63659") == 0) STREAM_OIL_ADJUST[6] = atof(regval);
+		else if (strcmp(regid, "63661") == 0) STREAM_OIL_ADJUST[7] = atof(regval);
+		else if (strcmp(regid, "63663") == 0) STREAM_OIL_ADJUST[8] = atof(regval);
+		else if (strcmp(regid, "63665") == 0) STREAM_OIL_ADJUST[9] = atof(regval);
+		else if (strcmp(regid, "63667") == 0) STREAM_OIL_ADJUST[10] = atof(regval);
+		else if (strcmp(regid, "63669") == 0) STREAM_OIL_ADJUST[11] = atof(regval);
+		else if (strcmp(regid, "63671") == 0) STREAM_OIL_ADJUST[12] = atof(regval);
+		else if (strcmp(regid, "63673") == 0) STREAM_OIL_ADJUST[13] = atof(regval);
+		else if (strcmp(regid, "63675") == 0) STREAM_OIL_ADJUST[14] = atof(regval);
+		else if (strcmp(regid, "63677") == 0) STREAM_OIL_ADJUST[15] = atof(regval);
+		else if (strcmp(regid, "63679") == 0) STREAM_OIL_ADJUST[16] = atof(regval);
+		else if (strcmp(regid, "63681") == 0) STREAM_OIL_ADJUST[17] = atof(regval);
+		else if (strcmp(regid, "63683") == 0) STREAM_OIL_ADJUST[18] = atof(regval);
+		else if (strcmp(regid, "63685") == 0) STREAM_OIL_ADJUST[19] = atof(regval);
+		else if (strcmp(regid, "63687") == 0) STREAM_OIL_ADJUST[20] = atof(regval);
+		else if (strcmp(regid, "63689") == 0) STREAM_OIL_ADJUST[21] = atof(regval);
+		else if (strcmp(regid, "63691") == 0) STREAM_OIL_ADJUST[22] = atof(regval);
+		else if (strcmp(regid, "63693") == 0) STREAM_OIL_ADJUST[23] = atof(regval);
+		else if (strcmp(regid, "63695") == 0) STREAM_OIL_ADJUST[24] = atof(regval);
+		else if (strcmp(regid, "63697") == 0) STREAM_OIL_ADJUST[25] = atof(regval);
+		else if (strcmp(regid, "63699") == 0) STREAM_OIL_ADJUST[26] = atof(regval);
+		else if (strcmp(regid, "63701") == 0) STREAM_OIL_ADJUST[27] = atof(regval);
+		else if (strcmp(regid, "63703") == 0) STREAM_OIL_ADJUST[28] = atof(regval);
+		else if (strcmp(regid, "63705") == 0) STREAM_OIL_ADJUST[29] = atof(regval);
+		else if (strcmp(regid, "63707") == 0) STREAM_OIL_ADJUST[30] = atof(regval);
+		else if (strcmp(regid, "63709") == 0) STREAM_OIL_ADJUST[31] = atof(regval);
+		else if (strcmp(regid, "63711") == 0) STREAM_OIL_ADJUST[32] = atof(regval);
+		else if (strcmp(regid, "63713") == 0) STREAM_OIL_ADJUST[33] = atof(regval);
+		else if (strcmp(regid, "63715") == 0) STREAM_OIL_ADJUST[34] = atof(regval);
+		else if (strcmp(regid, "63717") == 0) STREAM_OIL_ADJUST[35] = atof(regval);
+		else if (strcmp(regid, "63719") == 0) STREAM_OIL_ADJUST[36] = atof(regval);
+		else if (strcmp(regid, "63721") == 0) STREAM_OIL_ADJUST[37] = atof(regval);
+		else if (strcmp(regid, "63723") == 0) STREAM_OIL_ADJUST[38] = atof(regval);
+		else if (strcmp(regid, "63725") == 0) STREAM_OIL_ADJUST[39] = atof(regval);
+		else if (strcmp(regid, "63727") == 0) STREAM_OIL_ADJUST[40] = atof(regval);
+		else if (strcmp(regid, "63729") == 0) STREAM_OIL_ADJUST[41] = atof(regval);
+		else if (strcmp(regid, "63731") == 0) STREAM_OIL_ADJUST[42] = atof(regval);
+		else if (strcmp(regid, "63733") == 0) STREAM_OIL_ADJUST[43] = atof(regval);
+		else if (strcmp(regid, "63735") == 0) STREAM_OIL_ADJUST[44] = atof(regval);
+		else if (strcmp(regid, "63737") == 0) STREAM_OIL_ADJUST[45] = atof(regval);
+		else if (strcmp(regid, "63739") == 0) STREAM_OIL_ADJUST[46] = atof(regval);
+		else if (strcmp(regid, "63741") == 0) STREAM_OIL_ADJUST[47] = atof(regval);
+		else if (strcmp(regid, "63743") == 0) STREAM_OIL_ADJUST[48] = atof(regval);
+		else if (strcmp(regid, "63745") == 0) STREAM_OIL_ADJUST[49] = atof(regval);
+		else if (strcmp(regid, "63747") == 0) STREAM_OIL_ADJUST[50] = atof(regval);
+		else if (strcmp(regid, "63749") == 0) STREAM_OIL_ADJUST[51] = atof(regval);
+		else if (strcmp(regid, "63751") == 0) STREAM_OIL_ADJUST[52] = atof(regval);
+		else if (strcmp(regid, "63753") == 0) STREAM_OIL_ADJUST[53] = atof(regval);
+		else if (strcmp(regid, "63755") == 0) STREAM_OIL_ADJUST[54] = atof(regval);
+		else if (strcmp(regid, "63757") == 0) STREAM_OIL_ADJUST[55] = atof(regval);
+		else if (strcmp(regid, "63759") == 0) STREAM_OIL_ADJUST[56] = atof(regval);
+		else if (strcmp(regid, "63761") == 0) STREAM_OIL_ADJUST[57] = atof(regval);
+		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = atof(regval);
+		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = atof(regval);
+
 		line[0] = '\0';
 	}
 
@@ -965,7 +1098,7 @@ BOOL uploadCsv(char* fname)
 	/// delete PDI_RAZOR_PROFILE
 	if (strcmp(fname,PDI_RAZOR_PROFILE)==0) f_unlink(csvFileName);
 
-    while (1) (isPdiUpgradeMode) ? updateDisplay(" UPLOAD PROFILE "," Upload Success ") : displayLcd(" Upload Success ", 1);
+    while (1) (isPdiUpgradeMode) ? updateDisplay(" UPLOAD PROFILE ","   Success!   ") : displayLcd("   Success!   ", 1);
 
 	return TRUE;
 }
