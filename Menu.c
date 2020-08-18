@@ -158,19 +158,11 @@ Process_Menu(void)
 	/// Enable USB device
     loadUsbDriver();
 
-	/// enable upgrade mode
-	isPdiUpgradeMode = TRUE;
-
-	/// set flags
-	isUploadCsv = TRUE;
-	isDownloadCsv = TRUE;
-	isUpgradeFirmware = TRUE;
-
 	/// upload saved profile if exists
 	while (isUploadCsv) uploadCsv(PDI_RAZOR_PROFILE);
 
 	/// upgrade firmware if exists
-	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
+	while (isUpgradeFirmware) upgradeFirmware();
 
 	/// disable upgrade mode 
 	isPdiUpgradeMode = FALSE;

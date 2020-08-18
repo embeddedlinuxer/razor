@@ -404,7 +404,7 @@ void upgradeFirmware(void)
 	int index=0;
 	int loop = 0;
 	UINT br = 0;
-	BYTE buffer[4096*2] = 0;
+	BYTE buffer[4096] = 0;
 
     if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
 
@@ -460,26 +460,25 @@ void upgradeFirmware(void)
 
 	isUpdateDisplay=TRUE;
 	updateDisplay("FIRMWARE UPGRADE","   Loading...   ");
-
-	/// disable all interrupt while accessing usb
-	Swi_disable();
-
+	
 	/// read file	
 	for (;;) {
-     	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;  /* Read a chunk of data from the source file */
-        if (br == 0) break; /* error or eof */
-		for (i=0;i<ACCESS_DELAY*100;i++);
-		for (loop = 0; loop<sizeof(buffer); loop++) 
+     	if (f_read(&fPtr, buffer, sizeof(buffer)-1, &br) != FR_OK) return;  /* Read a chunk of data from the source file */
+		if (br == 0) break; /* error or eof */
+		for (loop=0;loop<br;loop++) 
 		{
       		aisPtr[index] = buffer[loop];
 			index++;
+		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+			displayLcd(lcdLine1,1);	
    		}
-		for (i=0;i<ACCESS_DELAY*100;i++);
     }
 
 	/// close
-    if (f_close (&fPtr) != FR_OK) return;
+    if (f_close(&fPtr) != FR_OK) return;
 
+	/// disable all interrupt while accessing usb
+	Swi_disable();
     Hwi_disable();
 
 	/// global erase
@@ -494,11 +493,8 @@ void upgradeFirmware(void)
 	Hwi_enable();
     Swi_enable();
 
-	/// create factory default
-	storeUserDataToFactoryDefault();
-
 	/// success
 	isUpdateDisplay=TRUE;
-	updateDisplay("FIRMWARE UPGRADE"," Upgrade Success");
-	while (1);
+	updateDisplay("UPGRADE  SUCCESS","  POWER  CYCLE  ");
+	while(1) displayLcd("  POWER  CYCLE  ",1);
 }

@@ -28,6 +28,12 @@ void resetGlobalVars(void)
 {
     CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 
+	/// enable upgrade mode
+    isPdiUpgradeMode = TRUE;
+    isUploadCsv = TRUE;
+    isDownloadCsv = TRUE;
+    isUpgradeFirmware = TRUE;
+
     isWriteRTC = FALSE;
     isLogData = FALSE;
 	isProfileMode = FALSE;
@@ -60,8 +66,6 @@ void storeUserDataToFactoryDefault(void)
 {
     // UNLOCK SAFETY GUARD FOR FCT REGISTERS
     COIL_UNLOCKED_FACTORY_DEFAULT.val = TRUE;
-
-    isWriteRTC = FALSE;
 
     // REGTYPE_INT
     FCT_AO_DAMPEN           = REG_AO_DAMPEN;
@@ -129,14 +133,6 @@ void storeUserDataToFactoryDefault(void)
 
     // save to nand flash
     Swi_post(Swi_writeNand);
-
-    // dislable usb handler
-    unloadUsbDriver();
-
-    // restart 
-	_c_int00();
-
-    // THE USER "MUST" POWER CYCLE AFTER RESET TO ENABLE USER DRIVER
 }
 
 void reloadFactoryDefault(void)

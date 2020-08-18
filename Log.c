@@ -37,6 +37,7 @@
 #define MAX_DATA_SIZE   160 
 #define MAX_HEADER_SIZE 110 
 #define MAX_BUF_SIZE   	4096*2
+#define MAX_CSV_SIZE   	4096*3
 
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 
@@ -45,7 +46,7 @@ static Uint8 try2 = 0;
 static Uint8 try3 = 0;
 static Uint8 try4 = 0;
 
-static char CSV_BUF[MAX_BUF_SIZE];
+static char CSV_BUF[MAX_CSV_SIZE];
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char LOG_BUF[MAX_BUF_SIZE];
 static Uint8 current_day = 99;
@@ -1092,13 +1093,16 @@ BOOL uploadCsv(char* fname)
     isCsvUploadSuccess = TRUE;
     isCsvDownloadSuccess = FALSE;
 
+	/// update factory default
+    COIL_UPDATE_FACTORY_DEFAULT.val = TRUE;
+
 	/// write to flash
 	Swi_post(Swi_writeNand);	
 
 	/// delete PDI_RAZOR_PROFILE
 	if (strcmp(fname,PDI_RAZOR_PROFILE)==0) f_unlink(csvFileName);
 
-    while (1) (isPdiUpgradeMode) ? updateDisplay(" UPLOAD PROFILE ","   Success!   ") : displayLcd("   Success!   ", 1);
+    while (1) (isPdiUpgradeMode) ? updateDisplay(" UPLOAD SUCCESS ","   REMOVE USB   ") : displayLcd("   REMOVE USB   ", 1);
 
 	return TRUE;
 }
