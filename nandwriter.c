@@ -407,7 +407,11 @@ void upgradeFirmware(void)
 	BYTE buffer[4096] = 0;
 
 	/// open fw file
-    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
+    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) 
+	{
+		f_unlink("0:pdi_razor_profile.csv");
+		return;
+	}
 
 	/// download existing csv
 	while (isDownloadCsv) downloadCsv(PDI_RAZOR_PROFILE);
