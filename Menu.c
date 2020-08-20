@@ -162,7 +162,7 @@ Process_Menu(void)
 	while (isUploadCsv) uploadCsv(PDI_RAZOR_PROFILE);
 
 	/// upgrade firmware if exists
-	while (isUpgradeFirmware) upgradeFirmware();
+	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
 	/// disable upgrade mode 
 	isPdiUpgradeMode = FALSE;
@@ -189,6 +189,7 @@ Process_Menu(void)
     /// Initialize buttons
 	int i;
 	for (i=0; i<4; i++) buttons[i] = 0; 
+
 	/// Start main loop
 	while (1)
 	{
@@ -3778,7 +3779,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
 
         	blinkLcdLine1(csv_file,BLANK);
     	}
-		else if (isUploadCsv) blinkLcdLine1(LOADING,BLANK);
+		else if (isScanCsvFiles || isUploadCsv) blinkLcdLine1(LOADING,BLANK);
 		else blinkLcdLine1(UPLOAD, BLANK);
 	}
 

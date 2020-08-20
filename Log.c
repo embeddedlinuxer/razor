@@ -836,7 +836,7 @@ BOOL uploadCsv(char* fname)
 	
 	FIL fil;
 	FRESULT result;
-	char line[250];
+	char line[1024];
 	char csvFileName[50] = 0;
 
 	/// get file name
