@@ -641,14 +641,14 @@ BOOL downloadCsv(char* fname)
 	/// get file name
 	(strcmp(PDI_RAZOR_PROFILE,fname)==0) ? sprintf(csvFileName,"0:%s.csv",fname) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
 
-	/// disable all interrupts
-	Swi_disable();
-
 	if (f_open(&csvWriteObject, csvFileName, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) 
 	{
-		Swi_enable();
-		return FALSE;
+		isUpgradeFirmware = FALSE;
+		return FALSE;;
 	}
+
+	/// disable all interrupts
+	Swi_disable();
 
 	/// integer
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
@@ -842,15 +842,8 @@ BOOL uploadCsv(char* fname)
 	/// get file name
 	sprintf(csvFileName,"0:%s.csv",fname);
 
-	/// block all interrupts
-	Swi_disable();
-
 	/// open file
-	if (f_open(&fil, csvFileName, FA_READ) != FR_OK) 
-	{
-		Swi_enable();
-		return FALSE;
-	}
+	if (f_open(&fil, csvFileName, FA_READ) != FR_OK) return FALSE;
 
 	/// read line
     while (f_gets(line, sizeof(line), &fil)) 
@@ -893,10 +886,13 @@ BOOL uploadCsv(char* fname)
             i++; 
         } 
 
+		/// block all interrupts
+		Swi_disable();
+
     	///
     	/// UPLOAD
     	///
-	
+
 		/// integer	
 		if      (strcmp(regid, "201") == 0) REG_SN_PIPE = atoi(regval);
 		else if (strcmp(regid, "203") == 0) REG_AO_DAMPEN = atoi(regval);
@@ -1081,13 +1077,19 @@ BOOL uploadCsv(char* fname)
 		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = atof(regval);
 		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = atof(regval);
 
+		/// print status -- we use print as an intended "delay"
+		if (isPdiUpgradeMode) 
+		{
+			LCD_setcursor(0,0);
+			displayLcd("PROFILE UPLOAD  ",0);
+			displayLcd("    Loading...  ",1);
+		}
+
 		line[0] = '\0';
+		Swi_enable();
 	}
 
 	f_close(&fil);
-
-	/// enable all interrupts back
-	Swi_enable();
 
 	/// set global var true
     isCsvUploadSuccess = TRUE;
@@ -1100,9 +1102,13 @@ BOOL uploadCsv(char* fname)
 	Swi_post(Swi_writeNand);	
 
 	/// delete PDI_RAZOR_PROFILE
-	if (strcmp(fname,PDI_RAZOR_PROFILE)==0) f_unlink(csvFileName);
+	if (isPdiUpgradeMode) 
+	{
+		displayLcd("PROFILE UPLOADED",0);
+		f_unlink(csvFileName);
+	}
 
-    while (1) (isPdiUpgradeMode) ? updateDisplay(" UPLOAD SUCCESS ","   REMOVE USB   ") : displayLcd("   REMOVE USB   ", 1);
+    while (1) displayLcd("   REMOVE USB   ", 1);
 
 	return TRUE;
 }

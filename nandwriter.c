@@ -406,9 +406,12 @@ void upgradeFirmware(void)
 	UINT br = 0;
 	BYTE buffer[4096] = 0;
 
-    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
-
-	if (!downloadCsv(PDI_RAZOR_PROFILE)) return;
+    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) 
+	{
+		/// remove PDI_RAZOR_PROFILE if no pdi_razor_firwmware.ais  exists.
+		f_unlink("0:pdi_razor_profile.csv");
+		return;
+	}
 
     UTIL_setCurrMemPtr(0);
 
@@ -470,6 +473,7 @@ void upgradeFirmware(void)
       		aisPtr[index] = buffer[loop];
 			index++;
 		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+			displayLcd("FIRMWARE UPGRADE",0);
 			displayLcd(lcdLine1,1);	
    		}
     }
