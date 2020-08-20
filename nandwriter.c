@@ -406,12 +406,11 @@ void upgradeFirmware(void)
 	UINT br = 0;
 	BYTE buffer[4096] = 0;
 
-    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) 
-	{
-		/// remove PDI_RAZOR_PROFILE if no pdi_razor_firwmware.ais  exists.
-		f_unlink("0:pdi_razor_profile.csv");
-		return;
-	}
+	/// open fw file
+    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
+
+	/// download existing csv
+	while (isDownloadCsv) downloadCsv(PDI_RAZOR_PROFILE);
 
     UTIL_setCurrMemPtr(0);
 

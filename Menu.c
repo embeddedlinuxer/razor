@@ -161,9 +161,6 @@ Process_Menu(void)
 	/// upload saved profile if exists
 	while (isUploadCsv) uploadCsv(PDI_RAZOR_PROFILE);
 
-	/// download current profile 
-	while (isDownloadCsv) downloadCsv(PDI_RAZOR_PROFILE);
-
 	/// upgrade firmware if exists
 	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 

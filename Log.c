@@ -535,58 +535,27 @@ void logData(void)
        	return;
    	}   
 
-	printf("%s\n","new DATA_BUF");
+	printf("\n%s","new DATA_BUF");
+
 	/// new DATA_BUF
-   	char DATA_BUF[200] = 0;
+   	char DATA_BUF[1024] = 0;
 	DATA_BUF[0] = '\0';
 
 	/// get modbus data
-   	//sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+   	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-	printf("%s\n","get data");
-	/// get modbus data
-   	sprintf(DATA_BUF,"%02d-",USB_RTC_MON); 
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%02d-",USB_RTC_DAY);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"20%02d,",USB_RTC_YR);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%02d:",USB_RTC_HR);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%02d:",USB_RTC_MIN);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%02d,",USB_RTC_SEC);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%10d,",DIAGNOSTICS);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%2.0f,",REG_STREAM.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%6.2f,",REG_WATERCUT.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_WATERCUT_RAW);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_TEMP_USER.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_TEMP_AVG.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_TEMP_ADJUST.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%6.3f,",REG_FREQ.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%6.3f,",REG_OIL_INDEX.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%6.3f,",REG_OIL_RP);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_OIL_PT);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_OIL_P0.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_OIL_P1.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_OIL_DENSITY.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%6.3f,",REG_OIL_FREQ_LOW.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%6.3f,",REG_OIL_FREQ_HIGH.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_AO_LRV.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.1f,",REG_AO_URV.calc_val);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%5.2f,",REG_AO_MANUAL_VAL);
-   	sprintf(DATA_BUF+strlen(DATA_BUF),"%8.1f,\n",REG_RELAY_SETPOINT.calc_val);
+	printf ("LOG_BUF 1 : %d", strlen(LOG_BUF));
+	for (data_delay=0; data_delay < 10000; data_delay++);
 
-	printf("%s\n","delay");
-	for (data_delay=0;data_delay<1000000;data_delay++);
-
-	printf("%s\n","strcat");
     /// fill data upto MAX_DATA_SIZE
-	int a = strlen(LOG_BUF);
-	int b = strlen(DATA_BUF);
-	printf ("LOG_BUF=%d,DATA_BUF=%d\n",a,b);
-    if ((MAX_BUF_SIZE - a) > b)
+    if ((MAX_BUF_SIZE - strlen(LOG_BUF)) > strlen(DATA_BUF))
     {
         strcat(LOG_BUF,DATA_BUF);
         return;
     }
 
-	printf("%s\n","open file");
+	printf ("LOG_BUF 2 : %d", strlen(LOG_BUF));
+
     /// open file
     fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
     if (fresult != FR_OK)
@@ -595,7 +564,8 @@ void logData(void)
         return;
     }
 
-	printf("%s\n","lseek");
+	printf ("LOG_BUF 3 : %d", strlen(LOG_BUF));
+
     /// move pointer to end of file 
     fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
     if (fresult != FR_OK)
@@ -604,7 +574,6 @@ void logData(void)
         return;
     }
 
-	printf("%s\n","fput");
     /// write
     if (f_puts(LOG_BUF,&fileWriteObject) == EOF)
     {
@@ -612,7 +581,8 @@ void logData(void)
         return;
     }
 
-	printf("%s\n","closing");
+	printf ("LOG_BUF 4 : %d", strlen(LOG_BUF));
+
     /// close file
     fresult = f_close(&fileWriteObject);
     if (fresult != FR_OK)
@@ -621,7 +591,7 @@ void logData(void)
         return;
     }
 
-	printf("%s\n","LOG_BUF[0] = 0");
+	printf ("LOG_BUF 5 : %d", strlen(LOG_BUF));
 	LOG_BUF[0] = '\0';
 }
 
