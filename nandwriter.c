@@ -464,15 +464,7 @@ void upgradeFirmware(void)
 		buffer[0] = '\0';
 		buffer[0] = '\0';
 		buffer[0] = '\0';
-		buffer[0] = '\0';
-		buffer[0] = '\0';
-		buffer[0] = '\0';
      	if (f_read(&fPtr, buffer, sizeof(buffer)-1, &br) != FR_OK) return;  /* Read a chunk of data from the source file */
-		displayLcd("FIRMWARE UPGRADE",0);	
-		displayLcd("FIRMWARE UPGRADE",0);	
-		displayLcd("FIRMWARE UPGRADE",0);	
-		displayLcd("FIRMWARE UPGRADE",0);	
-		displayLcd("FIRMWARE UPGRADE",0);	
 		displayLcd("FIRMWARE UPGRADE",0);	
 		displayLcd("FIRMWARE UPGRADE",0);	
 		displayLcd("FIRMWARE UPGRADE",0);	
@@ -483,11 +475,6 @@ void upgradeFirmware(void)
       		aisPtr[index] = buffer[loop];
       		aisPtr[index] = buffer[loop];
       		aisPtr[index] = buffer[loop];
-      		aisPtr[index] = buffer[loop];
-      		aisPtr[index] = buffer[loop];
-      		aisPtr[index] = buffer[loop];
-      		aisPtr[index] = buffer[loop];
-			aisPtr[index] = buffer[loop];
 		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 			displayLcd(lcdLine1,1);	
 			index++;

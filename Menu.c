@@ -159,7 +159,7 @@ Process_Menu(void)
     loadUsbDriver();
 
 	/// upload saved profile if exists
-	while (isUploadCsv) uploadCsv(PDI_RAZOR_PROFILE);
+	while (isUploadCsv) Swi_post(Swi_uploadCsv);
 
 	/// upgrade firmware if exists
 	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);

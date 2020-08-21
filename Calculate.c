@@ -86,7 +86,7 @@ void Poll(void)
    		if (isLogData) logData();
    		else if (isDownloadCsv) downloadCsv(NULL);
    		else if (isScanCsvFiles) scanCsvFiles();
-		else if (isUploadCsv) uploadCsv(CSV_FILES);
+		else if (isUploadCsv) Swi_post(Swi_uploadCsv);
 	}
 
     /// Read DIAGNOSTICS

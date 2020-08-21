@@ -569,8 +569,10 @@ void logData(void)
         return;
     }
 
+	printf("Swi_disable\n");
 	Swi_disable();
 
+	printf("f_puts\n");
     /// write
     if (f_puts(LOG_BUF,&fileWriteObject) == EOF)
     {
@@ -578,6 +580,7 @@ void logData(void)
         return;
     }
 
+	printf("Swi_enable\n");
 	Swi_enable();
 
     /// close file
@@ -810,7 +813,7 @@ void scanCsvFiles(void)
 }
 
 
-BOOL uploadCsv(char* fname)
+BOOL uploadCsv(void)
 {
 	if (!isUsbActive()) return FALSE;
 	isUploadCsv = FALSE;
@@ -823,11 +826,14 @@ BOOL uploadCsv(char* fname)
 	line[0] = '\0';
 
 	/// get file name
-	sprintf(csvFileName,"0:%s.csv",fname);
+	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:%s.csv",CSV_FILES);
 
 	/// open file
 	printf("Open file...");
 	if (f_open(&fil, csvFileName, FA_READ) != FR_OK) return FALSE;
+
+	/// do not upgrade firmware after profiling
+	isUpgradeFirmware = FALSE;
 
 	/// swi disable
 	printf("Swi_disable...");
@@ -1071,21 +1077,16 @@ BOOL uploadCsv(char* fname)
 		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = fvalue;
 		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = fvalue;
 
+		line[0] = '\0';
+		line[0] = '\0';
+
 		/// print status -- we use print as an intended "delay"
 		if (isPdiUpgradeMode) 
 		{
 			LCD_setcursor(0,0);
 			displayLcd(" PROFILE UPLOAD ",0);
-			displayLcd("    Loading...  ",1);
 		}
 
-		line[0] = '\0';
-		line[0] = '\0';
-		line[0] = '\0';
-		line[0] = '\0';
-		line[0] = '\0';
-		line[0] = '\0';
-
 		displayLcd("    Loading...  ",1);
 		displayLcd("    Loading...  ",1);
 		displayLcd("    Loading...  ",1);
@@ -1093,7 +1094,12 @@ BOOL uploadCsv(char* fname)
 		displayLcd("    Loading...  ",1);
 		displayLcd("    Loading...  ",1);
 		displayLcd("    Loading...  ",1);
-	}
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+	}	
 
 	printf("Swi_enable\n");
 	Swi_enable();
