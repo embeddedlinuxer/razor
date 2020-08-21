@@ -1661,6 +1661,7 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
         else isEnabled = 0;
         isUpdateDisplay = FALSE;
     }
+
     (isEnabled) ? blinkLcdLine1(ENABLE, BLANK) : blinkLcdLine1(DISABLE, BLANK);
 
     switch (input)  {
@@ -1672,9 +1673,9 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			isLogData = isEnabled;
 			if (isLogData) 
 			{
-                usbStatus = isEnabled;
 				if (!isPowerCycled) resetUsbDriver();
                 else isPowerCycled = FALSE;
+                usbStatus = 1;
 			}
             else
             {

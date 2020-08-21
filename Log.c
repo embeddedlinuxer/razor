@@ -36,7 +36,7 @@
 #define USB_INSTANCE    0
 #define MAX_DATA_SIZE   160 
 #define MAX_HEADER_SIZE 110 
-#define MAX_BUF_SIZE   	4096*2
+#define MAX_BUF_SIZE   	4096
 #define MAX_CSV_SIZE   	4096*3
 
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
@@ -415,7 +415,6 @@ void logData(void)
 {
 	if (!isUsbActive()) return;
 
-	FIL logReadObject;
     FRESULT fresult;
 	int data_delay;
 
@@ -449,18 +448,15 @@ void logData(void)
            	return;
        	}
 
-       	// get a file name
-       	logFile[0] = '\0';
-       	sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
+        // get a file name
+        logFile[0] = '\0';
+        sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
-		if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
-		{
-			fresult = f_close(&fileWriteObject);
-			if (fresult == FR_OK) 
-			{
-				return;
-			}
-		}
+        if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
+        {
+            fresult = f_close(&fileWriteObject);
+            if (fresult == FR_OK) return;
+        }
 
 		/// open file
        	fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
@@ -535,17 +531,16 @@ void logData(void)
        	return;
    	}   
 
-	printf("\n%s","new DATA_BUF");
+	printf("%s\n","new DATA_BUF");
 
 	/// new DATA_BUF
-   	char DATA_BUF[1024] = 0;
+   	char DATA_BUF[1024];
 	DATA_BUF[0] = '\0';
 
 	/// get modbus data
    	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-	printf ("LOG_BUF 1 : %d", strlen(LOG_BUF));
-	for (data_delay=0; data_delay < 10000; data_delay++);
+	printf("LOG_BUF LENGTH : %d\n", strlen(LOG_BUF));
 
     /// fill data upto MAX_DATA_SIZE
     if ((MAX_BUF_SIZE - strlen(LOG_BUF)) > strlen(DATA_BUF))
@@ -554,7 +549,7 @@ void logData(void)
         return;
     }
 
-	printf ("LOG_BUF 2 : %d", strlen(LOG_BUF));
+	printf("open\n");
 
     /// open file
     fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
@@ -564,7 +559,7 @@ void logData(void)
         return;
     }
 
-	printf ("LOG_BUF 3 : %d", strlen(LOG_BUF));
+	printf("lseek\n");
 
     /// move pointer to end of file 
     fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
@@ -574,6 +569,8 @@ void logData(void)
         return;
     }
 
+	Swi_disable();
+
     /// write
     if (f_puts(LOG_BUF,&fileWriteObject) == EOF)
     {
@@ -581,9 +578,13 @@ void logData(void)
         return;
     }
 
-	printf ("LOG_BUF 4 : %d", strlen(LOG_BUF));
+	Swi_enable();
 
     /// close file
+	printf ("verify: file size: %d, LOG_BUF size: %d\n", f_size(&fileWriteObject), strlen(LOG_BUF));
+	printf ("verify: file size: %d, LOG_BUF size: %d\n", f_size(&fileWriteObject), strlen(LOG_BUF));
+	printf ("verify: file size: %d, LOG_BUF size: %d\n", f_size(&fileWriteObject), strlen(LOG_BUF));
+	printf ("close\n");
     fresult = f_close(&fileWriteObject);
     if (fresult != FR_OK)
     {
@@ -591,14 +592,19 @@ void logData(void)
         return;
     }
 
-	printf ("LOG_BUF 5 : %d", strlen(LOG_BUF));
+	printf ("LOG_BUF=0\n");
+	LOG_BUF[0] = '\0';
+	LOG_BUF[0] = '\0';
+	LOG_BUF[0] = '\0';
+	LOG_BUF[0] = '\0';
+	LOG_BUF[0] = '\0';
 	LOG_BUF[0] = '\0';
 }
 
 
 BOOL downloadCsv(char* fname)
 {
-	if (!isUsbActive()) return;
+	if (!isUsbActive()) return FALSE;
 	isDownloadCsv = FALSE;
 	
 	FRESULT fr;	
@@ -611,6 +617,8 @@ BOOL downloadCsv(char* fname)
 	/// get file name
 	(strcmp(PDI_RAZOR_PROFILE,fname)==0) ? sprintf(csvFileName,"0:%s.csv",fname) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
 
+	/// open file
+	printf("f_open...");
 	if (f_open(&csvWriteObject, csvFileName, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) 
 	{
 		isUpgradeFirmware = FALSE;
@@ -618,9 +626,12 @@ BOOL downloadCsv(char* fname)
 	}
 
 	/// disable all interrupts
+	printf("Swi_disable...");
 	Swi_disable();
 
 	/// integer
+	printf("data copy...");
+
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d,\n",REG_AO_DAMPEN); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Slave Address,,204,int,1,RW,1,%d,\n",REG_SLAVE_ADDRESS); 
@@ -700,8 +711,14 @@ BOOL downloadCsv(char* fname)
 	for (data_index=0;data_index<60;data_index++)
     sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+2*data_index,STREAM_OIL_ADJUST[data_index]);
 	
-	for (csv_buf_delay=0;csv_buf_delay < 1000000; csv_buf_delay++);
+	printf("data ready\n");
 
+	/// enable all interrupts back
+	printf("Swi_enable\n");
+	Swi_enable();
+
+	/// write
+	printf("writing file\n");
 	UINT bw;
 	fr = f_write(&csvWriteObject,CSV_BUF,strlen(CSV_BUF),&bw);
 	if (fr != FR_OK) 
@@ -712,6 +729,8 @@ BOOL downloadCsv(char* fname)
 		return FALSE;
 	}
 
+	/// sync
+	printf("syncing file\n");
 	fr = f_sync(&csvWriteObject);
 	if (fr != FR_OK)
 	{
@@ -721,6 +740,8 @@ BOOL downloadCsv(char* fname)
 		return FALSE;
 	}
 
+	/// close file
+	printf("closing file\n");
 	fr = f_close(&csvWriteObject);
 	if (fr != FR_OK)
 	{
@@ -730,24 +751,8 @@ BOOL downloadCsv(char* fname)
 		return FALSE;
 	}
 
-	/// verify download file
-	FIL csvReadObject;
-	f_open(&csvReadObject,csvFileName,FA_READ);
-	if (f_size(&csvReadObject) != strlen(CSV_BUF))
-	{
-		f_close(&csvReadObject); 
-		resetUsbDriver();
-		stopAccessingUsb(FR_DISK_ERR);
-		Swi_enable();
-		return FALSE;
-	}
-
-	f_close(&csvReadObject); 
-
-	/// enable all interrupts back
-	Swi_enable();
-
 	/// set global var true
+	printf("set flags\n");
     isCsvDownloadSuccess = TRUE;
     isCsvUploadSuccess = FALSE;
     
@@ -768,14 +773,17 @@ void scanCsvFiles(void)
 	CSV_FILES[0] = '\0';
 
 	/// disable all interrupts
+	printf("Swi_disable...");
 	Swi_disable();
 
+	printf("f_opendir...");
 	if (f_opendir(&dir, path) != FR_OK) 
 	{
 		Swi_enable();
 		return;
 	}
 
+	printf("Looping start...");
     for (;;) {
         res = f_readdir(&dir, &fno);
         if (res != FR_OK || fno.fname[0] == 0) break;
@@ -791,9 +799,12 @@ void scanCsvFiles(void)
         }
     }
 
+	/// close dir
+	printf("Closing dir...");
 	f_closedir(&dir);
 
 	/// enable all interrupts back
+	printf("Swi_enable...");
 	Swi_enable();
     return;
 }
@@ -807,15 +818,23 @@ BOOL uploadCsv(char* fname)
 	FIL fil;
 	FRESULT result;
 	char line[1024];
-	char csvFileName[50] = 0;
+	char csvFileName[50];
+	csvFileName[0] = '\0';
+	line[0] = '\0';
 
 	/// get file name
 	sprintf(csvFileName,"0:%s.csv",fname);
 
 	/// open file
+	printf("Open file...");
 	if (f_open(&fil, csvFileName, FA_READ) != FR_OK) return FALSE;
 
+	/// swi disable
+	printf("Swi_disable...");
+	Swi_disable();
+
 	/// read line
+	printf("f_get looping starts...");
     while (f_gets(line, sizeof(line), &fil)) 
 	{
 		int i = 0; 
@@ -856,219 +875,244 @@ BOOL uploadCsv(char* fname)
             i++; 
         } 
 
-		/// block all interrupts
-		Swi_disable();
+		printf("updating register %s\n", regid);
 
-    	///
-    	/// UPLOAD
-    	///
+		int ivalue = atoi(regval);
+		float fvalue = atof(regval);
+		float fvalue1 = atof(regval1);
+		float fvalue2 = atof(regval2);
+		float fvalue3 = atof(regval3);
+		float fvalue4 = atof(regval4);
+		float fvalue5 = atof(regval5);
+		float fvalue6 = atof(regval6);
+		float fvalue7 = atof(regval7);
+		float fvalue8 = atof(regval8);
+		float fvalue9 = atof(regval9);
 
 		/// integer	
-		if      (strcmp(regid, "201") == 0) REG_SN_PIPE = atoi(regval);
-		else if (strcmp(regid, "203") == 0) REG_AO_DAMPEN = atoi(regval);
-		else if (strcmp(regid, "204") == 0) REG_SLAVE_ADDRESS = atoi(regval);
-		else if (strcmp(regid, "205") == 0) REG_STOP_BITS = atoi(regval);
-		else if (strcmp(regid, "206") == 0) REG_DENSITY_MODE = atoi(regval);
-		else if (strcmp(regid, "219") == 0) REG_MODEL_CODE[0] = atoi(regval);
-		else if (strcmp(regid, "220") == 0) REG_MODEL_CODE[1] = atoi(regval);
-		else if (strcmp(regid, "221") == 0) REG_MODEL_CODE[2] = atoi(regval);
-		else if (strcmp(regid, "222") == 0) REG_MODEL_CODE[3] = atoi(regval);
-		else if (strcmp(regid, "223") == 0) REG_LOGGING_PERIOD = atoi(regval);
-		else if (strcmp(regid, "227") == 0) REG_AO_ALARM_MODE = atoi(regval);
-		else if (strcmp(regid, "228") == 0) REG_PHASE_HOLD_CYCLES = atoi(regval);
-		else if (strcmp(regid, "229") == 0) REG_RELAY_DELAY = atoi(regval);
-		else if (strcmp(regid, "230") == 0) REG_AO_MODE = atoi(regval);
-		else if (strcmp(regid, "231") == 0) REG_OIL_DENS_CORR_MODE = atoi(regval);
-		else if (strcmp(regid, "232") == 0) REG_RELAY_MODE = atoi(regval);
+		if      (strcmp(regid, "201") == 0) REG_SN_PIPE = ivalue;
+		else if (strcmp(regid, "203") == 0) REG_AO_DAMPEN = ivalue;
+		else if (strcmp(regid, "204") == 0) REG_SLAVE_ADDRESS = ivalue;
+		else if (strcmp(regid, "205") == 0) REG_STOP_BITS = ivalue;
+		else if (strcmp(regid, "206") == 0) REG_DENSITY_MODE = ivalue;
+		else if (strcmp(regid, "219") == 0) REG_MODEL_CODE[0] = ivalue;
+		else if (strcmp(regid, "220") == 0) REG_MODEL_CODE[1] = ivalue;
+		else if (strcmp(regid, "221") == 0) REG_MODEL_CODE[2] = ivalue;
+		else if (strcmp(regid, "222") == 0) REG_MODEL_CODE[3] = ivalue;
+		else if (strcmp(regid, "223") == 0) REG_LOGGING_PERIOD = ivalue;
+		else if (strcmp(regid, "227") == 0) REG_AO_ALARM_MODE = ivalue;
+		else if (strcmp(regid, "228") == 0) REG_PHASE_HOLD_CYCLES = ivalue;
+		else if (strcmp(regid, "229") == 0) REG_RELAY_DELAY = ivalue;
+		else if (strcmp(regid, "230") == 0) REG_AO_MODE = ivalue;
+		else if (strcmp(regid, "231") == 0) REG_OIL_DENS_CORR_MODE = ivalue;
+		else if (strcmp(regid, "232") == 0) REG_RELAY_MODE = ivalue;
 
 		/// long int
-		else if (strcmp(regid, "301") == 0) REG_MEASSECTION_SN = atoi(regval);
-		else if (strcmp(regid, "303") == 0) REG_BACKBOARD_SN = atoi(regval);
-		else if (strcmp(regid, "305") == 0) REG_SAFETYBARRIER_SN = atoi(regval);
-		else if (strcmp(regid, "307") == 0) REG_POWERSUPPLY_SN = atoi(regval);
-		else if (strcmp(regid, "309") == 0) REG_PROCESSOR_SN = atoi(regval);
-		else if (strcmp(regid, "311") == 0) REG_DISPLAY_SN = atoi(regval);
-		else if (strcmp(regid, "313") == 0) REG_RF_SN = atoi(regval);
-		else if (strcmp(regid, "315") == 0) REG_ASSEMBLY_SN = atoi(regval);
-
-		/// float or double
+		else if (strcmp(regid, "301") == 0) REG_MEASSECTION_SN = ivalue;
+		else if (strcmp(regid, "303") == 0) REG_BACKBOARD_SN = ivalue;
+		else if (strcmp(regid, "305") == 0) REG_SAFETYBARRIER_SN = ivalue;
+		else if (strcmp(regid, "307") == 0) REG_POWERSUPPLY_SN = ivalue;
+		else if (strcmp(regid, "309") == 0) REG_PROCESSOR_SN = ivalue;
+		else if (strcmp(regid, "311") == 0) REG_DISPLAY_SN = ivalue;
+		else if (strcmp(regid, "313") == 0) REG_RF_SN = ivalue;
+		else if (strcmp(regid, "315") == 0) REG_ASSEMBLY_SN = ivalue;
 		else if (strcmp(regid, "15") == 0) VAR_Update(&REG_OIL_ADJUST,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "31") == 0) VAR_Update(&REG_TEMP_ADJUST,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "35") == 0) VAR_Update(&REG_PROC_AVGING,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "37") == 0) VAR_Update(&REG_OIL_INDEX,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "39") == 0) VAR_Update(&REG_OIL_P0,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "41") == 0) VAR_Update(&REG_OIL_P1,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "43") == 0) VAR_Update(&REG_OIL_FREQ_LOW,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "45") == 0) VAR_Update(&REG_OIL_FREQ_HIGH,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "47") == 0) VAR_Update(&REG_SAMPLE_PERIOD,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "49") == 0) VAR_Update(&REG_AO_URV,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "51") == 0) VAR_Update(&REG_AO_LRV,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "55") == 0) VAR_Update(&REG_BAUD_RATE,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "67") == 0) REG_OIL_CALC_MAX = atof(regval);
-		else if (strcmp(regid, "69") == 0) REG_OIL_PHASE_CUTOFF = atof(regval);
-		else if (strcmp(regid, "73") == 0) VAR_Update(&REG_STREAM,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "107") == 0) REG_AO_TRIMLO = atof(regval);
-		else if (strcmp(regid, "109") == 0) REG_AO_TRIMHI = atof(regval);
-		else if (strcmp(regid, "111") == 0) REG_DENSITY_ADJ = atof(regval);
-		else if (strcmp(regid, "117") == 0) VAR_Update(&REG_DENSITY_D3,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "119") == 0) VAR_Update(&REG_DENSITY_D2,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "121") == 0) VAR_Update(&REG_DENSITY_D1,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "123") == 0) VAR_Update(&REG_DENSITY_D0,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "125") == 0) VAR_Update(&REG_DENSITY_CAL_VAL,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "151") == 0) VAR_Update(&REG_RELAY_SETPOINT,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "161") == 0) REG_OIL_DENSITY_MANUAL = atof(regval);
-		else if (strcmp(regid, "163") == 0) VAR_Update(&REG_OIL_DENSITY_AI_LRV,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "165") == 0) VAR_Update(&REG_OIL_DENSITY_AI_URV,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "169") == 0) REG_AI_TRIMLO = atof(regval);
-		else if (strcmp(regid, "171") == 0) REG_AI_TRIMHI = atof(regval);
-		else if (strcmp(regid, "179") == 0) VAR_Update(&REG_OIL_T0,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "181") == 0) VAR_Update(&REG_OIL_T1,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "781") == 0) PDI_TEMP_ADJ = atof(regval);
-		else if (strcmp(regid, "783") == 0) PDI_FREQ_F0 = atof(regval);
-		else if (strcmp(regid, "785") == 0) PDI_FREQ_F1 = atof(regval);
+		else if (strcmp(regid, "31") == 0) VAR_Update(&REG_TEMP_ADJUST,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "35") == 0) VAR_Update(&REG_PROC_AVGING,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "37") == 0) VAR_Update(&REG_OIL_INDEX,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "39") == 0) VAR_Update(&REG_OIL_P0,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "41") == 0) VAR_Update(&REG_OIL_P1,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "43") == 0) VAR_Update(&REG_OIL_FREQ_LOW,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "45") == 0) VAR_Update(&REG_OIL_FREQ_HIGH,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "47") == 0) VAR_Update(&REG_SAMPLE_PERIOD,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "49") == 0) VAR_Update(&REG_AO_URV,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "51") == 0) VAR_Update(&REG_AO_LRV,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "55") == 0) VAR_Update(&REG_BAUD_RATE,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "67") == 0) REG_OIL_CALC_MAX = fvalue;
+		else if (strcmp(regid, "69") == 0) REG_OIL_PHASE_CUTOFF = fvalue;
+		else if (strcmp(regid, "73") == 0) VAR_Update(&REG_STREAM,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "107") == 0) REG_AO_TRIMLO = fvalue;
+		else if (strcmp(regid, "109") == 0) REG_AO_TRIMHI = fvalue;
+		else if (strcmp(regid, "111") == 0) REG_DENSITY_ADJ = fvalue;
+		else if (strcmp(regid, "117") == 0) VAR_Update(&REG_DENSITY_D3,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "119") == 0) VAR_Update(&REG_DENSITY_D2,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "121") == 0) VAR_Update(&REG_DENSITY_D1,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "123") == 0) VAR_Update(&REG_DENSITY_D0,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "125") == 0) VAR_Update(&REG_DENSITY_CAL_VAL,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "151") == 0) VAR_Update(&REG_RELAY_SETPOINT,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "161") == 0) REG_OIL_DENSITY_MANUAL = fvalue;
+		else if (strcmp(regid, "163") == 0) VAR_Update(&REG_OIL_DENSITY_AI_LRV,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "165") == 0) VAR_Update(&REG_OIL_DENSITY_AI_URV,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "169") == 0) REG_AI_TRIMLO = fvalue;
+		else if (strcmp(regid, "171") == 0) REG_AI_TRIMHI = fvalue;
+		else if (strcmp(regid, "179") == 0) VAR_Update(&REG_OIL_T0,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "181") == 0) VAR_Update(&REG_OIL_T1,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "781") == 0) PDI_TEMP_ADJ = fvalue;
+		else if (strcmp(regid, "783") == 0) PDI_FREQ_F0 = fvalue;
+		else if (strcmp(regid, "785") == 0) PDI_FREQ_F1 = fvalue;
 
 		/// extended
-		else if (strcmp(regid, "60001") == 0) REG_TEMP_OIL_NUM_CURVES = atof(regval); 
+		else if (strcmp(regid, "60001") == 0) REG_TEMP_OIL_NUM_CURVES = fvalue; 
 		else if (strcmp(regid, "60003") == 0) 
 		{
-			REG_TEMPS_OIL[0] = atof(regval);
-			REG_TEMPS_OIL[1] = atof(regval1);
-			REG_TEMPS_OIL[2] = atof(regval2);
-			REG_TEMPS_OIL[3] = atof(regval3);
-			REG_TEMPS_OIL[4] = atof(regval4);
-			REG_TEMPS_OIL[5] = atof(regval5);
-			REG_TEMPS_OIL[6] = atof(regval6);
-			REG_TEMPS_OIL[7] = atof(regval7);
-			REG_TEMPS_OIL[8] = atof(regval8);
-			REG_TEMPS_OIL[9] = atof(regval9);
+			REG_TEMPS_OIL[0] = fvalue;
+			REG_TEMPS_OIL[1] = fvalue1;
+			REG_TEMPS_OIL[2] = fvalue2;
+			REG_TEMPS_OIL[3] = fvalue3;
+			REG_TEMPS_OIL[4] = fvalue4;
+			REG_TEMPS_OIL[5] = fvalue5;
+			REG_TEMPS_OIL[6] = fvalue6;
+			REG_TEMPS_OIL[7] = fvalue7;
+			REG_TEMPS_OIL[8] = fvalue8;
+			REG_TEMPS_OIL[9] = fvalue9;
 		}
 		else if (strcmp(regid, "60023") == 0) 
 		{
-			REG_COEFFS_TEMP_OIL[0][0] = atof(regval);
-			REG_COEFFS_TEMP_OIL[0][1] = atof(regval1);
-			REG_COEFFS_TEMP_OIL[0][2] = atof(regval2);
-			REG_COEFFS_TEMP_OIL[0][3] = atof(regval3);
+			REG_COEFFS_TEMP_OIL[0][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[0][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[0][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[0][3] = fvalue3;
 		}
 		else if (strcmp(regid, "60031") == 0) 
 		{
-			REG_COEFFS_TEMP_OIL[1][0] = atof(regval);
-			REG_COEFFS_TEMP_OIL[1][1] = atof(regval1);
-			REG_COEFFS_TEMP_OIL[1][2] = atof(regval2);
-			REG_COEFFS_TEMP_OIL[1][3] = atof(regval3);
-		}	
+			REG_COEFFS_TEMP_OIL[1][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[1][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[1][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[1][3] = fvalue3;
+		}
 		else if (strcmp(regid, "60039") == 0)
 		{
-			REG_COEFFS_TEMP_OIL[2][0] = atof(regval);
-			REG_COEFFS_TEMP_OIL[2][1] = atof(regval1);
-			REG_COEFFS_TEMP_OIL[2][2] = atof(regval2);
-			REG_COEFFS_TEMP_OIL[2][3] = atof(regval3);
+			REG_COEFFS_TEMP_OIL[2][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[2][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[2][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[2][3] = fvalue3;
 		}
 		else if (strcmp(regid, "60047") == 0)
 		{
-			REG_COEFFS_TEMP_OIL[3][0] = atof(regval);
-			REG_COEFFS_TEMP_OIL[3][1] = atof(regval1);
-			REG_COEFFS_TEMP_OIL[3][2] = atof(regval2);
-			REG_COEFFS_TEMP_OIL[3][3] = atof(regval3);
+			REG_COEFFS_TEMP_OIL[3][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[3][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[3][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[3][3] = fvalue3;
 		}
 		else if (strcmp(regid, "60055") == 0)
 		{
-			REG_COEFFS_TEMP_OIL[4][0] = atof(regval);
-			REG_COEFFS_TEMP_OIL[4][1] = atof(regval1);
-			REG_COEFFS_TEMP_OIL[4][2] = atof(regval2);
-			REG_COEFFS_TEMP_OIL[4][3] = atof(regval3);
+			REG_COEFFS_TEMP_OIL[4][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[4][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[4][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[4][3] = fvalue3;
 		}
 		else if (strcmp(regid, "60063") == 0)
 		{
-			REG_COEFFS_TEMP_OIL[5][0] = atof(regval);
-			REG_COEFFS_TEMP_OIL[5][1] = atof(regval1);
-			REG_COEFFS_TEMP_OIL[5][2] = atof(regval2);
-			REG_COEFFS_TEMP_OIL[5][3] = atof(regval3);
+			REG_COEFFS_TEMP_OIL[5][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[5][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[5][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[5][3] = fvalue3;
 		}
 
 		/// stream dependent data
-		else if (strcmp(regid, "63647") == 0) STREAM_OIL_ADJUST[0] = atof(regval);
-		else if (strcmp(regid, "63649") == 0) STREAM_OIL_ADJUST[1] = atof(regval);
-		else if (strcmp(regid, "63651") == 0) STREAM_OIL_ADJUST[2] = atof(regval);
-		else if (strcmp(regid, "63653") == 0) STREAM_OIL_ADJUST[3] = atof(regval);
-		else if (strcmp(regid, "63655") == 0) STREAM_OIL_ADJUST[4] = atof(regval);
-		else if (strcmp(regid, "63657") == 0) STREAM_OIL_ADJUST[5] = atof(regval);
-		else if (strcmp(regid, "63659") == 0) STREAM_OIL_ADJUST[6] = atof(regval);
-		else if (strcmp(regid, "63661") == 0) STREAM_OIL_ADJUST[7] = atof(regval);
-		else if (strcmp(regid, "63663") == 0) STREAM_OIL_ADJUST[8] = atof(regval);
-		else if (strcmp(regid, "63665") == 0) STREAM_OIL_ADJUST[9] = atof(regval);
-		else if (strcmp(regid, "63667") == 0) STREAM_OIL_ADJUST[10] = atof(regval);
-		else if (strcmp(regid, "63669") == 0) STREAM_OIL_ADJUST[11] = atof(regval);
-		else if (strcmp(regid, "63671") == 0) STREAM_OIL_ADJUST[12] = atof(regval);
-		else if (strcmp(regid, "63673") == 0) STREAM_OIL_ADJUST[13] = atof(regval);
-		else if (strcmp(regid, "63675") == 0) STREAM_OIL_ADJUST[14] = atof(regval);
-		else if (strcmp(regid, "63677") == 0) STREAM_OIL_ADJUST[15] = atof(regval);
-		else if (strcmp(regid, "63679") == 0) STREAM_OIL_ADJUST[16] = atof(regval);
-		else if (strcmp(regid, "63681") == 0) STREAM_OIL_ADJUST[17] = atof(regval);
-		else if (strcmp(regid, "63683") == 0) STREAM_OIL_ADJUST[18] = atof(regval);
-		else if (strcmp(regid, "63685") == 0) STREAM_OIL_ADJUST[19] = atof(regval);
-		else if (strcmp(regid, "63687") == 0) STREAM_OIL_ADJUST[20] = atof(regval);
-		else if (strcmp(regid, "63689") == 0) STREAM_OIL_ADJUST[21] = atof(regval);
-		else if (strcmp(regid, "63691") == 0) STREAM_OIL_ADJUST[22] = atof(regval);
-		else if (strcmp(regid, "63693") == 0) STREAM_OIL_ADJUST[23] = atof(regval);
-		else if (strcmp(regid, "63695") == 0) STREAM_OIL_ADJUST[24] = atof(regval);
-		else if (strcmp(regid, "63697") == 0) STREAM_OIL_ADJUST[25] = atof(regval);
-		else if (strcmp(regid, "63699") == 0) STREAM_OIL_ADJUST[26] = atof(regval);
-		else if (strcmp(regid, "63701") == 0) STREAM_OIL_ADJUST[27] = atof(regval);
-		else if (strcmp(regid, "63703") == 0) STREAM_OIL_ADJUST[28] = atof(regval);
-		else if (strcmp(regid, "63705") == 0) STREAM_OIL_ADJUST[29] = atof(regval);
-		else if (strcmp(regid, "63707") == 0) STREAM_OIL_ADJUST[30] = atof(regval);
-		else if (strcmp(regid, "63709") == 0) STREAM_OIL_ADJUST[31] = atof(regval);
-		else if (strcmp(regid, "63711") == 0) STREAM_OIL_ADJUST[32] = atof(regval);
-		else if (strcmp(regid, "63713") == 0) STREAM_OIL_ADJUST[33] = atof(regval);
-		else if (strcmp(regid, "63715") == 0) STREAM_OIL_ADJUST[34] = atof(regval);
-		else if (strcmp(regid, "63717") == 0) STREAM_OIL_ADJUST[35] = atof(regval);
-		else if (strcmp(regid, "63719") == 0) STREAM_OIL_ADJUST[36] = atof(regval);
-		else if (strcmp(regid, "63721") == 0) STREAM_OIL_ADJUST[37] = atof(regval);
-		else if (strcmp(regid, "63723") == 0) STREAM_OIL_ADJUST[38] = atof(regval);
-		else if (strcmp(regid, "63725") == 0) STREAM_OIL_ADJUST[39] = atof(regval);
-		else if (strcmp(regid, "63727") == 0) STREAM_OIL_ADJUST[40] = atof(regval);
-		else if (strcmp(regid, "63729") == 0) STREAM_OIL_ADJUST[41] = atof(regval);
-		else if (strcmp(regid, "63731") == 0) STREAM_OIL_ADJUST[42] = atof(regval);
-		else if (strcmp(regid, "63733") == 0) STREAM_OIL_ADJUST[43] = atof(regval);
-		else if (strcmp(regid, "63735") == 0) STREAM_OIL_ADJUST[44] = atof(regval);
-		else if (strcmp(regid, "63737") == 0) STREAM_OIL_ADJUST[45] = atof(regval);
-		else if (strcmp(regid, "63739") == 0) STREAM_OIL_ADJUST[46] = atof(regval);
-		else if (strcmp(regid, "63741") == 0) STREAM_OIL_ADJUST[47] = atof(regval);
-		else if (strcmp(regid, "63743") == 0) STREAM_OIL_ADJUST[48] = atof(regval);
-		else if (strcmp(regid, "63745") == 0) STREAM_OIL_ADJUST[49] = atof(regval);
-		else if (strcmp(regid, "63747") == 0) STREAM_OIL_ADJUST[50] = atof(regval);
-		else if (strcmp(regid, "63749") == 0) STREAM_OIL_ADJUST[51] = atof(regval);
-		else if (strcmp(regid, "63751") == 0) STREAM_OIL_ADJUST[52] = atof(regval);
-		else if (strcmp(regid, "63753") == 0) STREAM_OIL_ADJUST[53] = atof(regval);
-		else if (strcmp(regid, "63755") == 0) STREAM_OIL_ADJUST[54] = atof(regval);
-		else if (strcmp(regid, "63757") == 0) STREAM_OIL_ADJUST[55] = atof(regval);
-		else if (strcmp(regid, "63759") == 0) STREAM_OIL_ADJUST[56] = atof(regval);
-		else if (strcmp(regid, "63761") == 0) STREAM_OIL_ADJUST[57] = atof(regval);
-		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = atof(regval);
-		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = atof(regval);
+		else if (strcmp(regid, "63647") == 0) STREAM_OIL_ADJUST[0] = fvalue;
+		else if (strcmp(regid, "63649") == 0) STREAM_OIL_ADJUST[1] = fvalue;
+		else if (strcmp(regid, "63651") == 0) STREAM_OIL_ADJUST[2] = fvalue;
+		else if (strcmp(regid, "63653") == 0) STREAM_OIL_ADJUST[3] = fvalue;
+		else if (strcmp(regid, "63655") == 0) STREAM_OIL_ADJUST[4] = fvalue;
+		else if (strcmp(regid, "63657") == 0) STREAM_OIL_ADJUST[5] = fvalue;
+		else if (strcmp(regid, "63659") == 0) STREAM_OIL_ADJUST[6] = fvalue;
+		else if (strcmp(regid, "63661") == 0) STREAM_OIL_ADJUST[7] = fvalue;
+		else if (strcmp(regid, "63663") == 0) STREAM_OIL_ADJUST[8] = fvalue;
+		else if (strcmp(regid, "63665") == 0) STREAM_OIL_ADJUST[9] = fvalue;
+		else if (strcmp(regid, "63667") == 0) STREAM_OIL_ADJUST[10] = fvalue;
+		else if (strcmp(regid, "63669") == 0) STREAM_OIL_ADJUST[11] = fvalue;
+		else if (strcmp(regid, "63671") == 0) STREAM_OIL_ADJUST[12] = fvalue;
+		else if (strcmp(regid, "63673") == 0) STREAM_OIL_ADJUST[13] = fvalue;
+		else if (strcmp(regid, "63675") == 0) STREAM_OIL_ADJUST[14] = fvalue;
+		else if (strcmp(regid, "63677") == 0) STREAM_OIL_ADJUST[15] = fvalue;
+		else if (strcmp(regid, "63679") == 0) STREAM_OIL_ADJUST[16] = fvalue;
+		else if (strcmp(regid, "63681") == 0) STREAM_OIL_ADJUST[17] = fvalue;
+		else if (strcmp(regid, "63683") == 0) STREAM_OIL_ADJUST[18] = fvalue;
+		else if (strcmp(regid, "63685") == 0) STREAM_OIL_ADJUST[19] = fvalue;
+		else if (strcmp(regid, "63687") == 0) STREAM_OIL_ADJUST[20] = fvalue;
+		else if (strcmp(regid, "63689") == 0) STREAM_OIL_ADJUST[21] = fvalue;
+		else if (strcmp(regid, "63691") == 0) STREAM_OIL_ADJUST[22] = fvalue;
+		else if (strcmp(regid, "63693") == 0) STREAM_OIL_ADJUST[23] = fvalue;
+		else if (strcmp(regid, "63695") == 0) STREAM_OIL_ADJUST[24] = fvalue;
+		else if (strcmp(regid, "63697") == 0) STREAM_OIL_ADJUST[25] = fvalue;
+		else if (strcmp(regid, "63699") == 0) STREAM_OIL_ADJUST[26] = fvalue;
+		else if (strcmp(regid, "63701") == 0) STREAM_OIL_ADJUST[27] = fvalue;
+		else if (strcmp(regid, "63703") == 0) STREAM_OIL_ADJUST[28] = fvalue;
+		else if (strcmp(regid, "63705") == 0) STREAM_OIL_ADJUST[29] = fvalue;
+		else if (strcmp(regid, "63707") == 0) STREAM_OIL_ADJUST[30] = fvalue;
+		else if (strcmp(regid, "63709") == 0) STREAM_OIL_ADJUST[31] = fvalue;
+		else if (strcmp(regid, "63711") == 0) STREAM_OIL_ADJUST[32] = fvalue;
+		else if (strcmp(regid, "63713") == 0) STREAM_OIL_ADJUST[33] = fvalue;
+		else if (strcmp(regid, "63715") == 0) STREAM_OIL_ADJUST[34] = fvalue;
+		else if (strcmp(regid, "63717") == 0) STREAM_OIL_ADJUST[35] = fvalue;
+		else if (strcmp(regid, "63719") == 0) STREAM_OIL_ADJUST[36] = fvalue;
+		else if (strcmp(regid, "63721") == 0) STREAM_OIL_ADJUST[37] = fvalue;
+		else if (strcmp(regid, "63723") == 0) STREAM_OIL_ADJUST[38] = fvalue;
+		else if (strcmp(regid, "63725") == 0) STREAM_OIL_ADJUST[39] = fvalue;
+		else if (strcmp(regid, "63727") == 0) STREAM_OIL_ADJUST[40] = fvalue;
+		else if (strcmp(regid, "63729") == 0) STREAM_OIL_ADJUST[41] = fvalue;
+		else if (strcmp(regid, "63731") == 0) STREAM_OIL_ADJUST[42] = fvalue;
+		else if (strcmp(regid, "63733") == 0) STREAM_OIL_ADJUST[43] = fvalue;
+		else if (strcmp(regid, "63735") == 0) STREAM_OIL_ADJUST[44] = fvalue;
+		else if (strcmp(regid, "63737") == 0) STREAM_OIL_ADJUST[45] = fvalue;
+		else if (strcmp(regid, "63739") == 0) STREAM_OIL_ADJUST[46] = fvalue;
+		else if (strcmp(regid, "63741") == 0) STREAM_OIL_ADJUST[47] = fvalue;
+		else if (strcmp(regid, "63743") == 0) STREAM_OIL_ADJUST[48] = fvalue;
+		else if (strcmp(regid, "63745") == 0) STREAM_OIL_ADJUST[49] = fvalue;
+		else if (strcmp(regid, "63747") == 0) STREAM_OIL_ADJUST[50] = fvalue;
+		else if (strcmp(regid, "63749") == 0) STREAM_OIL_ADJUST[51] = fvalue;
+		else if (strcmp(regid, "63751") == 0) STREAM_OIL_ADJUST[52] = fvalue;
+		else if (strcmp(regid, "63753") == 0) STREAM_OIL_ADJUST[53] = fvalue;
+		else if (strcmp(regid, "63755") == 0) STREAM_OIL_ADJUST[54] = fvalue;
+		else if (strcmp(regid, "63757") == 0) STREAM_OIL_ADJUST[55] = fvalue;
+		else if (strcmp(regid, "63759") == 0) STREAM_OIL_ADJUST[56] = fvalue;
+		else if (strcmp(regid, "63761") == 0) STREAM_OIL_ADJUST[57] = fvalue;
+		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = fvalue;
+		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = fvalue;
 
 		/// print status -- we use print as an intended "delay"
 		if (isPdiUpgradeMode) 
 		{
 			LCD_setcursor(0,0);
-			displayLcd("PROFILE UPLOAD  ",0);
+			displayLcd(" PROFILE UPLOAD ",0);
 			displayLcd("    Loading...  ",1);
 		}
 
 		line[0] = '\0';
-		Swi_enable();
+		line[0] = '\0';
+		line[0] = '\0';
+		line[0] = '\0';
+		line[0] = '\0';
+		line[0] = '\0';
+
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
+		displayLcd("    Loading...  ",1);
 	}
 
+	printf("Swi_enable\n");
+	Swi_enable();
+
+	/// close file
+	printf("closing file\n");
 	f_close(&fil);
 
 	/// set global var true
+	printf("set global flags\n");
     isCsvUploadSuccess = TRUE;
     isCsvDownloadSuccess = FALSE;
 
 	/// update factory default
+	printf("FACTORY_DEFAULT\n");
     COIL_UPDATE_FACTORY_DEFAULT.val = TRUE;
 
 	/// write to flash
+	printf("Swi_post\n");
 	Swi_post(Swi_writeNand);	
 
 	/// delete PDI_RAZOR_PROFILE

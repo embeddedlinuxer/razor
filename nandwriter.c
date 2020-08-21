@@ -484,11 +484,9 @@ void upgradeFirmware(void)
       		aisPtr[index] = buffer[loop];
       		aisPtr[index] = buffer[loop];
       		aisPtr[index] = buffer[loop];
-			aisPtr[index] = buffer[loop];
-			aisPtr[index] = buffer[loop];
-			aisPtr[index] = buffer[loop];
-			aisPtr[index] = buffer[loop];
-			aisPtr[index] = buffer[loop];
+      		aisPtr[index] = buffer[loop];
+      		aisPtr[index] = buffer[loop];
+      		aisPtr[index] = buffer[loop];
 			aisPtr[index] = buffer[loop];
 		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 			displayLcd(lcdLine1,1);	
@@ -500,33 +498,36 @@ void upgradeFirmware(void)
 	displayLcd(lcdLine1,1);	
 
 	/// close
+	printf("closing file...\n");
     if (f_close(&fPtr) != FR_OK) return;
-	printf("firmware file closed.\n");
 
 	/// download existing csv
+	printf("download csv....\n");
 	while (isDownloadCsv) downloadCsv(PDI_RAZOR_PROFILE);
-	printf("download csv success.\n");
 
 	/// disable all interrupts while accessing flash memory
+	printf("Swi_disable....\n");
 	Swi_disable();
     Hwi_disable();
 
 	/// global erase
+	printf("global erase...\n");
     if (NAND_globalErase(hNandInfo) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*20;i++);
-	printf("global erase success.\n");
 
     /// Write the file data to the NAND flash
+	printf("write data to flash...\n");
     if (USB_writeData(hNandInfo, aisPtr, numPagesAIS) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*100;i++);
-	printf("write data flash success.\n");
 
 	/// re-enable interrupts
+	printf("Swi_enable....\n");
 	Hwi_enable();
     Swi_enable();
 
 	/// success
+	printf("success....\n");
 	isUpdateDisplay=TRUE;
-	updateDisplay("UPGRADE  SUCCESS","  POWER  CYCLE  ");
-	while(1) displayLcd("  POWER  CYCLE  ",1);
+	updateDisplay(" UPGRADE SUCCESS","   POWER CYCLE  ");
+	while(1) displayLcd("   POWER CYCLE  ",1);
 }
