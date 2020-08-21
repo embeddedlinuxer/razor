@@ -404,18 +404,11 @@ void upgradeFirmware(void)
 	int index=0;
 	int loop = 0;
 	UINT br = 0;
-	BYTE buffer[4096] = 0;
+	int buffer[4096];
 
 	/// open fw file
-    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) 
-	{
-		f_unlink("0:pdi_razor_profile.csv");
-		return;
-	}
-
-	/// download existing csv
-	while (isDownloadCsv) downloadCsv(PDI_RAZOR_PROFILE);
-
+    if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
+	
     UTIL_setCurrMemPtr(0);
 
     /// reset command
@@ -464,37 +457,69 @@ void upgradeFirmware(void)
     /// Go to start of file
     if (f_lseek(&fPtr,0) != FR_OK) return;
 
-	isUpdateDisplay=TRUE;
-	updateDisplay("FIRMWARE UPGRADE","   Loading...   ");
-	
+	displayLcd("FIRMWARE UPGRADE",0);	
+
 	/// read file	
 	for (;;) {
+		buffer[0] = '\0';
+		buffer[0] = '\0';
+		buffer[0] = '\0';
+		buffer[0] = '\0';
+		buffer[0] = '\0';
+		buffer[0] = '\0';
      	if (f_read(&fPtr, buffer, sizeof(buffer)-1, &br) != FR_OK) return;  /* Read a chunk of data from the source file */
+		displayLcd("FIRMWARE UPGRADE",0);	
+		displayLcd("FIRMWARE UPGRADE",0);	
+		displayLcd("FIRMWARE UPGRADE",0);	
+		displayLcd("FIRMWARE UPGRADE",0);	
+		displayLcd("FIRMWARE UPGRADE",0);	
+		displayLcd("FIRMWARE UPGRADE",0);	
+		displayLcd("FIRMWARE UPGRADE",0);	
+		displayLcd("FIRMWARE UPGRADE",0);	
 		if (br == 0) break; /* error or eof */
 		for (loop=0;loop<br;loop++) 
 		{
+			LCD_setcursor(0,0);
       		aisPtr[index] = buffer[loop];
-			index++;
+      		aisPtr[index] = buffer[loop];
+      		aisPtr[index] = buffer[loop];
+      		aisPtr[index] = buffer[loop];
+			aisPtr[index] = buffer[loop];
+			aisPtr[index] = buffer[loop];
+			aisPtr[index] = buffer[loop];
+			aisPtr[index] = buffer[loop];
+			aisPtr[index] = buffer[loop];
+			aisPtr[index] = buffer[loop];
 		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
-			displayLcd("FIRMWARE UPGRADE",0);
 			displayLcd(lcdLine1,1);	
+			index++;
    		}
     }
 
+	sprintf(lcdLine1,"   Loading.... ");
+	displayLcd(lcdLine1,1);	
+
 	/// close
     if (f_close(&fPtr) != FR_OK) return;
+	printf("firmware file closed.\n");
 
-	/// disable all interrupt while accessing usb
+	/// download existing csv
+	while (isDownloadCsv) downloadCsv(PDI_RAZOR_PROFILE);
+	printf("download csv success.\n");
+
+	/// disable all interrupts while accessing flash memory
 	Swi_disable();
     Hwi_disable();
 
 	/// global erase
     if (NAND_globalErase(hNandInfo) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*20;i++);
+	printf("global erase success.\n");
 
     /// Write the file data to the NAND flash
     if (USB_writeData(hNandInfo, aisPtr, numPagesAIS) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*100;i++);
+	printf("write data flash success.\n");
 
 	/// re-enable interrupts
 	Hwi_enable();
