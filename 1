@@ -35,14 +35,14 @@
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
-#define MAX_BUF_SIZE   	4096*2
+#define MAX_BUF_SIZE   	4096
 #define MAX_CSV_SIZE   	4096*3
 
 static char DATA_BUF[MAX_BUF_SIZE];
 static char LOG_BUF[MAX_BUF_SIZE];
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char CSV_BUF[MAX_CSV_SIZE];
-static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
+static char logFile[] = "0:LOG_01_01_2019.csv";
 
 static Uint8 try = 0;
 static Uint8 try2 = 0;
@@ -53,7 +53,7 @@ static Uint8 current_day = 99;
 unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
 static USB_Params usb_host_params;
-static FIL fileWriteObject;
+static FIL logWriteObject;
 
 // TIME VARS
 static int USB_RTC_SEC = 0;
@@ -439,43 +439,35 @@ void logData(void)
 
        	LOG_BUF[0] = '\0';
 
-       	// mkdir PDI
-       	fresult = f_mkdir("0:PDI");
-       	if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
-       	{
-           	stopAccessingUsb(fresult);
-           	return;
-       	}
-
         // get a file name
         logFile[0] = '\0';
-        sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
+        sprintf(logFile,"0:LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
-        if (f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
-        {
-            fresult = f_close(&fileWriteObject);
-            if (fresult == FR_OK) return;
-        }
+		/// open file exists?
+		if (f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
+		{
+			f_close(&logWriteObject);
+			return;
+		}
 
 		/// open file
-       	fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
-       	if (fresult != FR_OK) 
-       	{
+		if (f_open(&logWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) 
+		{
            	stopAccessingUsb(fresult);
-           	return;
-       	}
+			return;
+		}
 
        	/// write header1
 		LOG_HEADER[0] = '\0';
 		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
 
-       	if (f_puts(LOG_HEADER,&fileWriteObject) == EOF) 
+       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
        	}
 
-       	fresult = f_sync(&fileWriteObject);
+        for (i=0;i<100;i++)	fresult = f_sync(&logWriteObject);
        	if (fresult != FR_OK)
        	{
            	stopAccessingUsb(fresult);
@@ -486,13 +478,13 @@ void logData(void)
 		LOG_HEADER[0] = '\0';
        	sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
 
-       	if (f_puts(LOG_HEADER,&fileWriteObject) == EOF) 
+       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
        	}
 
-       	fresult = f_sync(&fileWriteObject);
+       	for (i=0;i<100;i++) fresult = f_sync(&logWriteObject);
        	if (fresult != FR_OK)
        	{
            	stopAccessingUsb(fresult);
@@ -503,13 +495,13 @@ void logData(void)
 		LOG_HEADER[0] = '\0';
        	sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
 
-       	if (f_puts(LOG_HEADER,&fileWriteObject) == EOF) 
+       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
        	}
 
-       	fresult = f_sync(&fileWriteObject);
+       	for (i=0;i<100;i++) fresult = f_sync(&logWriteObject);
        	if (fresult != FR_OK)
        	{
            	stopAccessingUsb(fresult);
@@ -517,7 +509,7 @@ void logData(void)
        	}
 
        	/// close file
-       	fresult = f_close(&fileWriteObject);
+       	fresult = f_close(&logWriteObject);
        	if (fresult != FR_OK)
        	{
            	stopAccessingUsb(fresult);
@@ -545,24 +537,16 @@ void logData(void)
     }
 
     /// open file
-    fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+    fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
     if (fresult != FR_OK)
     {
         stopAccessingUsb(fresult);
         return;
     }
-
-    fresult = f_sync(&fileWriteObject);
-	if (fresult != FR_OK)
-    {
-        stopAccessingUsb(fresult);
-        return;
-    }
-	for (i=0;i<10;i++) printf("sync\n");
-    usb_osalDelayMs(1000);
+	printf("open\n");
 
     /// move pointer to end of file 
-    fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
+    fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
     if (fresult != FR_OK)
     {
         stopAccessingUsb(fresult);
@@ -570,31 +554,24 @@ void logData(void)
     }
 	printf("lseek\n");
 
-    /// write
-    if (f_puts(LOG_BUF,&fileWriteObject) == EOF)
-    {
-        stopAccessingUsb(FR_DISK_ERR);
-        return;
-    }
-	printf("f_puts\n");
-
-	fresult = f_sync(&fileWriteObject);
+	/// write
+	UINT bw;
+	fresult = f_write(&logWriteObject,LOG_BUF,strlen(LOG_BUF),&bw);
+	for (i=0;i<100;i++) fresult = f_sync(&logWriteObject);
 	if (fresult != FR_OK)
-    {
-        stopAccessingUsb(fresult);
-        return;
-    }
-	for (i=0;i<10;i++) printf("sync\n");
-    usb_osalDelayMs(1000);
+	{
+		stopAccessingUsb(fresult);
+		return; 
+	}
+	printf("syncing file\n");
 
     /// close file
-    fresult = f_close(&fileWriteObject);
+    fresult = f_close(&logWriteObject);
     if (fresult != FR_OK)
     {
         stopAccessingUsb(fresult);
         return;
     }
-
 	printf("f_close\n");
 
 	LOG_BUF[0] = '\0';
@@ -620,7 +597,7 @@ BOOL downloadCsv(void)
 	if (f_open(&csvWriteObject, csvFileName, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) 
 	{
 		isUpgradeFirmware = FALSE;
-		return FALSE;;
+		return FALSE;
 	}
 
 	/// disable all interrupts

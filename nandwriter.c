@@ -462,7 +462,7 @@ void upgradeFirmware(void)
 		for (loop=0;loop<br;loop++) 
 		{
 			LCD_setcursor(0,0);
-      		for (i=0;i<5;i++) aisPtr[index] = buffer[loop];
+      		for (i=0;i<100;i++) aisPtr[index] = buffer[loop];
 		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 			displayLcd(lcdLine1,1);	
 			index++;

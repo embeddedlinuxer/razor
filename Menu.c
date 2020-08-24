@@ -155,21 +155,26 @@ ISR_Process_Menu (void)
 void 
 Process_Menu(void)
 {
-	/// Enable USB device
-    loadUsbDriver();
+	if (isPowerCycled)
+	{
+		isPowerCycled = FALSE;
 
-	/// upload saved profile if exists
-	while (isUploadCsv) Swi_post(Swi_uploadCsv);
+		/// Enable USB device
+    	loadUsbDriver();
 
-	/// upgrade firmware if exists
-	while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
+		/// upload saved profile if exists
+		while (isUploadCsv) Swi_post(Swi_uploadCsv);
 
-	/// disable upgrade mode 
-	isPdiUpgradeMode = FALSE;
+		/// upgrade firmware if exists
+		while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
-	/// reset usb driver
-	resetCsvStaticVars();
-    resetUsbStaticVars();
+		/// disable upgrade mode 
+		isPdiUpgradeMode = FALSE;
+
+		/// reset usb driver
+		resetCsvStaticVars();
+    	resetUsbStaticVars();
+	}
 
 	char 	prevButtons[4];
 	Uint32	buttons[4];
@@ -1673,8 +1678,7 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			isLogData = isEnabled;
 			if (isLogData) 
 			{
-				if (!isPowerCycled) resetUsbDriver();
-                else isPowerCycled = FALSE;
+				resetUsbDriver();
                 usbStatus = 1;
 			}
             else
