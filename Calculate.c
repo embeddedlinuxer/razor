@@ -47,6 +47,15 @@ static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_R
 // Currently, it's called once every 0.5 seconds.
 void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 {
+	/// access usb drive
+	if (!isPdiUpgradeMode)
+	{
+   			 if (isLogData) Swi_post(Swi_logData);
+   		else if (isDownloadCsv) Swi_post(Swi_downloadCsv);
+   		else if (isScanCsvFiles) Swi_post(Swi_scanCsvFiles);
+		else if (isUploadCsv) Swi_post(Swi_uploadCsv);
+	}
+
     // disable counter
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,DISABLE); 
 
@@ -79,15 +88,6 @@ void Poll(void)
 	Uint8 err_f = FALSE;	// frequency calculation error
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
-
-	/// access usb drive
-	if (!isPdiUpgradeMode)
-	{
-   		if (isLogData) logData();
-   		else if (isDownloadCsv) downloadCsv(NULL);
-   		else if (isScanCsvFiles) scanCsvFiles();
-		else if (isUploadCsv) Swi_post(Swi_uploadCsv);
-	}
 
     /// Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;

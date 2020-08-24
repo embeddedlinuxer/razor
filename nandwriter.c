@@ -401,10 +401,10 @@ void upgradeFirmware(void)
     ASYNC_MEM_InfoHandle dummy;
 	FIL fPtr;
 
-	int index=0;
+	int buffer[4096];
+	int index = 0;
 	int loop = 0;
 	UINT br = 0;
-	int buffer[4096];
 
 	/// open fw file
     if (f_open(&fPtr, PDI_RAZOR_FIRMWARE, FA_READ) != FR_OK) return;
@@ -428,11 +428,7 @@ void upgradeFirmware(void)
     *addr_flash = (VUint16)NAND_ONFIRDIDADD;
 
     for (i=0;i<ACCESS_DELAY;i++);
-
-    for (i=0;i<4;i++)
-    {
-        addr_flash = (VUint16 *)(FBASE);
-    }
+    for (i=0;i<4;i++) addr_flash = (VUint16 *)(FBASE);
 
     /// Initialize NAND Flash
     hNandInfo = NAND_open((Uint32)NANDStart, DEVICE_BUSWIDTH_16BIT);
@@ -457,24 +453,16 @@ void upgradeFirmware(void)
     /// Go to start of file
     if (f_lseek(&fPtr,0) != FR_OK) return;
 
-	displayLcd("FIRMWARE UPGRADE",0);	
-
 	/// read file	
 	for (;;) {
-		buffer[0] = '\0';
-		buffer[0] = '\0';
-		buffer[0] = '\0';
-     	if (f_read(&fPtr, buffer, sizeof(buffer)-1, &br) != FR_OK) return;  /* Read a chunk of data from the source file */
-		displayLcd("FIRMWARE UPGRADE",0);	
-		displayLcd("FIRMWARE UPGRADE",0);	
-		displayLcd("FIRMWARE UPGRADE",0);	
+		for (i=0;i<5;i++) buffer[0] = '\0';
+     	if (f_read(&fPtr, buffer, sizeof(buffer)-1, &br) != FR_OK) return;
+		for (i=0;i<20;i++) displayLcd("FIRMWARE UPGRADE",0);	
 		if (br == 0) break; /* error or eof */
 		for (loop=0;loop<br;loop++) 
 		{
 			LCD_setcursor(0,0);
-      		aisPtr[index] = buffer[loop];
-      		aisPtr[index] = buffer[loop];
-      		aisPtr[index] = buffer[loop];
+      		for (i=0;i<5;i++) aisPtr[index] = buffer[loop];
 		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 			displayLcd(lcdLine1,1);	
 			index++;
@@ -490,7 +478,7 @@ void upgradeFirmware(void)
 
 	/// download existing csv
 	printf("download csv....\n");
-	while (isDownloadCsv) downloadCsv(PDI_RAZOR_PROFILE);
+	while (isDownloadCsv) downloadCsv();
 
 	/// disable all interrupts while accessing flash memory
 	printf("Swi_disable....\n");

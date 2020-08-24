@@ -34,21 +34,20 @@
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
-#define MAX_DATA_SIZE   160 
 #define MAX_HEADER_SIZE 110 
-#define MAX_BUF_SIZE   	4096
+#define MAX_BUF_SIZE   	512
 #define MAX_CSV_SIZE   	4096*3
 
+static char DATA_BUF[MAX_BUF_SIZE];
+static char LOG_BUF[MAX_BUF_SIZE];
+static char LOG_HEADER[MAX_HEADER_SIZE];
+static char CSV_BUF[MAX_CSV_SIZE];
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 
 static Uint8 try = 0;
 static Uint8 try2 = 0;
 static Uint8 try3 = 0;
 static Uint8 try4 = 0;
-
-static char CSV_BUF[MAX_CSV_SIZE];
-static char LOG_HEADER[MAX_HEADER_SIZE];
-static char LOG_BUF[MAX_BUF_SIZE];
 static Uint8 current_day = 99;
 
 unsigned int g_ulMSCInstance = 0;
@@ -417,6 +416,7 @@ void logData(void)
 
     FRESULT fresult;
 	int data_delay;
+	int i;
 
    	/// read rtc
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
@@ -425,7 +425,7 @@ void logData(void)
    	if ((tmp_sec % REG_LOGGING_PERIOD != 0) || (tmp_sec == USB_RTC_SEC)) return;
 
 	/// UPDATE TIME	
-	if (USB_RTC_SEC != tmp_sec) USB_RTC_SEC = tmp_sec;
+	USB_RTC_SEC = tmp_sec;
 	if (USB_RTC_MIN != tmp_min) USB_RTC_MIN = tmp_min;
 	if (USB_RTC_HR != tmp_hr)   USB_RTC_HR = tmp_hr;
 	if (USB_RTC_DAY != tmp_day) USB_RTC_DAY = tmp_day;
@@ -435,7 +435,6 @@ void logData(void)
    	/// A NEW FILE? 
    	if (current_day != USB_RTC_DAY) 
    	{   
-		FILINFO fno;
        	current_day = USB_RTC_DAY;
 
        	LOG_BUF[0] = '\0';
@@ -531,25 +530,19 @@ void logData(void)
        	return;
    	}   
 
-	printf("%s\n","new DATA_BUF");
-
 	/// new DATA_BUF
-   	char DATA_BUF[1024];
 	DATA_BUF[0] = '\0';
 
 	/// get modbus data
    	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-	printf("LOG_BUF LENGTH : %d\n", strlen(LOG_BUF));
-
-    /// fill data upto MAX_DATA_SIZE
+    /// fill data upto MAX_BUF_SIZE
     if ((MAX_BUF_SIZE - strlen(LOG_BUF)) > strlen(DATA_BUF))
     {
+		printf("LOG_BUF SIZE: %d,  DATA_BUF SIZE: %d\n",strlen(LOG_BUF),strlen(DATA_BUF));
         strcat(LOG_BUF,DATA_BUF);
         return;
     }
-
-	printf("open\n");
 
     /// open file
     fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
@@ -559,7 +552,14 @@ void logData(void)
         return;
     }
 
-	printf("lseek\n");
+    fresult = f_sync(&fileWriteObject);
+	if (fresult != FR_OK)
+    {
+        stopAccessingUsb(fresult);
+        return;
+    }
+	for (i=0;i<10;i++) printf("sync\n");
+    usb_osalDelayMs(1000);
 
     /// move pointer to end of file 
     fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
@@ -568,26 +568,26 @@ void logData(void)
         stopAccessingUsb(fresult);
         return;
     }
+	printf("lseek\n");
 
-	printf("Swi_disable\n");
-	Swi_disable();
-
-	printf("f_puts\n");
     /// write
     if (f_puts(LOG_BUF,&fileWriteObject) == EOF)
     {
         stopAccessingUsb(FR_DISK_ERR);
         return;
     }
+	printf("f_puts\n");
 
-	printf("Swi_enable\n");
-	Swi_enable();
+	fresult = f_sync(&fileWriteObject);
+	if (fresult != FR_OK)
+    {
+        stopAccessingUsb(fresult);
+        return;
+    }
+	for (i=0;i<10;i++) printf("sync\n");
+    usb_osalDelayMs(1000);
 
     /// close file
-	printf ("verify: file size: %d, LOG_BUF size: %d\n", f_size(&fileWriteObject), strlen(LOG_BUF));
-	printf ("verify: file size: %d, LOG_BUF size: %d\n", f_size(&fileWriteObject), strlen(LOG_BUF));
-	printf ("verify: file size: %d, LOG_BUF size: %d\n", f_size(&fileWriteObject), strlen(LOG_BUF));
-	printf ("close\n");
     fresult = f_close(&fileWriteObject);
     if (fresult != FR_OK)
     {
@@ -595,17 +595,13 @@ void logData(void)
         return;
     }
 
-	printf ("LOG_BUF=0\n");
-	LOG_BUF[0] = '\0';
-	LOG_BUF[0] = '\0';
-	LOG_BUF[0] = '\0';
-	LOG_BUF[0] = '\0';
-	LOG_BUF[0] = '\0';
+	printf("f_close\n");
+
 	LOG_BUF[0] = '\0';
 }
 
 
-BOOL downloadCsv(char* fname)
+BOOL downloadCsv(void)
 {
 	if (!isUsbActive()) return FALSE;
 	isDownloadCsv = FALSE;
@@ -614,11 +610,11 @@ BOOL downloadCsv(char* fname)
 	FIL csvWriteObject;
 	CSV_BUF[0] = '\0';
 	char csvFileName[50] = 0;
-	int csv_buf_delay;
 	int data_index;
+	int i;
 
 	/// get file name
-	(strcmp(PDI_RAZOR_PROFILE,fname)==0) ? sprintf(csvFileName,"0:%s.csv",fname) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
+	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
 
 	/// open file
 	printf("f_open...");
@@ -629,12 +625,10 @@ BOOL downloadCsv(char* fname)
 	}
 
 	/// disable all interrupts
-	printf("Swi_disable...");
 	Swi_disable();
+	for (i=0;i<10;i++) printf("Swi_disable%d...\n",i);
 
 	/// integer
-	printf("data copy...");
-
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d,\n",REG_AO_DAMPEN); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Slave Address,,204,int,1,RW,1,%d,\n",REG_SLAVE_ADDRESS); 
@@ -714,14 +708,11 @@ BOOL downloadCsv(char* fname)
 	for (data_index=0;data_index<60;data_index++)
     sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+2*data_index,STREAM_OIL_ADJUST[data_index]);
 	
-	printf("data ready\n");
-
 	/// enable all interrupts back
-	printf("Swi_enable\n");
 	Swi_enable();
+	for (i=0;i<10;i++) printf("Swi_enable%d\n",i);
 
 	/// write
-	printf("writing file\n");
 	UINT bw;
 	fr = f_write(&csvWriteObject,CSV_BUF,strlen(CSV_BUF),&bw);
 	if (fr != FR_OK) 
@@ -731,9 +722,9 @@ BOOL downloadCsv(char* fname)
 		Swi_enable();
 		return FALSE;
 	}
+	for (i=0;i<10;i++) printf("writing file%d\n",i);
 
 	/// sync
-	printf("syncing file\n");
 	fr = f_sync(&csvWriteObject);
 	if (fr != FR_OK)
 	{
@@ -742,9 +733,9 @@ BOOL downloadCsv(char* fname)
 		Swi_enable();
 		return FALSE;
 	}
+	for (i=0;i<10;i++) printf("syncing file%d\n",i);
 
 	/// close file
-	printf("closing file\n");
 	fr = f_close(&csvWriteObject);
 	if (fr != FR_OK)
 	{
@@ -753,6 +744,7 @@ BOOL downloadCsv(char* fname)
 		Swi_enable();
 		return FALSE;
 	}
+	for (i=0;i<10;i++) printf("closing file%d\n",i);
 
 	/// set global var true
 	printf("set flags\n");
@@ -768,6 +760,7 @@ void scanCsvFiles(void)
 	if (!isUsbActive()) return;
 	isScanCsvFiles = FALSE;
 
+	int i;
 	FRESULT res;
     static DIR dir;
     static FILINFO fno;
@@ -776,17 +769,18 @@ void scanCsvFiles(void)
 	CSV_FILES[0] = '\0';
 
 	/// disable all interrupts
-	printf("Swi_disable...");
 	Swi_disable();
+	for (i=0;i<10;i++) printf("Swi_disable...");
 
-	printf("f_opendir...");
+	/// opendir
 	if (f_opendir(&dir, path) != FR_OK) 
 	{
 		Swi_enable();
 		return;
 	}
+	for (i=0;i<10;i++) printf("f_opendir...");
 
-	printf("Looping start...");
+	/// read file names
     for (;;) {
         res = f_readdir(&dir, &fno);
         if (res != FR_OK || fno.fname[0] == 0) break;
@@ -801,14 +795,16 @@ void scanCsvFiles(void)
 			}
         }
     }
+	for (i=0;i<10;i++) printf("read files...");
 
 	/// close dir
-	printf("Closing dir...");
 	f_closedir(&dir);
+	for (i=0;i<10;i++) printf("Closing dir...");
 
 	/// enable all interrupts back
-	printf("Swi_enable...");
 	Swi_enable();
+	for (i=0;i<10;i++) printf("Swi_enable...");
+
     return;
 }
 
@@ -817,7 +813,8 @@ BOOL uploadCsv(void)
 {
 	if (!isUsbActive()) return FALSE;
 	isUploadCsv = FALSE;
-	
+
+	int i;
 	FIL fil;
 	FRESULT result;
 	char line[1024];
@@ -829,15 +826,14 @@ BOOL uploadCsv(void)
 	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:%s.csv",CSV_FILES);
 
 	/// open file
-	printf("Open file...");
 	if (f_open(&fil, csvFileName, FA_READ) != FR_OK) return FALSE;
+	printf("Open file...");
+
+	Swi_disable();
+	printf("Swi_disable...");
 
 	/// do not upgrade firmware after profiling
 	isUpgradeFirmware = FALSE;
-
-	/// swi disable
-	printf("Swi_disable...");
-	Swi_disable();
 
 	/// read line
 	printf("f_get looping starts...");
@@ -1077,8 +1073,7 @@ BOOL uploadCsv(void)
 		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = fvalue;
 		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = fvalue;
 
-		line[0] = '\0';
-		line[0] = '\0';
+		for (i=0;i<10;i++) line[0] = '\0';
 
 		/// print status -- we use print as an intended "delay"
 		if (isPdiUpgradeMode) 
@@ -1088,38 +1083,21 @@ BOOL uploadCsv(void)
 		}
 
 		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
-		displayLcd("    Loading...  ",1);
 	}	
 
-	printf("Swi_enable\n");
-	Swi_enable();
-
 	/// close file
-	printf("closing file\n");
 	f_close(&fil);
+	for (i=0;i<10;i++) printf("Closing%d...\n",i);
 
-	/// set global var true
-	printf("set global flags\n");
-    isCsvUploadSuccess = TRUE;
-    isCsvDownloadSuccess = FALSE;
+	Swi_enable();
+	for (i=0;i<10;i++) printf("Swi_enable%d\n",i);
 
-	/// update factory default
-	printf("FACTORY_DEFAULT\n");
-    COIL_UPDATE_FACTORY_DEFAULT.val = TRUE;
-
-	/// write to flash
-	printf("Swi_post\n");
+	/// update FACTORY DEFAULT
+   	storeUserDataToFactoryDefault();
 	Swi_post(Swi_writeNand);	
+	isCsvUploadSuccess = TRUE;
+    isCsvDownloadSuccess = FALSE;
+	for (i=0;i<10;i++) printf("Swi_post%d\n",i);
 
 	/// delete PDI_RAZOR_PROFILE
 	if (isPdiUpgradeMode) 

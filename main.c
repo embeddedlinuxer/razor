@@ -40,6 +40,7 @@ static inline void Init_Counter_3(void);
 static inline void initHardwareObjects(void);
 static inline void initSoftwareObjects(void);
 static inline void startClocks(void);
+static inline void enableUpgradeMode(void);
 static inline void Init_All(void);
 
 int main (void)
@@ -66,11 +67,25 @@ int main (void)
     /// osal delay timer reset
     delayTimerSetup();
 
+	/// set upgrade flags
+	enableUpgradeMode();
+		
     // START TI-RTOS KERNEL
 	BIOS_start();
 
 	return 0;
 }
+
+
+static inline void enableUpgradeMode(void)
+{
+	/// enable upgrade mode
+    isPdiUpgradeMode = TRUE;
+    isUploadCsv = TRUE;
+    isDownloadCsv = TRUE;
+    isUpgradeFirmware = TRUE;
+}
+
 
 static inline void Init_All(void)
 {
@@ -87,8 +102,7 @@ static inline void Init_All(void)
 		reloadFactoryDefault();
 		Store_Vars_in_NAND();
 	}
-	else
-		resetGlobalVars(); 
+	else resetGlobalVars(); 
 
 	// INITIALIZE HARDWARES 
 	initHardwareObjects();

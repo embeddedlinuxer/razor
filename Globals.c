@@ -28,12 +28,6 @@ void resetGlobalVars(void)
 {
     CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 
-	/// enable upgrade mode
-    isPdiUpgradeMode = TRUE;
-    isUploadCsv = TRUE;
-    isDownloadCsv = TRUE;
-    isUpgradeFirmware = TRUE;
-
     isWriteRTC = FALSE;
     isLogData = FALSE;
 	isProfileMode = FALSE;
