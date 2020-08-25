@@ -1,5 +1,4 @@
-/* This Information is proprietary to Phase Dynamics Inc, Richardson, Texas
-* and MAY NOT be copied by any method or incorporated into another program
+/* This Information is proprietary to Phase Dynamics Inc, Richardson, Texas * and MAY NOT be copied by any method or incorporated into another program
 * without the express written consent of Phase Dynamics Inc. This information
 * or any portion thereof remains the property of Phase Dynamics Inc.
 * The information contained herein is believed to be accurate and Phase

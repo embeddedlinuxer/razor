@@ -39,10 +39,6 @@
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_BUF[MAX_BUF_SIZE];
-static char LOG_BUF1[MAX_BUF_SIZE];
-static char LOG_BUF2[MAX_BUF_SIZE];
-static char LOG_BUF3[MAX_BUF_SIZE];
-static char LOG_BUF4[MAX_BUF_SIZE];
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char CSV_BUF[MAX_CSV_SIZE];
@@ -917,8 +913,8 @@ BOOL uploadCsv(void)
 		else if (strcmp(regid, "43") == 0) VAR_Update(&REG_OIL_FREQ_LOW,fvalue,CALC_UNIT);
 		else if (strcmp(regid, "45") == 0) VAR_Update(&REG_OIL_FREQ_HIGH,fvalue,CALC_UNIT);
 		else if (strcmp(regid, "47") == 0) VAR_Update(&REG_SAMPLE_PERIOD,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "49") == 0) VAR_Update(&REG_AO_URV,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "51") == 0) VAR_Update(&REG_AO_LRV,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "49") == 0) VAR_Update(&REG_AO_LRV,fvalue,CALC_UNIT);
+		else if (strcmp(regid, "51") == 0) VAR_Update(&REG_AO_URV,fvalue,CALC_UNIT);
 		else if (strcmp(regid, "55") == 0) VAR_Update(&REG_BAUD_RATE,fvalue,CALC_UNIT);
 		else if (strcmp(regid, "67") == 0) REG_OIL_CALC_MAX = fvalue;
 		else if (strcmp(regid, "69") == 0) REG_OIL_PHASE_CUTOFF = fvalue;
@@ -965,42 +961,69 @@ BOOL uploadCsv(void)
 			REG_COEFFS_TEMP_OIL[0][2] = fvalue2;
 			REG_COEFFS_TEMP_OIL[0][3] = fvalue3;
 		}
-		else if (strcmp(regid, "60031") == 0) 
+		else if (strcmp(regid, "60027") == 0) 
 		{
 			REG_COEFFS_TEMP_OIL[1][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[1][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[1][2] = fvalue2;
 			REG_COEFFS_TEMP_OIL[1][3] = fvalue3;
 		}
-		else if (strcmp(regid, "60039") == 0)
+		else if (strcmp(regid, "60031") == 0) 
 		{
 			REG_COEFFS_TEMP_OIL[2][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[2][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[2][2] = fvalue2;
 			REG_COEFFS_TEMP_OIL[2][3] = fvalue3;
 		}
-		else if (strcmp(regid, "60047") == 0)
+		else if (strcmp(regid, "60035") == 0) 
 		{
 			REG_COEFFS_TEMP_OIL[3][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[3][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[3][2] = fvalue2;
 			REG_COEFFS_TEMP_OIL[3][3] = fvalue3;
 		}
-		else if (strcmp(regid, "60055") == 0)
+		else if (strcmp(regid, "60039") == 0)
 		{
 			REG_COEFFS_TEMP_OIL[4][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[4][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[4][2] = fvalue2;
 			REG_COEFFS_TEMP_OIL[4][3] = fvalue3;
 		}
-		else if (strcmp(regid, "60063") == 0)
+		else if (strcmp(regid, "60043") == 0)
 		{
 			REG_COEFFS_TEMP_OIL[5][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[5][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[5][2] = fvalue2;
 			REG_COEFFS_TEMP_OIL[5][3] = fvalue3;
 		}
-
+		else if (strcmp(regid, "60047") == 0)
+		{
+			REG_COEFFS_TEMP_OIL[6][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[6][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[6][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[6][3] = fvalue3;
+		}
+		else if (strcmp(regid, "60051") == 0)
+		{
+			REG_COEFFS_TEMP_OIL[7][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[7][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[7][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[7][3] = fvalue3;
+		}
+		else if (strcmp(regid, "60055") == 0)
+		{
+			REG_COEFFS_TEMP_OIL[8][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[8][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[8][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[8][3] = fvalue3;
+		}
+		else if (strcmp(regid, "60059") == 0)
+		{
+			REG_COEFFS_TEMP_OIL[9][0] = fvalue;
+			REG_COEFFS_TEMP_OIL[9][1] = fvalue1;
+			REG_COEFFS_TEMP_OIL[9][2] = fvalue2;
+			REG_COEFFS_TEMP_OIL[9][3] = fvalue3;
+		}
 		/// stream dependent data
 		else if (strcmp(regid, "63647") == 0) STREAM_OIL_ADJUST[0] = fvalue;
 		else if (strcmp(regid, "63649") == 0) STREAM_OIL_ADJUST[1] = fvalue;
