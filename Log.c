@@ -38,7 +38,12 @@
 #define MAX_BUF_SIZE   	4096*2
 #define MAX_CSV_SIZE   	4096*3
 
-static char DATA_BUF[MAX_BUF_SIZE];
+static char LOG_BUF[MAX_BUF_SIZE];
+static char LOG_BUF1[MAX_BUF_SIZE];
+static char LOG_BUF2[MAX_BUF_SIZE];
+static char LOG_BUF3[MAX_BUF_SIZE];
+static char LOG_BUF4[MAX_BUF_SIZE];
+
 static char LOG_BUF[MAX_BUF_SIZE];
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char CSV_BUF[MAX_CSV_SIZE];
@@ -414,6 +419,7 @@ void logData(void)
 {
 	if (!isUsbActive()) return;
 
+	static int buf_index = 0;
     FRESULT fresult;
 	int data_delay;
 	int i;
@@ -531,61 +537,201 @@ void logData(void)
    	}   
 
 	/// new DATA_BUF
+	char DATA_BUF[500];
 	DATA_BUF[0] = '\0';
 
 	/// get modbus data
    	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-    /// fill data upto MAX_BUF_SIZE
-    if ((MAX_BUF_SIZE - strlen(LOG_BUF)) > strlen(DATA_BUF))
+	if (buf_index == 0)
     {
-		printf("LOG_BUF SIZE: %d,  DATA_BUF SIZE: %d\n",strlen(LOG_BUF),strlen(DATA_BUF));
-        strcat(LOG_BUF,DATA_BUF);
-        return;
+        /// fill data upto MAX_DATA_SIZE
+        if ((MAX_BUF_SIZE - strlen(LOG_BUF)) > strlen(DATA_BUF))
+        {
+            strcat(LOG_BUF,DATA_BUF);
+            return;
+        }
+
+        /// open file
+        fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// move to entry point
+        fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// write
+        if (f_puts(LOG_BUF,&fileWriteObject) == EOF)
+        {
+            stopAccessingUsb(FR_DISK_ERR);
+            return;
+        }
+    
+        /// reset log buf
+        LOG_BUF1[0] = '\0';
+        buf_index = 1;
+    }
+	else if (buf_index == 1)
+    {
+        /// fill data upto MAX_DATA_SIZE
+        if ((MAX_BUF_SIZE - strlen(LOG_BUF1)) > strlen(DATA_BUF))
+        {
+            strcat(LOG_BUF1,DATA_BUF);
+            return;
+        }
+
+        /// open file
+        fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// move to entry point
+        fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// write
+        if (f_puts(LOG_BUF1,&fileWriteObject) == EOF)
+        {
+            stopAccessingUsb(FR_DISK_ERR);
+            return;
+        }
+
+        /// reset log buf
+        LOG_BUF2[0] = '\0';
+        buf_index = 2;
+    }
+	else if (buf_index == 2)
+    {
+        /// fill data upto MAX_DATA_SIZE
+        if ((MAX_BUF_SIZE - strlen(LOG_BUF2)) > strlen(DATA_BUF))
+        {
+            strcat(LOG_BUF2,DATA_BUF);
+            return;
+        }
+
+        /// open file
+        fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// move to entry point
+        fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// write
+        if (f_puts(LOG_BUF2,&fileWriteObject) == EOF)
+        {
+            stopAccessingUsb(FR_DISK_ERR);
+            return;
+        }
+
+        /// reset log buf
+        LOG_BUF3[0] = '\0';
+        buf_index = 3;
+    }
+	else if (buf_index == 3)
+    {
+        /// fill data upto MAX_DATA_SIZE
+        if ((MAX_BUF_SIZE - strlen(LOG_BUF3)) > strlen(DATA_BUF))
+        {
+            strcat(LOG_BUF3,DATA_BUF);
+            return;
+        }
+
+        /// open file
+        fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// move to entry point
+        fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// write
+        if (f_puts(LOG_BUF3,&fileWriteObject) == EOF)
+        {
+            stopAccessingUsb(FR_DISK_ERR);
+            return;
+        }
+
+        /// reset log buf
+        LOG_BUF4[0] = '\0';
+        buf_index = 4;
+    }
+	else if (buf_index == 4)
+    {
+
+        /// fill data upto MAX_DATA_SIZE
+        if ((MAX_BUF_SIZE - strlen(LOG_BUF4)) > strlen(DATA_BUF))
+        {
+            strcat(LOG_BUF4,DATA_BUF);
+            return;
+        }
+
+        /// open file
+        fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// move to entry point
+        fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
+        if (fresult != FR_OK)
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
+
+        /// write
+        if (f_puts(LOG_BUF4,&fileWriteObject) == EOF)
+        {
+            stopAccessingUsb(FR_DISK_ERR);
+            return;
+        }
+
+        /// reset log buf
+        LOG_BUF[0] = '\0';
+        buf_index = 0;
     }
 
-    /// open file
-    fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-    if (fresult != FR_OK)
-    {
-        stopAccessingUsb(fresult);
-        return;
-    }
-
+	/// sync with usb drive
     fresult = f_sync(&fileWriteObject);
-	if (fresult != FR_OK)
-    {
-        stopAccessingUsb(fresult);
-        return;
-    }
-	for (i=0;i<10;i++) printf("sync\n");
-    usb_osalDelayMs(1000);
-
-    /// move pointer to end of file 
-    fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
     if (fresult != FR_OK)
     {
         stopAccessingUsb(fresult);
         return;
     }
-	printf("lseek\n");
-
-    /// write
-    if (f_puts(LOG_BUF,&fileWriteObject) == EOF)
-    {
-        stopAccessingUsb(FR_DISK_ERR);
-        return;
-    }
-	printf("f_puts\n");
-
-	fresult = f_sync(&fileWriteObject);
-	if (fresult != FR_OK)
-    {
-        stopAccessingUsb(fresult);
-        return;
-    }
-	for (i=0;i<10;i++) printf("sync\n");
-    usb_osalDelayMs(1000);
 
     /// close file
     fresult = f_close(&fileWriteObject);
@@ -594,10 +740,6 @@ void logData(void)
         stopAccessingUsb(fresult);
         return;
     }
-
-	printf("f_close\n");
-
-	LOG_BUF[0] = '\0';
 }
 
 
