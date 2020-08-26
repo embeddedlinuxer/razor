@@ -401,7 +401,7 @@ void upgradeFirmware(void)
     ASYNC_MEM_InfoHandle dummy;
 	FIL fPtr;
 
-	int buffer[4096];
+	BYTE buffer[4096];
 	int index = 0;
 	int loop = 0;
 	UINT br = 0;
@@ -456,10 +456,10 @@ void upgradeFirmware(void)
 	/// read file	
 	for (;;) {
 		for (i=0;i<5;i++) buffer[0] = '\0';
-     	if (f_read(&fPtr, buffer, sizeof(buffer)-1, &br) != FR_OK) return;
+     	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;
 		for (i=0;i<20;i++) displayLcd("FIRMWARE UPGRADE",0);	
 		if (br == 0) break; /* error or eof */
-		for (loop=0;loop<br;loop++) 
+		for (loop=0;loop<sizeof(buffer);loop++) 
 		{
 			LCD_setcursor(0,0);
       		for (i=0;i<100;i++) aisPtr[index] = buffer[loop];

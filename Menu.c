@@ -3728,10 +3728,12 @@ fxnSecurityInfo_Profile(const Uint16 input)
 	const char delim[] = ".csv";
 	char csv_file[MAX_NAME_LENGTH];
 	static BOOL isDownload = TRUE;
+	static BOOL isSelected = FALSE;
 	static int csvIndex = 0;
     
 	if (isUpdateDisplay) 
 	{
+		isSelected = FALSE;
 		isDownload = TRUE;
 		csvIndex = 0;
 		usbStatus = 0;
@@ -3781,7 +3783,8 @@ fxnSecurityInfo_Profile(const Uint16 input)
             	i++;
         	}
 
-        	blinkLcdLine1(csv_file,BLANK);
+			if (isSelected) blinkLcdLine1(csv_file,STEP_CONFIRM);
+        	else blinkLcdLine1(csv_file,BLANK);
     	}
 		else if (isScanCsvFiles || isUploadCsv) blinkLcdLine1(LOADING,BLANK);
 		else blinkLcdLine1(UPLOAD, BLANK);
@@ -3794,7 +3797,7 @@ fxnSecurityInfo_Profile(const Uint16 input)
             else (isDownload = !isDownload);
             return FXN_SECURITYINFO_PROFILE;
         case BTN_STEP  :
-            if (isScanSuccess)
+            if (isScanSuccess && isSelected)
             {
                 isScanSuccess = FALSE;
                 CSV_FILES[0] = '\0';
@@ -3803,7 +3806,11 @@ fxnSecurityInfo_Profile(const Uint16 input)
             }
             return FXN_SECURITYINFO_PROFILE;
 		case BTN_ENTER  :
-			if (isScanSuccess) return FXN_SECURITYINFO_PROFILE;
+			if (isScanSuccess) 
+			{
+				isSelected = TRUE;
+				return FXN_SECURITYINFO_PROFILE;
+			}
             (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
             return FXN_SECURITYINFO_PROFILE;
         case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_PROFILE);
