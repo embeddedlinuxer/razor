@@ -540,7 +540,7 @@ void logData(void)
 	for (i=0;i<30;i++) printf("DATA_BUF: %d\n",strlen(DATA_BUF));
 
     /// fill data upto MAX_DATA_SIZE
-    if ((MAX_BUF_SIZE - strlen(LOG_BUF)) > strlen(DATA_BUF))
+    if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF)) >= strlen(DATA_BUF))
     {
         strcat(LOG_BUF,DATA_BUF);
 		for (i=0;i<30;i++) printf("LOG_BUF: %d\n", strlen(LOG_BUF));
@@ -548,14 +548,22 @@ void logData(void)
     }
 	else
 	{
+		/// make sure not to exceed max_buf_size
+		printf("LOG_BUF: %d\n", strlen(LOG_BUF));
+		if (strlen(LOG_BUF) >= MAX_BUF_SIZE)
+		{
+			LOG_BUF[0] = '\0';
+			return;
+		}
+
        	/// open
-		printf("open");
        	fresult = f_open(&fileWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
        	if (fresult != FR_OK)
        	{
            	stopAccessingUsb(fresult);
            	return;
        	}
+		printf("open\n");
 
        	/// append mode 
        	fresult = f_lseek(&fileWriteObject,f_size(&fileWriteObject));
@@ -564,15 +572,16 @@ void logData(void)
            	stopAccessingUsb(fresult);
            	return;
        	}
+		printf("seek\n");
 
        	/// write
 		int val = f_puts(LOG_BUF,&fileWriteObject);
-		printf("puts %d\n", val);
        	if (val == EOF)
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
        	}
+		printf("puts %d\n", val);
 
 		/// sync
     	fresult = f_sync(&fileWriteObject);
