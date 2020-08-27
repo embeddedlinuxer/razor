@@ -156,6 +156,7 @@ _EXTERN BOOL isCsvDownloadSuccess;
 _EXTERN BOOL isScanSuccess;
 _EXTERN BOOL isPdiUpgradeMode;
 _EXTERN BOOL isProfileMode;
+_EXTERN BOOL isAccessible;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

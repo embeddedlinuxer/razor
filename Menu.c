@@ -1678,6 +1678,7 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			if (isLogData) 
 			{
 				resetUsbDriver();
+				isAccessible = TRUE;
                 usbStatus = 1;
 			}
             else
