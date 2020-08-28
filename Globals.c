@@ -31,7 +31,6 @@ void resetGlobalVars(void)
     isWriteRTC = FALSE;
     isLogData = FALSE;
 	isProfileMode = FALSE;
-	isAccessible= TRUE;
     usbStatus = 0;
 
     THROW_ERROR 	                    = 0;

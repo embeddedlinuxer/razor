@@ -1678,7 +1678,6 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			if (isLogData) 
 			{
 				resetUsbDriver();
-				isAccessible = TRUE;
                 usbStatus = 1;
 			}
             else
@@ -3812,7 +3811,12 @@ fxnSecurityInfo_Profile(const Uint16 input)
 				isSelected = TRUE;
 				return FXN_SECURITYINFO_PROFILE;
 			}
-            (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
+			else
+			{
+				resetUsbDriver();
+				usb_osalDelayMs(1000);
+            	(isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
+			}
             return FXN_SECURITYINFO_PROFILE;
         case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_PROFILE);
         default         : return FXN_SECURITYINFO_PROFILE;
