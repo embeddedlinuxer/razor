@@ -1344,7 +1344,7 @@ void logData(void)
 			printf("f_close\n");
 
        		/// reset log buf
-       		LOG_BUF[0] = '\0';
+       		LOG_BUF7[0] = '\0';
 			PDI_USBBufferFlush(USB_INSTANCE);
 			buf_index++;
 		}
