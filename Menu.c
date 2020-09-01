@@ -34,6 +34,7 @@
 #include "nandwriter.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "ModbusRTU.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -44,7 +45,9 @@ static int y = 0;
 static int blinker = 0;             // MENU ID BLINKER 
 static BOOL isOn = FALSE;           // LINE1 BLINKER
 static BOOL isMessage = FALSE;      // Message to display? 
+static BOOL isTechModeRequested = FALSE;
 static Uint8 isPowerCycled = TRUE;  // loadUsbDriver only 1 time after power cycle
+static BOOL isIdEntered = FALSE; 	// MENU 3.9
 
 extern void blinkLcdLine1(const char * textA, const char * textB);
 
@@ -567,16 +570,16 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
     isUpdateDisplay = TRUE;
 	isMessage = TRUE;
 
-    strncpy(val, lcdLine1, MAX_LCD_WIDTH);
-    for (y=0; y<MAX_LCD_WIDTH; y++) lcdLine1[y] = 0x20;
- 
-    // INTEGER REGISTER
+   	strncpy(val, lcdLine1, MAX_LCD_WIDTH);
+   	for (y=0; y<MAX_LCD_WIDTH; y++) lcdLine1[y] = 0x20;
+
+    /// INTEGER REGISTER
     if (iregister != NULL_INT)
     {
         int ivalue = atoi(val);
 		if ((*iregister == REG_PASSWORD) && (ivalue == 1343))
 		{
-			sprintf(lcdLine1, "%16s", " Reserved Passwd");
+			sprintf(lcdLine1, "%16s", " Invalid Passwd ");
     		isUpdateDisplay = FALSE;
     		return currentId;
 		}
@@ -588,19 +591,35 @@ onFxnEnterPressed(const int currentId, const double max, const double min, VAR *
     		return currentId;
         }
     }
-    // DOUBLE OR VAR REGISTER
-    else
+    /// DOUBLE REGISTER 
+    else if (dregister != NULL_DBL) 
     {
         float dvalue = atof(val);
         if ((dvalue <= max) && (dvalue >= min))
         {
-            if (dregister != NULL_DBL) *dregister = dvalue;
-            else VAR_Update(vregister, dvalue, CALC_UNIT);
+            *dregister = dvalue;
    	        Swi_post(Swi_writeNand);
             sprintf(lcdLine1, "%16s", CHANGE_SUCCESS);
     		return currentId;
         }
     }
+	else if (vregister != NULL_VAR) 
+    {
+        float dvalue = atof(val);
+        if ((dvalue <= max) && (dvalue >= min))
+        {
+            VAR_Update(vregister, dvalue, CALC_UNIT);
+   	        Swi_post(Swi_writeNand);
+            sprintf(lcdLine1, "%16s", CHANGE_SUCCESS);
+    		return currentId;
+        }
+    }
+	else
+	{
+		Swi_post(Swi_writeNand);
+        (strcmp(val,CHANGE_SUCCESS) == 0) ? sprintf(lcdLine1, "%16s", CHANGE_SUCCESS) : sprintf(lcdLine1, "%16s", INVALID);
+    	return currentId;
+	}
 
     // INVALID INPUT, STAY IN CURRENT FXN AND RETRY
     isUpdateDisplay = FALSE;
@@ -3445,7 +3464,8 @@ mnuSecurityInfo_AccessTech(const Uint16 input)
 			if (COIL_UNLOCKED.val)
 			{
 				COIL_UNLOCKED.val = FALSE;
-				isProfileMode = FALSE;
+				isTechMode = FALSE;
+				isTechModeRequested = FALSE;
                 Swi_post(Swi_writeNand);
                 return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, CHANGE_SUCCESS);
 			}
@@ -3472,15 +3492,36 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
 			if (atoi(lcdLine1) == REG_PASSWORD)
 			{
 				COIL_UNLOCKED.val = TRUE;
+				isTechMode = FALSE;
+				isTechModeRequested = FALSE;
                 Swi_post(Swi_writeNand);
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, GOOD_PASS);
 			}
 			else if (atoi(lcdLine1) == 1343)
 			{
-				isProfileMode = TRUE;
-				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, "Tech Mode Enbld");
+				if (!isTechModeRequested)
+				{
+					isTechModeRequested = TRUE;
+					isTechMode = FALSE;
+					COIL_UNLOCKED.val = FALSE;
+					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
+				}
+				else
+				{
+					isTechModeRequested = FALSE;
+					isTechMode = TRUE;
+					COIL_UNLOCKED.val = TRUE;
+					return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, "Tech Mode Enbld");
+				}
 			}
-			else return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
+			else 
+			{
+				isTechModeRequested = FALSE;
+				isTechMode = FALSE;
+				COIL_UNLOCKED.val = FALSE;
+
+				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
+			}
         case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_ACCESSTECH);
 		default			: return FXN_SECURITYINFO_ACCESSTECH;
 	}
@@ -3655,8 +3696,6 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 	switch (input)	
 	{
         case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_PROFILE);
-        //case BTN_VALUE 	: 
-		//return (isProfileMode) ? onNextPressed(MNU_SECURITYINFO_PROFILE) : onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;
@@ -3709,7 +3748,8 @@ mnuSecurityInfo_Profile(const Uint16 input)
 
 	switch (input)	
 	{
-        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
+        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_TECHMODE);
+        case BTN_VALUE 	: return (isTechMode) ? onNextPressed(MNU_SECURITYINFO_TECHMODE) : onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_PROFILE,MNU_SECURITYINFO_PROFILE,SECURITYINFO_PROFILE);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_PROFILE;
@@ -3811,14 +3851,68 @@ fxnSecurityInfo_Profile(const Uint16 input)
 				isSelected = TRUE;
 				return FXN_SECURITYINFO_PROFILE;
 			}
-			else
-			{
-				resetUsbDriver();
-				usb_osalDelayMs(1000);
-            	(isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
-			}
+            (isDownload) ? (isDownloadCsv = TRUE) : (isScanCsvFiles = TRUE);
             return FXN_SECURITYINFO_PROFILE;
         case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_PROFILE);
         default         : return FXN_SECURITYINFO_PROFILE;
     } 
+}
+
+
+
+// MENU 3.9
+Uint16 
+mnuSecurityInfo_TechMode(const Uint16 input)
+{
+	if (I2C_TXBUF.n > 0) return MNU_SECURITYINFO_TECHMODE;
+
+	if (isUpdateDisplay) updateDisplay(SECURITYINFO_TECHMODE, BLANK);
+	isIdEntered = FALSE;
+
+	switch (input)	
+	{
+        case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_INFO);
+		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_TECHMODE,MNU_SECURITYINFO_TECHMODE,SECURITYINFO_TECHMODE);
+		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
+		default			: return MNU_SECURITYINFO_TECHMODE;
+	}
+}
+
+
+// FXN 3.9
+Uint16 
+fxnSecurityInfo_TechMode(const Uint16 input)
+{
+	if (I2C_TXBUF.n > 0) return FXN_SECURITYINFO_TECHMODE;
+    if (isMessage) { return notifyMessageAndExit(FXN_SECURITYINFO_TECHMODE, MNU_SECURITYINFO_TECHMODE); }
+
+    (isIdEntered) ? displayFxn(SECURITYINFO_TECHMODE, 0, 4) : displayFxn(SECURITYINFO_TECHMODE, 0, 0);
+
+    switch (input)  {
+        case BTN_VALUE  : 
+			(isIdEntered) ? onFxnValuePressed(FXN_SECURITYINFO_TECHMODE, TRUE, 4) : onFxnValuePressed(FXN_SECURITYINFO_TECHMODE, FALSE, 0);
+			return FXN_SECURITYINFO_TECHMODE;
+	    case BTN_STEP   : return onFxnStepPressed(FXN_SECURITYINFO_TECHMODE,16);
+        case BTN_ENTER  : 
+			if (isIdEntered) 
+			{
+				globalVal[0] = '\0';
+				strcpy(globalVal,lcdLine1);
+				int a = atoi(globalId);
+				double b = atof(globalVal);
+				LCD_setcursor(0,0);
+				(updateVars(a,b)) ? strcpy(lcdLine1,CHANGE_SUCCESS) : strcpy(lcdLine1,INVALID);
+				return onFxnEnterPressed(FXN_SECURITYINFO_TECHMODE,0,0,NULL_VAR,NULL_DBL,NULL_INT);
+			}
+			else
+			{
+				globalId[0] = '\0';
+				strcpy(globalId,lcdLine1);
+				isIdEntered = TRUE;
+				isUpdateDisplay = TRUE;
+				return FXN_SECURITYINFO_TECHMODE;
+			}
+        case BTN_BACK   : return onFxnBackPressed(FXN_SECURITYINFO_TECHMODE);
+        default         : return FXN_SECURITYINFO_TECHMODE;
+	}
 }
