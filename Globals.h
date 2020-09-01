@@ -138,8 +138,6 @@ _EXTERN unsigned int phase_rollover_count;   		/*phase hold over RS*/
 _EXTERN int TEMP_STREAM;
 _EXTERN char lcdLine0[MAX_LCD_WIDTH];
 _EXTERN char lcdLine1[MAX_LCD_WIDTH];
-_EXTERN char globalId[MAX_LCD_WIDTH];
-_EXTERN char globalVal[MAX_LCD_WIDTH];
 _EXTERN char CSV_FILES[MAX_CSV_ARRAY_LENGTH];
 _EXTERN int csvCounter;
 _EXTERN int usbStatus;
@@ -157,7 +155,7 @@ _EXTERN BOOL isCsvUploadSuccess;
 _EXTERN BOOL isCsvDownloadSuccess;
 _EXTERN BOOL isScanSuccess;
 _EXTERN BOOL isPdiUpgradeMode;
-_EXTERN BOOL isTechMode;
+_EXTERN BOOL isProfileMode;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

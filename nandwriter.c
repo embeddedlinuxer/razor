@@ -476,9 +476,6 @@ void upgradeFirmware(void)
 	printf("closing file...\n");
     if (f_close(&fPtr) != FR_OK) return;
 
-	/// flush USB buffer for downloading
-	PDI_USBBufferFlush(0);
-	
 	/// download existing csv
 	printf("download csv....\n");
 	while (isDownloadCsv) downloadCsv();

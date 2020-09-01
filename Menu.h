@@ -192,10 +192,6 @@
 ///										3.6 Restart
 ///											| (VALUE)
 ///										3.7 Reset Fact.
-/// 										|
-///										3.8 Profile
-///											|
-///										3.9 Tech Mode
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -216,8 +212,6 @@
 #define FXN_SECURITYINFO_FACTRESET			370		// Node function
 #define MNU_SECURITYINFO_PROFILE 			38		// 3.8 Profile.
 #define FXN_SECURITYINFO_PROFILE	    	380		// Node function
-#define MNU_SECURITYINFO_TECHMODE 			39		// 3.9 Tech Mode.
-#define FXN_SECURITYINFO_TECHMODE	    	390		// Node function
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -685,9 +679,6 @@ _EXTERN Uint16 fxnSecurityInfo_FactReset(Uint16 input);
 // MENU 3.8
 _EXTERN Uint16 mnuSecurityInfo_Profile(Uint16 input);
 _EXTERN Uint16 fxnSecurityInfo_Profile(Uint16 input);
-// MENU 3.9
-_EXTERN Uint16 mnuSecurityInfo_TechMode(Uint16 input);
-_EXTERN Uint16 fxnSecurityInfo_TechMode(Uint16 input);
 
 
 #ifdef MENU_H
@@ -909,7 +900,7 @@ _EXTERN char SECURITYINFO_CHANGEPASSWORD[]		= "3.5 Change Paswd";
 _EXTERN char SECURITYINFO_RESTART[]				= "3.6 Restart";
 _EXTERN char SECURITYINFO_FACTRESET[]			= "3.7 Fact. Reset";
 _EXTERN char SECURITYINFO_PROFILE[]				= "3.8 Profile";
-_EXTERN char SECURITYINFO_TECHMODE[]			= "3.9 Tech Mode";
+
 
 #endif
 
@@ -1177,11 +1168,8 @@ _EXTERN MENU_STATE MENU_TABLE[] = {
 {MNU_SECURITYINFO_FACTRESET, 7, 2, mnuSecurityInfo_FactReset},
 {FXN_SECURITYINFO_FACTRESET, 99, 99, fxnSecurityInfo_FactReset},
 // MENU 3.8 
-{MNU_SECURITYINFO_PROFILE, 8, 2, mnuSecurityInfo_Profile},
+{MNU_SECURITYINFO_PROFILE, 99, 99, mnuSecurityInfo_Profile},
 {FXN_SECURITYINFO_PROFILE, 99, 99, fxnSecurityInfo_Profile},
-// MENU 3.9 
-{MNU_SECURITYINFO_TECHMODE, 99, 99, mnuSecurityInfo_TechMode},
-{FXN_SECURITYINFO_TECHMODE, 99, 99, fxnSecurityInfo_TechMode},
 
 //{99, 99, 99, 99}
 {NULL, NULL, NULL, NULL}
