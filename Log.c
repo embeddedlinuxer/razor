@@ -1601,7 +1601,6 @@ BOOL downloadCsv(void)
 
 void scanCsvFiles(void)
 {
-    if (g_eState != STATE_DEVICE_READY) return;
 	if (!isUsbActive()) return;
 	isScanCsvFiles = FALSE;
 
