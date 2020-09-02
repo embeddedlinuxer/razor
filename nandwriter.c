@@ -469,6 +469,8 @@ void upgradeFirmware(void)
    		}
     }
 
+	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
+
 	sprintf(lcdLine1,"   Loading.... ");
 	displayLcd(lcdLine1,1);	
 
