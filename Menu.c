@@ -3445,7 +3445,6 @@ mnuSecurityInfo_AccessTech(const Uint16 input)
 			if (COIL_UNLOCKED.val)
 			{
 				COIL_UNLOCKED.val = FALSE;
-				isProfileMode = FALSE;
                 Swi_post(Swi_writeNand);
                 return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, CHANGE_SUCCESS);
 			}
@@ -3477,7 +3476,6 @@ fxnSecurityInfo_AccessTech(const Uint16 input)
 			}
 			else if (atoi(lcdLine1) == 1343)
 			{
-				isProfileMode = TRUE;
 				return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, "Tech Mode Enbld");
 			}
 			else return onNextMessagePressed(FXN_SECURITYINFO_ACCESSTECH, BAD_PASS);
@@ -3655,8 +3653,6 @@ mnuSecurityInfo_FactReset(const Uint16 input)
 	switch (input)	
 	{
         case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_PROFILE);
-        //case BTN_VALUE 	: 
-		//return (isProfileMode) ? onNextPressed(MNU_SECURITYINFO_PROFILE) : onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_FACTRESET,MNU_SECURITYINFO_FACTRESET,SECURITYINFO_FACTRESET);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
 		default			: return MNU_SECURITYINFO_FACTRESET;

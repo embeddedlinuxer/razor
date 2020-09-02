@@ -17,20 +17,15 @@
 #include <ti/csl/cslr_syscfg.h>
 #include <ti/fs/fatfs/diskio.h>
 #include <ti/fs/fatfs/FATFS.h>
-
-
 #include "ti/csl/arch/arm9/V0/csl_cp15.h"
 #include "fatfs_port_usbmsc.h"
 #include "fs_shell_app_utils.h"
-
 #include <ti/drv/usb/usb_drv.h>
 #include <ti/drv/usb/usb_osal.h>
 #include "usblib.h"
 #include "usbhost.h"
 #include "usbhmsc.h"
 #include "usb_drv.h"
-
-
 #include "timer.h"
 #include "types.h"
 #include "fatfs_port_usbmsc.h"
@@ -727,8 +722,8 @@ void logData(void)
 
        		/// reset log buf
        		LOG_BUF1[0] = '\0';
-			buf_index++;
 			PDI_USBBufferFlush(USB_INSTANCE);
+			buf_index++;
 		}
 	}
 	else if (buf_index == 1)
