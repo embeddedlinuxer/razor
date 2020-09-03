@@ -1465,10 +1465,6 @@ BOOL downloadCsv(void)
 		return FALSE;;
 	}
 
-	/// disable all interrupts
-	Swi_disable();
-	for (i=0;i<10;i++) printf("Swi_disable%d...\n",i);
-
 	/// integer
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d,\n",REG_AO_DAMPEN); 
@@ -1548,15 +1544,21 @@ BOOL downloadCsv(void)
 	/// stream dependent data
 	for (data_index=0;data_index<60;data_index++)
     sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+4*data_index,STREAM_OIL_ADJUST[data_index]);
-	
-	/// enable all interrupts back
-	Swi_enable();
-	for (i=0;i<10;i++) printf("Swi_enable%d\n",i);
+
+	/// clean the piple to transmit	
+	PDI_USBBufferFlush(USB_INSTANCE);
 
 	/// write
-	UINT bw;
-	fr = f_write(&csvWriteObject,CSV_BUF,strlen(CSV_BUF),&bw);
-	for (i=0;i<100;i++) fr = f_sync(&csvWriteObject);
+	fr = f_puts(CSV_BUF,&csvWriteObject);
+	if (fr == EOF)
+	{
+		resetUsbDriver();
+		stopAccessingUsb(fr);
+		Swi_enable();
+		return FALSE;
+	}
+
+	fr = f_sync(&csvWriteObject);
 	if (fr != FR_OK)
 	{
 		resetUsbDriver();
@@ -1564,7 +1566,7 @@ BOOL downloadCsv(void)
 		Swi_enable();
 		return FALSE;
 	}
-	printf("syncing file%d\n",i);
+	for (i=0;i<1000;i++) displayLcd("    Loading...  ",LCD1);
 
 	/// close file
 	fr = f_close(&csvWriteObject);

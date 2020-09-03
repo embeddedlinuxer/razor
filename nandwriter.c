@@ -479,7 +479,13 @@ void upgradeFirmware(void)
 
 	/// close
 	printf("closing file...\n");
-    if (f_close(&fPtr) != FR_OK) return;
+    if (f_close(&fPtr) != FR_OK) 
+	{
+		displayLcd(lcdLine1,1);	
+		return;
+	}
+
+	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
 
 	/// download existing csv
 	printf("download csv....\n");
@@ -508,6 +514,6 @@ void upgradeFirmware(void)
 	/// success
 	printf("success....\n");
 	isUpdateDisplay=TRUE;
-	updateDisplay(" UPGRADE SUCCESS","   POWER CYCLE  ");
+	updateDisplay("UPGRADE FIRMWARE","   POWER CYCLE  ");
 	while(1) displayLcd("   POWER CYCLE  ",1);
 }
