@@ -30,6 +30,7 @@ void resetGlobalVars(void)
 
     isWriteRTC = FALSE;
     isLogData = FALSE;
+	isTechMode = FALSE;
     usbStatus = 0;
 
     THROW_ERROR 	                    = 0;
@@ -562,7 +563,7 @@ void initializeAllRegisters(void)
     FCT_SLAVE_ADDRESS       = 1;
     FCT_STOP_BITS           = 0;
     FCT_DENSITY_MODE        = 0;
-    FCT_LOGGING_PERIOD      = 5;
+    FCT_LOGGING_PERIOD      = 2;
     FCT_STATISTICS			= 0;
 	FCT_ACTIVE_ERROR 		= 0;
 	FCT_AO_ALARM_MODE		= 0;

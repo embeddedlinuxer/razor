@@ -714,7 +714,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 
@@ -817,7 +816,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 
@@ -920,7 +918,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 
@@ -1023,7 +1020,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 
@@ -1126,7 +1122,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 
@@ -1229,7 +1224,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 
@@ -1332,7 +1326,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 
@@ -1435,7 +1428,6 @@ void logData(void)
 			if (fresult != FR_OK)
     		{    
 				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
         		stopAccessingUsb(fresult);
         		return;
     		} 

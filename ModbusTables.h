@@ -182,7 +182,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
     783 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&PDI_FREQ_F0,           // PDI factory freq adjust - no FCT_ exists
     785 ,   REGTYPE_DBL ,   REGPERM_FCT ,   (Uint32)&PDI_FREQ_F1,           // PDI factory freq adjust - no FCT_ exists
 
-	0	, 	0			, 	0					, 	0
+	0	, 	0			, 	0			, 	0
 };
 
  const Uint32 MB_TBL_INT[][4] = {

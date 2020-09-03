@@ -453,6 +453,9 @@ void upgradeFirmware(void)
     /// Go to start of file
     if (f_lseek(&fPtr,0) != FR_OK) return;
 
+	/// display clear
+	LCD_setcursor(0,0);
+
 	/// read file	
 	for (;;) {
 		for (i=0;i<5;i++) buffer[0] = '\0';
@@ -461,12 +464,12 @@ void upgradeFirmware(void)
 		if (br == 0) break; /* error or eof */
 		for (loop=0;loop<sizeof(buffer);loop++) 
 		{
-			LCD_setcursor(0,0);
       		for (i=0;i<100;i++) aisPtr[index] = buffer[loop];
-		    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
-			displayLcd(lcdLine1,1);	
 			index++;
    		}
+
+	    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+		displayLcd(lcdLine1,1);	
     }
 
 	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
