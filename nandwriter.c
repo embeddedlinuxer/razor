@@ -464,8 +464,8 @@ void upgradeFirmware(void)
 		if (br == 0) break; /* error or eof */
 		for (loop=0;loop<sizeof(buffer);loop++) 
 		{
-      		for (i=0;i<100;i++) aisPtr[index] = buffer[loop];
-	    	sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+      		for (i=0;i<10;i++) aisPtr[index] = buffer[loop];
+	    	for (i=0;i<5;i++) sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 			index++;
    		}
 
