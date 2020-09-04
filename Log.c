@@ -1545,9 +1545,6 @@ BOOL downloadCsv(void)
 	for (data_index=0;data_index<60;data_index++)
     sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+4*data_index,STREAM_OIL_ADJUST[data_index]);
 
-	/// clean the piple to transmit	
-	PDI_USBBufferFlush(USB_INSTANCE);
-
 	/// write
 	fr = f_puts(CSV_BUF,&csvWriteObject);
 	if (fr == EOF)
