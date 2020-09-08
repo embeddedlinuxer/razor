@@ -47,7 +47,7 @@
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
-#define MAX_BUF_SIZE   	MAX_DATA_SIZE*32
+#define MAX_BUF_SIZE   	MAX_DATA_SIZE*32*8 // 64KB
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_BUF[MAX_BUF_SIZE];
@@ -492,23 +492,35 @@ BOOL isUsbActive(void)
 
 void logData(void)
 {
-	if (!isLoggingReady) return;
+	if (!isUsbReady) return;
 	if (!isUsbActive()) return;
+	isUsbReady = FALSE;
 
-	/// temp hold
-	isLoggingReady = FALSE;
-
-    FRESULT fresult;
+    static FRESULT fresult;
+	static int time_counter = 1;
+	static int prev_sec = 0;
 	
    	/// read rtc
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
 	/// valid timestamp?
-   	if ((tmp_sec % REG_LOGGING_PERIOD != 0) || (tmp_sec == USB_RTC_SEC) || (tmp_sec == 0)) 
+   	if (tmp_sec == prev_sec) 
 	{
-		isLoggingReady = TRUE;
+		isUsbReady = TRUE;
 		return;
 	}
+	else 
+	{
+		prev_sec = tmp_sec;
+		time_counter++;
+	}
+
+	if (time_counter % REG_LOGGING_PERIOD != 0) 
+	{
+		isUsbReady = TRUE;
+		return;
+	}
+	else time_counter = 0;
 
 	/// UPDATE TIME	
 	USB_RTC_SEC = tmp_sec;
@@ -540,8 +552,11 @@ void logData(void)
         if (f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
         {
             fresult = f_close(&logWriteObject);
-			isLoggingReady = TRUE;
-            if (fresult == FR_OK) return;
+            if (fresult == FR_OK) 
+			{
+				isUsbReady = TRUE;
+				return;
+			}
         }
 
 		/// open file
@@ -613,20 +628,24 @@ void logData(void)
 
        	/// flush LOG_BUF 
        	LOG_BUF[0] = '\0';
-		
-		isLoggingReady = TRUE;
+		isUsbReady = TRUE;
 		return;
    	}   
 
 	/// new DATA_BUF
 	char DATA_BUF[MAX_DATA_SIZE];
-	static LOG_BUF_SIZE = 0;
+	static int LOG_BUF_SIZE = 0;
+	static int return_val = 0;
 	static BOOL buf_select = TRUE;
 	DATA_BUF[0] = '\0';
 
 	/// get modbus data
 	printf("get DATA_BUF\n");
-   	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+   	while (1) {
+		return_val = sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+		printf ("return size: %d\n",return_val);
+		if (return_val > 0) break;
+	}
 
 if (buf_select)
 {
@@ -635,7 +654,7 @@ if (buf_select)
    	{
 			LOG_BUF_SIZE += MAX_DATA_SIZE;
       		strcat(LOG_BUF,DATA_BUF);
-			isLoggingReady = TRUE;
+			isUsbReady = TRUE;
       	 	return;
    	}
 	else
@@ -653,13 +672,15 @@ if (buf_select)
    	    	return;
    		}
 		printf("open\n");
+		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
 			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
 			printf("error...\n");
-			isLoggingReady = TRUE;
 			return;
 		}
 
@@ -673,13 +694,15 @@ if (buf_select)
    	    	return;
    		}
 		printf("seek\n");
+		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
 			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
 			printf("error...\n");
-			isLoggingReady = TRUE;
 			return;
 		}
 
@@ -693,13 +716,15 @@ if (buf_select)
        		return;
    		}
 		printf("puts %d\n", val);
+		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
 			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
 			printf("error...\n");
-			isLoggingReady = TRUE;
 			return;
 		}
 
@@ -718,6 +743,8 @@ if (buf_select)
 		{
 			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
 			printf("error...\n");
 			return;
 		}
@@ -736,6 +763,8 @@ if (buf_select)
    		LOG_BUF1[0] = '\0';
 		buf_select = !buf_select;
 		PDI_USBBufferFlush(USB_INSTANCE);
+		isUsbReady = TRUE;
+       	return;
 	}
 }
 
@@ -744,10 +773,10 @@ else if (!buf_select)
    	/// fill data upto MAX_DATA_SIZE
    	if (MAX_BUF_SIZE >= (LOG_BUF_SIZE + MAX_DATA_SIZE))
    	{
-			LOG_BUF_SIZE += MAX_DATA_SIZE;
-      		strcat(LOG_BUF1,DATA_BUF);
-			isLoggingReady = TRUE;
-      	 	return;
+		LOG_BUF_SIZE += MAX_DATA_SIZE;
+      	strcat(LOG_BUF1,DATA_BUF);
+		isUsbReady = TRUE;
+      	return;
    	}
 	else
 	{
@@ -764,13 +793,14 @@ else if (!buf_select)
    	    	return;
    		}
 		printf("open\n");
+		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
 			LOG_BUF1[0] = '\0';
 			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
 			printf("error...\n");
-			isLoggingReady = TRUE;
 			return;
 		}
 
@@ -784,12 +814,14 @@ else if (!buf_select)
    	    	return;
    		}
 		printf("seek\n");
+		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
 			LOG_BUF1[0] = '\0';
 			f_close(&logWriteObject); 
-			isLoggingReady = TRUE;
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
 			printf("error...\n");
 			return;
 		}
@@ -804,13 +836,15 @@ else if (!buf_select)
        		return;
    		}
 		printf("puts %d\n", val);
+		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
 			LOG_BUF1[0] = '\0';
 			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
 			printf("error...\n");
-			isLoggingReady = TRUE;
 			return;
 		}
 
@@ -829,8 +863,9 @@ else if (!buf_select)
 		{
 			LOG_BUF1[0] = '\0';
 			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
 			printf("error...\n");
-			isLoggingReady = TRUE;
 			return;
 		}
 
@@ -848,7 +883,8 @@ else if (!buf_select)
    		LOG_BUF[0] = '\0';
 		buf_select = !buf_select;
 		PDI_USBBufferFlush(USB_INSTANCE);
-		isLoggingReady = TRUE;
+		isUsbReady = TRUE;
+       	return;
 	}
 	}
 }
@@ -1053,6 +1089,7 @@ BOOL uploadCsv(void)
 	if (!isUsbActive()) return FALSE;
 	isUploadCsv = FALSE;
 
+	int id;
 	int i;
 	FIL fil;
 	char line[1024];
@@ -1129,68 +1166,10 @@ BOOL uploadCsv(void)
 		float fvalue8 = atof(regval8);
 		float fvalue9 = atof(regval9);
 
-		/// integer	
-		if      (strcmp(regid, "201") == 0) REG_SN_PIPE = ivalue;
-		else if (strcmp(regid, "203") == 0) REG_AO_DAMPEN = ivalue;
-		else if (strcmp(regid, "204") == 0) REG_SLAVE_ADDRESS = ivalue;
-		else if (strcmp(regid, "205") == 0) REG_STOP_BITS = ivalue;
-		else if (strcmp(regid, "206") == 0) REG_DENSITY_MODE = ivalue;
-		else if (strcmp(regid, "219") == 0) REG_MODEL_CODE[0] = ivalue;
-		else if (strcmp(regid, "220") == 0) REG_MODEL_CODE[1] = ivalue;
-		else if (strcmp(regid, "221") == 0) REG_MODEL_CODE[2] = ivalue;
-		else if (strcmp(regid, "222") == 0) REG_MODEL_CODE[3] = ivalue;
-		else if (strcmp(regid, "223") == 0) REG_LOGGING_PERIOD = ivalue;
-		else if (strcmp(regid, "227") == 0) REG_AO_ALARM_MODE = ivalue;
-		else if (strcmp(regid, "228") == 0) REG_PHASE_HOLD_CYCLES = ivalue;
-		else if (strcmp(regid, "229") == 0) REG_RELAY_DELAY = ivalue;
-		else if (strcmp(regid, "230") == 0) REG_AO_MODE = ivalue;
-		else if (strcmp(regid, "231") == 0) REG_OIL_DENS_CORR_MODE = ivalue;
-		else if (strcmp(regid, "232") == 0) REG_RELAY_MODE = ivalue;
 
-		/// long int
-		else if (strcmp(regid, "301") == 0) REG_MEASSECTION_SN = ivalue;
-		else if (strcmp(regid, "303") == 0) REG_BACKBOARD_SN = ivalue;
-		else if (strcmp(regid, "305") == 0) REG_SAFETYBARRIER_SN = ivalue;
-		else if (strcmp(regid, "307") == 0) REG_POWERSUPPLY_SN = ivalue;
-		else if (strcmp(regid, "309") == 0) REG_PROCESSOR_SN = ivalue;
-		else if (strcmp(regid, "311") == 0) REG_DISPLAY_SN = ivalue;
-		else if (strcmp(regid, "313") == 0) REG_RF_SN = ivalue;
-		else if (strcmp(regid, "315") == 0) REG_ASSEMBLY_SN = ivalue;
-		else if (strcmp(regid, "15") == 0) VAR_Update(&REG_OIL_ADJUST,atof(regval),CALC_UNIT);
-		else if (strcmp(regid, "31") == 0) VAR_Update(&REG_TEMP_ADJUST,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "35") == 0) VAR_Update(&REG_PROC_AVGING,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "37") == 0) VAR_Update(&REG_OIL_INDEX,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "39") == 0) VAR_Update(&REG_OIL_P0,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "41") == 0) VAR_Update(&REG_OIL_P1,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "43") == 0) VAR_Update(&REG_OIL_FREQ_LOW,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "45") == 0) VAR_Update(&REG_OIL_FREQ_HIGH,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "47") == 0) VAR_Update(&REG_SAMPLE_PERIOD,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "49") == 0) VAR_Update(&REG_AO_LRV,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "51") == 0) VAR_Update(&REG_AO_URV,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "55") == 0) VAR_Update(&REG_BAUD_RATE,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "67") == 0) REG_OIL_CALC_MAX = fvalue;
-		else if (strcmp(regid, "69") == 0) REG_OIL_PHASE_CUTOFF = fvalue;
-		else if (strcmp(regid, "73") == 0) VAR_Update(&REG_STREAM,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "107") == 0) REG_AO_TRIMLO = fvalue;
-		else if (strcmp(regid, "109") == 0) REG_AO_TRIMHI = fvalue;
-		else if (strcmp(regid, "111") == 0) REG_DENSITY_ADJ = fvalue;
-		else if (strcmp(regid, "113") == 0) REG_DENSITY_UNIT.val = fvalue;
-		else if (strcmp(regid, "117") == 0) VAR_Update(&REG_DENSITY_D3,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "119") == 0) VAR_Update(&REG_DENSITY_D2,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "121") == 0) VAR_Update(&REG_DENSITY_D1,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "123") == 0) VAR_Update(&REG_DENSITY_D0,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "125") == 0) VAR_Update(&REG_DENSITY_CAL_VAL,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "151") == 0) VAR_Update(&REG_RELAY_SETPOINT,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "161") == 0) REG_OIL_DENSITY_MANUAL = fvalue;
-		else if (strcmp(regid, "163") == 0) VAR_Update(&REG_OIL_DENSITY_AI_LRV,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "165") == 0) VAR_Update(&REG_OIL_DENSITY_AI_URV,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "169") == 0) REG_AI_TRIMLO = fvalue;
-		else if (strcmp(regid, "171") == 0) REG_AI_TRIMHI = fvalue;
-		else if (strcmp(regid, "179") == 0) VAR_Update(&REG_OIL_T0,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "181") == 0) VAR_Update(&REG_OIL_T1,fvalue,CALC_UNIT);
-		else if (strcmp(regid, "781") == 0) PDI_TEMP_ADJ = fvalue;
-		else if (strcmp(regid, "783") == 0) PDI_FREQ_F0 = fvalue;
-		else if (strcmp(regid, "785") == 0) PDI_FREQ_F1 = fvalue;
+		/// 1-dimensional array
+		id = atoi(regid);
+		if ((id>0) && (id<1000)) updateVars(id,fvalue);
 
 		/// extended
 		else if (strcmp(regid, "60001") == 0) REG_TEMP_OIL_NUM_CURVES = fvalue; 

@@ -1695,14 +1695,14 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			isLogData = isEnabled;
 			if (isLogData) 
 			{
+				isUsbReady = TRUE;
 				resetUsbDriver();
-				isLoggingReady = TRUE;
                 usbStatus = 1;
 			}
             else
             {
+				isUsbReady = FALSE;
 				resetUsbStaticVars();
-				isLoggingReady = FALSE;
                 usbStatus = 0;
             }
             return onNextMessagePressed(FXN_CFG_DATALOGGER_ENABLELOGGER,CHANGE_SUCCESS);
@@ -1740,7 +1740,7 @@ fxnConfig_DataLogger_Period(const Uint16 input)
 
     switch (input)  {
         case BTN_VALUE  : return onFxnValuePressed(FXN_CFG_DATALOGGER_PERIOD, FALSE, 0);
-        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_DATALOGGER_PERIOD,3); // 59'\0'
+        case BTN_STEP   : return onFxnStepPressed(FXN_CFG_DATALOGGER_PERIOD,5); // 3600'\0'
         case BTN_ENTER  : return onFxnEnterPressed(FXN_CFG_DATALOGGER_PERIOD, 59.0, 2.0, NULL_VAR, NULL_DBL, &REG_LOGGING_PERIOD);
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_DATALOGGER_PERIOD);
         default         : return FXN_CFG_DATALOGGER_PERIOD;
@@ -3891,12 +3891,15 @@ fxnSecurityInfo_TechMode(const Uint16 input)
 	static int i;
 	static double d;
 	static BOOL isIdEntered = FALSE;
+	static BOOL isIntType = FALSE;
 
-    (isIdEntered) ? displayFxn(SECURITYINFO_TECHMODE, 0, 4) : displayFxn(SECURITYINFO_TECHMODE, 0, 0);
+	if (isIntType) displayFxn(SECURITYINFO_TECHMODE, 0, 0);
+    else (isIdEntered) ? displayFxn(SECURITYINFO_TECHMODE, 0, 4) : displayFxn(SECURITYINFO_TECHMODE, 0, 0);
 
     switch (input)  {
         case BTN_VALUE  : 
-			(isIdEntered) ? onFxnValuePressed(FXN_SECURITYINFO_TECHMODE, TRUE, 4) : onFxnValuePressed(FXN_SECURITYINFO_TECHMODE, FALSE, 0);
+			if (isIntType) onFxnValuePressed(FXN_SECURITYINFO_TECHMODE, FALSE, 0);
+			else (isIdEntered) ? onFxnValuePressed(FXN_SECURITYINFO_TECHMODE, TRUE, 4) : onFxnValuePressed(FXN_SECURITYINFO_TECHMODE, FALSE, 0);
 			return FXN_SECURITYINFO_TECHMODE;
 	    case BTN_STEP   : return onFxnStepPressed(FXN_SECURITYINFO_TECHMODE,16);
         case BTN_ENTER  : 
@@ -3905,12 +3908,14 @@ fxnSecurityInfo_TechMode(const Uint16 input)
 			{
 				d = atof(lcdLine1);
 				isIdEntered = FALSE;
+				isIntType = FALSE;
 				(updateVars(i,d)) ? strcpy(lcdLine1,CHANGE_SUCCESS) : strcpy(lcdLine1,INVALID);
 				return onFxnEnterPressed(FXN_SECURITYINFO_TECHMODE,0,0,NULL_VAR,NULL_DBL,NULL_INT);
 			}
 			else
 			{
 				i = atoi(lcdLine1);
+				((i>200) && (i<501)) ? (isIntType = TRUE) : (isIntType = FALSE); 
 				isIdEntered = TRUE;
 				return FXN_SECURITYINFO_TECHMODE;
 			}
