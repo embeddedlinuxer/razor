@@ -35,6 +35,7 @@
 #include <ti/csl/src/ip/syscfg/V0/cslr_syscfg.h>
 
 extern void delayInt(Uint32 count);
+extern BOOL updateVars(const int id,double val);
 
 ///// EXTENDED REGISTERS /////
 #define SPECIAL_OFFSET 60000
@@ -1446,7 +1447,7 @@ void MB_SendPacket_Int16(void)
 			if (data_type == REGTYPE_DBL)
 				mbtable_val = (int) Round_N(*mbtable_ptr_dbl,0); 	// round to whole number and cast to int
 			else if (data_type == REGTYPE_SWI)
-				mbtable_val = (int) Round_N( (( (REGSWI*)mbtable_ptr_dbl)->val) ,0); 	// round to whole number and cast to int
+				mbtable_val = (int) Round_N((((REGSWI*)mbtable_ptr_dbl)->val) ,0); 	// round to whole number and cast to int
 			else if (data_type == REGTYPE_INT)
 				mbtable_val = *((int*)mbtable_ptr_dbl);				// cast double* as int* then dereference
 			else if (data_type == REGTYPE_VAR)
@@ -2874,4 +2875,90 @@ isNoPermission(Uint8 prot, Uint8 isWriteCommand)
 	}
 	else  // read command
 		return (prot == REGPERM_WRITE_O) ? 1 : 0;
+}
+
+
+BOOL
+updateVars(const int id, double val)
+{
+	/// integer
+	if (((id > 200) && (id < 301)) || ((id > 400) && (id < 501)))
+	{
+		int i = 0;
+		while (MB_TBL_INT[i][0] != 0) //address 0 = end of table
+		{
+			if (MB_TBL_INT[i][0] == id)
+			{
+				int* mbtable_ptr;
+				mbtable_ptr = (int*) MB_TBL_INT[i][3]; 
+                *mbtable_ptr = val;
+
+				return TRUE;
+			}
+			else i++;
+		}
+	}
+	else if ((id > 300) && (id < 401))
+	{
+		int i = 0;
+		while (MB_TBL_LONGINT[i][0] != 0) //address 0 = end of table
+		{
+			if (MB_TBL_LONGINT[i][0] == id)
+			{
+				int* mbtable_ptr;
+				mbtable_ptr = (int*) MB_TBL_LONGINT[i][3]; 
+                *mbtable_ptr = val;
+
+				return TRUE;
+			}
+			else i++;
+		}
+	}
+	else if (((id > 0) && (id < 201)) || ((id > 700) && (id < 801)))
+	{
+		int i = 0;
+		while (MB_TBL_FLOAT[i][0] != 0) //address 0 = end of table
+		{
+			if (MB_TBL_FLOAT[i][0] == id)
+			{
+				double* mbtable_ptr;
+				Uint8 data_type = (int*) MB_TBL_FLOAT[i][1];
+				mbtable_ptr = (double*) MB_TBL_FLOAT[i][3]; 
+				if (data_type == REGTYPE_DBL) *mbtable_ptr = val;
+				else if (data_type == REGTYPE_VAR) VAR_Update(mbtable_ptr, (double) val, 0);
+                
+				return TRUE;
+			}
+			else i++;
+		}
+	}
+	else if (id > 60000)
+	{
+		int i = 0;
+		while (MB_TBL_EXTENDED[i][0] != 0) //address 0 = end of table
+		{
+			if (MB_TBL_EXTENDED[i][0] == id)
+			{
+				int* mbtable_ptr;
+				mbtable_ptr = (int*) MB_TBL_EXTENDED[i][1]; 
+				*mbtable_ptr = val;
+                
+				return TRUE;
+			}
+			else i++;
+		}
+	}
+	else if ((id > 9000) && (id<60000))
+	{
+		if (id==9999) 
+		{
+			if (val==1) 
+			{
+				COIL_UPDATE_FACTORY_DEFAULT.val = TRUE;
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
 }

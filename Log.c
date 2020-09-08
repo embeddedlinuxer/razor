@@ -46,17 +46,12 @@
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
-#define MAX_BUF_SIZE   	4096*2
+#define MAX_DATA_SIZE  	256
+#define MAX_BUF_SIZE   	MAX_DATA_SIZE*32
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_BUF[MAX_BUF_SIZE];
 static char LOG_BUF1[MAX_BUF_SIZE];
-static char LOG_BUF2[MAX_BUF_SIZE];
-static char LOG_BUF3[MAX_BUF_SIZE];
-static char LOG_BUF4[MAX_BUF_SIZE];
-static char LOG_BUF5[MAX_BUF_SIZE];
-static char LOG_BUF6[MAX_BUF_SIZE];
-static char LOG_BUF7[MAX_BUF_SIZE];
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char CSV_BUF[MAX_CSV_SIZE];
@@ -497,16 +492,23 @@ BOOL isUsbActive(void)
 
 void logData(void)
 {
+	if (!isLoggingReady) return;
 	if (!isUsbActive()) return;
 
+	/// temp hold
+	isLoggingReady = FALSE;
+
     FRESULT fresult;
-	static Uint8 buf_index= 0;
 	
    	/// read rtc
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
 	/// valid timestamp?
-   	if ((tmp_sec % REG_LOGGING_PERIOD != 0) || (tmp_sec == USB_RTC_SEC) || (tmp_sec == 0)) return;
+   	if ((tmp_sec % REG_LOGGING_PERIOD != 0) || (tmp_sec == USB_RTC_SEC) || (tmp_sec == 0)) 
+	{
+		isLoggingReady = TRUE;
+		return;
+	}
 
 	/// UPDATE TIME	
 	USB_RTC_SEC = tmp_sec;
@@ -522,7 +524,6 @@ void logData(void)
        	current_day = USB_RTC_DAY;
 
        	LOG_BUF[0] = '\0';
-		buf_index = 0;
 
        	// mkdir PDI
        	fresult = f_mkdir("0:PDI");
@@ -539,6 +540,7 @@ void logData(void)
         if (f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
         {
             fresult = f_close(&logWriteObject);
+			isLoggingReady = TRUE;
             if (fresult == FR_OK) return;
         }
 
@@ -612,835 +614,245 @@ void logData(void)
        	/// flush LOG_BUF 
        	LOG_BUF[0] = '\0';
 		
+		isLoggingReady = TRUE;
 		return;
    	}   
 
 	/// new DATA_BUF
-	char DATA_BUF[200];
+	char DATA_BUF[MAX_DATA_SIZE];
+	static LOG_BUF_SIZE = 0;
+	static BOOL buf_select = TRUE;
 	DATA_BUF[0] = '\0';
 
 	/// get modbus data
 	printf("get DATA_BUF\n");
    	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-	if (buf_index == 0)
+if (buf_select)
+{
+	/// fill data upto MAX_DATA_SIZE
+   	if (MAX_BUF_SIZE >= (LOG_BUF_SIZE + MAX_DATA_SIZE))
+   	{
+			LOG_BUF_SIZE += MAX_DATA_SIZE;
+      		strcat(LOG_BUF,DATA_BUF);
+			isLoggingReady = TRUE;
+      	 	return;
+   	}
+	else
 	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF)) >= strlen(DATA_BUF))
-    	{
-       		strcat(LOG_BUF,DATA_BUF);
-       	 	return;
-    	}
-		else
+		// reset logbuf length
+		LOG_BUF_SIZE = 0;
+
+   		/// open
+   		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+   		if (fresult != FR_OK)
+   		{
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+   	    	stopAccessingUsb(fresult);
+   	    	return;
+   		}
+		printf("open\n");
+
+		if (f_error(&logWriteObject) != 0)
 		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-       	    	stopAccessingUsb(fresult);
-       	    	return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-       	    	stopAccessingUsb(fresult);
-       	    	return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF,&logWriteObject);
-       		if (val != strlen(LOG_BUF))
-       		{
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF1[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index++;
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+			printf("error...\n");
+			isLoggingReady = TRUE;
+			return;
 		}
-	}
-	else if (buf_index == 1)
-	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF1)) >= strlen(DATA_BUF))
-    	{
-        	strcat(LOG_BUF1,DATA_BUF);
-        	return;
-    	}
-		else
+
+   		/// append mode 
+   		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
+   		if (fresult != FR_OK)
+   		{
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+   	    	stopAccessingUsb(fresult);
+   	    	return;
+   		}
+		printf("seek\n");
+
+		if (f_error(&logWriteObject) != 0)
 		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF1,&logWriteObject);
-       		if (val != strlen(LOG_BUF1))
-       		{
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF1[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF1[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF2[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index++;
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+			printf("error...\n");
+			isLoggingReady = TRUE;
+			return;
 		}
-	}
-	else if (buf_index == 2)
-	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF2)) >= strlen(DATA_BUF))
-    	{
-        	strcat(LOG_BUF2,DATA_BUF);
-        	return;
-    	}
-		else
+
+   		/// write
+		int val = f_puts(LOG_BUF,&logWriteObject);
+  		if (val != strlen(LOG_BUF))
+   		{
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+       		stopAccessingUsb(FR_DISK_ERR);
+       		return;
+   		}
+		printf("puts %d\n", val);
+
+		if (f_error(&logWriteObject) != 0)
 		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF2,&logWriteObject);
-       		if (val != strlen(LOG_BUF2))
-       		{
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF2[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF2[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF3[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index++;
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+			printf("error...\n");
+			isLoggingReady = TRUE;
+			return;
 		}
-	}
-	else if (buf_index == 3)
-	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF3)) >= strlen(DATA_BUF))
-    	{
-        	strcat(LOG_BUF3,DATA_BUF);
-        	return;
-    	}
-		else
+
+		/// sync
+   		fresult = f_sync(&logWriteObject);
+   		if (fresult != FR_OK)
+   		{    
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+       		stopAccessingUsb(fresult);
+       		return;
+   		}    
+		usb_osalDelayMs(1000);
+
+		if (f_error(&logWriteObject) != 0)
 		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF3,&logWriteObject);
-       		if (val != strlen(LOG_BUF3))
-       		{
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF3[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF3[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF4[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index++;
+			LOG_BUF[0] = '\0';
+			f_close(&logWriteObject); 
+			printf("error...\n");
+			return;
 		}
+
+   		/// close
+   		fresult = f_close(&logWriteObject);
+		if (fresult != FR_OK)
+   		{    
+			LOG_BUF[0] = '\0';
+       		stopAccessingUsb(fresult);
+       		return;
+   		} 
+		printf("f_close\n");
+
+   		/// reset log buf
+   		LOG_BUF1[0] = '\0';
+		buf_select = !buf_select;
+		PDI_USBBufferFlush(USB_INSTANCE);
 	}
-	else if (buf_index == 4)
-	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF4)) >= strlen(DATA_BUF))
-    	{
-        	strcat(LOG_BUF4,DATA_BUF);
-        	return;
-    	}
-		else
-		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF4,&logWriteObject);
-       		if (val != strlen(LOG_BUF4))
-       		{
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF4[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF4[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF5[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index++;
-		}
-	}
-	else if (buf_index == 5)
-	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF5)) >= strlen(DATA_BUF))
-    	{
-        	strcat(LOG_BUF5,DATA_BUF);
-        	return;
-    	}
-		else
-		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF5,&logWriteObject);
-       		if (val != strlen(LOG_BUF5))
-       		{
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF5[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF5[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF6[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index++;
-		}
-	}
-	else if (buf_index == 6)
-	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF6)) >= strlen(DATA_BUF))
-    	{
-        	strcat(LOG_BUF6,DATA_BUF);
-        	return;
-    	}
-		else
-		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF6,&logWriteObject);
-       		if (val != strlen(LOG_BUF6))
-       		{
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF6[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF6[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF7[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index++;
-		}
-	}
-	else if (buf_index == 7)
-	{
-    	/// fill data upto MAX_DATA_SIZE
-    	if (((MAX_BUF_SIZE-1) - strlen(LOG_BUF7)) >= strlen(DATA_BUF))
-    	{
-        	strcat(LOG_BUF7,DATA_BUF);
-        	return;
-    	}
-		else
-		{
-       		/// open
-       		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("open\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// append mode 
-       		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-       		if (fresult != FR_OK)
-       		{
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(fresult);
-           		return;
-       		}
-			printf("seek\n");
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-       		/// write
-			int val = f_puts(LOG_BUF7,&logWriteObject);
-       		if (val != strlen(LOG_BUF7))
-       		{
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-           		stopAccessingUsb(FR_DISK_ERR);
-           		return;
-       		}
-			printf("puts %d\n", val);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-			/// sync
-    		fresult = f_sync(&logWriteObject);
-    		if (fresult != FR_OK)
-    		{    
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-        		stopAccessingUsb(fresult);
-        		return;
-    		}    
-			usb_osalDelayMs(1000);
-
-			if (f_error(&logWriteObject) != 0)
-			{
-				LOG_BUF7[0] = '\0';
-				f_close(&logWriteObject); 
-				printf("error...\n");
-				return;
-			}
-
-    		/// close
-    		fresult = f_close(&logWriteObject);
-			if (fresult != FR_OK)
-    		{    
-				LOG_BUF7[0] = '\0';
-        		stopAccessingUsb(fresult);
-        		return;
-    		} 
-			printf("f_close\n");
-
-       		/// reset log buf
-       		LOG_BUF[0] = '\0';
-			PDI_USBBufferFlush(USB_INSTANCE);
-			buf_index = 0;
-		}
-	}
-	else buf_index = 0;
 }
+
+else if (!buf_select) 
+{
+   	/// fill data upto MAX_DATA_SIZE
+   	if (MAX_BUF_SIZE >= (LOG_BUF_SIZE + MAX_DATA_SIZE))
+   	{
+			LOG_BUF_SIZE += MAX_DATA_SIZE;
+      		strcat(LOG_BUF1,DATA_BUF);
+			isLoggingReady = TRUE;
+      	 	return;
+   	}
+	else
+	{
+		// reset logbuf length
+		LOG_BUF_SIZE = 0;
+
+   		/// open
+   		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+   		if (fresult != FR_OK)
+   		{
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+   	    	stopAccessingUsb(fresult);
+   	    	return;
+   		}
+		printf("open\n");
+
+		if (f_error(&logWriteObject) != 0)
+		{
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+			printf("error...\n");
+			isLoggingReady = TRUE;
+			return;
+		}
+
+   		/// append mode 
+   		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
+   		if (fresult != FR_OK)
+   		{
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+   	    	stopAccessingUsb(fresult);
+   	    	return;
+   		}
+		printf("seek\n");
+
+		if (f_error(&logWriteObject) != 0)
+		{
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+			isLoggingReady = TRUE;
+			printf("error...\n");
+			return;
+		}
+
+   		/// write
+		int val = f_puts(LOG_BUF1,&logWriteObject);
+  		if (val != strlen(LOG_BUF1))
+   		{
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+       		stopAccessingUsb(FR_DISK_ERR);
+       		return;
+   		}
+		printf("puts %d\n", val);
+
+		if (f_error(&logWriteObject) != 0)
+		{
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+			printf("error...\n");
+			isLoggingReady = TRUE;
+			return;
+		}
+
+		/// sync
+   		fresult = f_sync(&logWriteObject);
+   		if (fresult != FR_OK)
+   		{    
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+       		stopAccessingUsb(fresult);
+       		return;
+   		}    
+		usb_osalDelayMs(1000);
+
+		if (f_error(&logWriteObject) != 0)
+		{
+			LOG_BUF1[0] = '\0';
+			f_close(&logWriteObject); 
+			printf("error...\n");
+			isLoggingReady = TRUE;
+			return;
+		}
+
+   		/// close
+   		fresult = f_close(&logWriteObject);
+		if (fresult != FR_OK)
+   		{    
+			LOG_BUF1[0] = '\0';
+       		stopAccessingUsb(fresult);
+       		return;
+   		} 
+		printf("f_close\n");
+
+   		/// reset log buf
+   		LOG_BUF[0] = '\0';
+		buf_select = !buf_select;
+		PDI_USBBufferFlush(USB_INSTANCE);
+		isLoggingReady = TRUE;
+	}
+	}
+}
+
 
 
 BOOL downloadCsv(void)
@@ -1551,7 +963,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		Swi_enable();
 		return FALSE;
 	}
 
@@ -1560,7 +971,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		Swi_enable();
 		return FALSE;
 	}
 	for (i=0;i<1000;i++) displayLcd("    Loading...  ",LCD1);
@@ -1571,7 +981,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		Swi_enable();
 		return FALSE;
 	}
 	printf("closing file%d\n",i);

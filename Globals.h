@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.1"
+#define FIRMWARE_VERSION 		"1.2.2"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -158,6 +158,7 @@ _EXTERN BOOL isCsvDownloadSuccess;
 _EXTERN BOOL isScanSuccess;
 _EXTERN BOOL isPdiUpgradeMode;
 _EXTERN BOOL isTechMode;
+_EXTERN BOOL isLoggingReady;
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
