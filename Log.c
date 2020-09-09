@@ -492,9 +492,7 @@ BOOL isUsbActive(void)
 
 void logData(void)
 {
-	if (!isUsbReady) return;
 	if (!isUsbActive()) return;
-	isUsbReady = FALSE;
 
     static FRESULT fresult;
 	static int time_counter = 1;
@@ -506,7 +504,6 @@ void logData(void)
 	/// valid timestamp?
    	if (tmp_sec == prev_sec) 
 	{
-		isUsbReady = TRUE;
 		return;
 	}
 	else 
@@ -517,7 +514,6 @@ void logData(void)
 
 	if (time_counter % REG_LOGGING_PERIOD != 0) 
 	{
-		isUsbReady = TRUE;
 		return;
 	}
 	else time_counter = 0;
@@ -554,7 +550,6 @@ void logData(void)
             fresult = f_close(&logWriteObject);
             if (fresult == FR_OK) 
 			{
-				isUsbReady = TRUE;
 				return;
 			}
         }
@@ -628,59 +623,32 @@ void logData(void)
 
        	/// flush LOG_BUF 
        	LOG_BUF[0] = '\0';
-		isUsbReady = TRUE;
 		return;
    	}   
 
 	/// new DATA_BUF
-	char DATA_BUF[MAX_DATA_SIZE];
-	static int LOG_BUF_SIZE = 0;
-	static int return_val = 0;
-	static BOOL buf_select = TRUE;
-	DATA_BUF[0] = '\0';
+	char *DATA_BUF;
+    DATA_BUF=(char *)malloc(MAX_DATA_SIZE*sizeof(char));
 
 	/// get modbus data
-	printf("get DATA_BUF\n");
-   	while (1) {
-		return_val = sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
-		printf ("return size: %d\n",return_val);
-		if (return_val > 0) break;
-	}
-
-if (buf_select)
-{
-	/// fill data upto MAX_DATA_SIZE
-   	if (MAX_BUF_SIZE >= (LOG_BUF_SIZE + MAX_DATA_SIZE))
-   	{
-			LOG_BUF_SIZE += MAX_DATA_SIZE;
-      		strcat(LOG_BUF,DATA_BUF);
-			isUsbReady = TRUE;
-      	 	return;
-   	}
-	else
-	{
-		// reset logbuf length
-		LOG_BUF_SIZE = 0;
+	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
    		/// open
    		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
    		if (fresult != FR_OK)
    		{
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
    	    	stopAccessingUsb(fresult);
+			free(DATA_BUF);
    	    	return;
    		}
-		printf("open\n");
-		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
 			PDI_USBBufferFlush(USB_INSTANCE);
        		stopAccessingUsb(FR_DISK_ERR);
-			printf("error...\n");
+			free(DATA_BUF);
 			return;
 		}
 
@@ -688,43 +656,38 @@ if (buf_select)
    		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
    		if (fresult != FR_OK)
    		{
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
    	    	stopAccessingUsb(fresult);
+			free(DATA_BUF);
    	    	return;
    		}
-		printf("seek\n");
-		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
 			PDI_USBBufferFlush(USB_INSTANCE);
        		stopAccessingUsb(FR_DISK_ERR);
-			printf("error...\n");
+			free(DATA_BUF);
 			return;
 		}
 
    		/// write
-		int val = f_puts(LOG_BUF,&logWriteObject);
-  		if (val != strlen(LOG_BUF))
+		int val = f_puts(DATA_BUF,&logWriteObject);
+  		if (val != strlen(DATA_BUF))
    		{
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
        		stopAccessingUsb(FR_DISK_ERR);
+			free(DATA_BUF);
        		return;
    		}
-		printf("puts %d\n", val);
 		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
 			PDI_USBBufferFlush(USB_INSTANCE);
        		stopAccessingUsb(FR_DISK_ERR);
-			printf("error...\n");
+			free(DATA_BUF);
 			return;
 		}
 
@@ -732,20 +695,18 @@ if (buf_select)
    		fresult = f_sync(&logWriteObject);
    		if (fresult != FR_OK)
    		{    
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
        		stopAccessingUsb(fresult);
+			free(DATA_BUF);
        		return;
    		}    
-		usb_osalDelayMs(1000);
 
 		if (f_error(&logWriteObject) != 0)
 		{
-			LOG_BUF[0] = '\0';
 			f_close(&logWriteObject); 
 			PDI_USBBufferFlush(USB_INSTANCE);
        		stopAccessingUsb(FR_DISK_ERR);
-			printf("error...\n");
+			free(DATA_BUF);
 			return;
 		}
 
@@ -753,140 +714,15 @@ if (buf_select)
    		fresult = f_close(&logWriteObject);
 		if (fresult != FR_OK)
    		{    
-			LOG_BUF[0] = '\0';
        		stopAccessingUsb(fresult);
+			free(DATA_BUF);
        		return;
    		} 
-		printf("f_close\n");
 
    		/// reset log buf
-   		LOG_BUF1[0] = '\0';
-		buf_select = !buf_select;
 		PDI_USBBufferFlush(USB_INSTANCE);
-		isUsbReady = TRUE;
+		free(DATA_BUF);
        	return;
-	}
-}
-
-else if (!buf_select) 
-{
-   	/// fill data upto MAX_DATA_SIZE
-   	if (MAX_BUF_SIZE >= (LOG_BUF_SIZE + MAX_DATA_SIZE))
-   	{
-		LOG_BUF_SIZE += MAX_DATA_SIZE;
-      	strcat(LOG_BUF1,DATA_BUF);
-		isUsbReady = TRUE;
-      	return;
-   	}
-	else
-	{
-		// reset logbuf length
-		LOG_BUF_SIZE = 0;
-
-   		/// open
-   		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-   		if (fresult != FR_OK)
-   		{
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-   	    	stopAccessingUsb(fresult);
-   	    	return;
-   		}
-		printf("open\n");
-		usb_osalDelayMs(1000);
-
-		if (f_error(&logWriteObject) != 0)
-		{
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-			printf("error...\n");
-			return;
-		}
-
-   		/// append mode 
-   		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-   		if (fresult != FR_OK)
-   		{
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-   	    	stopAccessingUsb(fresult);
-   	    	return;
-   		}
-		printf("seek\n");
-		usb_osalDelayMs(1000);
-
-		if (f_error(&logWriteObject) != 0)
-		{
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-       		stopAccessingUsb(FR_DISK_ERR);
-			printf("error...\n");
-			return;
-		}
-
-   		/// write
-		int val = f_puts(LOG_BUF1,&logWriteObject);
-  		if (val != strlen(LOG_BUF1))
-   		{
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-       		stopAccessingUsb(FR_DISK_ERR);
-       		return;
-   		}
-		printf("puts %d\n", val);
-		usb_osalDelayMs(1000);
-
-		if (f_error(&logWriteObject) != 0)
-		{
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-       		stopAccessingUsb(FR_DISK_ERR);
-			printf("error...\n");
-			return;
-		}
-
-		/// sync
-   		fresult = f_sync(&logWriteObject);
-   		if (fresult != FR_OK)
-   		{    
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-       		stopAccessingUsb(fresult);
-       		return;
-   		}    
-		usb_osalDelayMs(1000);
-
-		if (f_error(&logWriteObject) != 0)
-		{
-			LOG_BUF1[0] = '\0';
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-       		stopAccessingUsb(FR_DISK_ERR);
-			printf("error...\n");
-			return;
-		}
-
-   		/// close
-   		fresult = f_close(&logWriteObject);
-		if (fresult != FR_OK)
-   		{    
-			LOG_BUF1[0] = '\0';
-       		stopAccessingUsb(fresult);
-       		return;
-   		} 
-		printf("f_close\n");
-
-   		/// reset log buf
-   		LOG_BUF[0] = '\0';
-		buf_select = !buf_select;
-		PDI_USBBufferFlush(USB_INSTANCE);
-		isUsbReady = TRUE;
-       	return;
-	}
-	}
 }
 
 

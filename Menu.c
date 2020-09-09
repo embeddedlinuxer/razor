@@ -1695,13 +1695,11 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			isLogData = isEnabled;
 			if (isLogData) 
 			{
-				isUsbReady = TRUE;
 				resetUsbDriver();
                 usbStatus = 1;
 			}
             else
             {
-				isUsbReady = FALSE;
 				resetUsbStaticVars();
                 usbStatus = 0;
             }
