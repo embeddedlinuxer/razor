@@ -225,6 +225,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
     232 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_RELAY_MODE,        // relay mode
     233 ,   REGTYPE_INT ,   REGPERM_READ_O  ,   (Uint32)&REG_DIAGNOSTICS,       // diagnostics 
     234 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&REG_USB_TRY,           // MAX_USB_TRY 
+    235 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_DOWNLOAD_CSV,      // download csv while upgrading
 
     402 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_AO_DAMPEN,         //
     403 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_SLAVE_ADDRESS,     //  
@@ -313,7 +314,7 @@ const Uint32 MB_TBL_COIL[][4] = {
 	3	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_RELAY[2],				    //unused; hardware not implemented
 	4	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_RELAY[3],				    //unused; hardware not implemented
 	5	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_BEGIN_OIL_CAP,		    //begins oil capture process
-	6	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_UPGRADE_ENABLE,			    //enable USB logging (basic)
+	6	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_RESERVED_6,		    	//reserved
 	7	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_LOG_ALARMS,			    //enable USB logging for alarms
 	8	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_LOG_ERRORS,			    //enable USB logging for errors
 	9	, 	REGTYPE_COIL	,	REGPERM_PASSWD	,	(Uint32)&COIL_LOG_ACTIVITY,			    //enable USB logging for configuration changes by user

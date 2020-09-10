@@ -760,6 +760,9 @@ typedef struct
 #pragma DATA_SECTION(REG_USB_TRY,"CFG")
 	_EXTERN far int REG_USB_TRY;
  
+#pragma DATA_SECTION(REG_DOWNLOAD_CSV,"CFG")
+	_EXTERN far int REG_DOWNLOAD_CSV;
+
     _EXTERN far int TMP_RTC_SEC;        // RTC read-only: seconds
     _EXTERN far int TMP_RTC_MIN;        // RTC read-only: minutes
     _EXTERN far int TMP_RTC_HR;         // RTC read-only: hours
@@ -934,8 +937,8 @@ typedef struct
 #pragma DATA_SECTION(COIL_BEGIN_OIL_CAP,"CFG")
 	_EXTERN far COIL COIL_BEGIN_OIL_CAP;
 
-#pragma DATA_SECTION(COIL_UPGRADE_ENABLE,"CFG")
-	_EXTERN far COIL COIL_UPGRADE_ENABLE;
+#pragma DATA_SECTION(COIL_DOWNLOAD_CSV,"CFG")
+	_EXTERN far COIL COIL_DOWNLOAD_CSV;
 
 #pragma DATA_SECTION(COIL_LOG_ALARMS,"CFG")
 	_EXTERN far COIL COIL_LOG_ALARMS;
@@ -1001,6 +1004,9 @@ typedef struct
 
 #pragma DATA_SECTION(COIL_UNLOCKED_FACTORY_DEFAULT,"CFG")
 	_EXTERN far COIL COIL_UNLOCKED_FACTORY_DEFAULT;
+
+#pragma DATA_SECTION(COIL_RESERVED_6,"CFG")
+	_EXTERN far COIL COIL_RESERVED_6;
 
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
