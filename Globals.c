@@ -123,7 +123,7 @@ void storeUserDataToFactoryDefault(void)
     // dislable the trigger
     COIL_UPDATE_FACTORY_DEFAULT.val = FALSE;
     COIL_UNLOCKED_FACTORY_DEFAULT.val = FALSE;
-	REG_DOWNLOAD_CSV = TRUE;
+	COIL_UPGRADE_ENABLE.val = FALSE;
 
     // save to nand flash
     Swi_post(Swi_writeNand);
@@ -542,7 +542,7 @@ void reloadFactoryDefault(void)
 	COIL_Initialize(&COIL_LOCKED_HARD_FACTORY_RESET, TRUE, 0);
 	COIL_Initialize(&COIL_UPDATE_FACTORY_DEFAULT, FALSE, 0);
 	COIL_Initialize(&COIL_UNLOCKED_FACTORY_DEFAULT, FALSE, 0);
-	COIL_Initialize(&COIL_RESERVED_6, FALSE, 0);
+	COIL_Initialize(&COIL_UPGRADE_ENABLE, FALSE, 0);
 
 	CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 	THROW_ERROR 		= 0;
@@ -607,7 +607,6 @@ void initializeAllRegisters(void)
 	REG_OIL_DENS_CORR_MODE	= FCT_OIL_DENS_CORR_MODE; 
 	REG_RELAY_MODE 			= FCT_RELAY_MODE;
 	REG_DIAGNOSTICS 		= 0;
-	REG_DOWNLOAD_CSV 		= TRUE;
 	
 	//////////////////////////////////////
 	// REGTYPE_LONGINT (REGPERM_FCT)
@@ -1215,7 +1214,7 @@ void initializeAllRegisters(void)
 	COIL_Initialize(&COIL_RELAY[2], FALSE, 0);
 	COIL_Initialize(&COIL_RELAY[3], FALSE, 0);
 	COIL_Initialize(&COIL_BEGIN_OIL_CAP, FALSE, 0);
-	COIL_Initialize(&COIL_RESERVED_6, FALSE, 0);
+	COIL_Initialize(&COIL_UPGRADE_ENABLE, FALSE, 0);
     COIL_Initialize(&COIL_LOG_ALARMS, FALSE, 0);
 	COIL_Initialize(&COIL_LOG_ERRORS, FALSE, 0);
 	COIL_Initialize(&COIL_LOG_ACTIVITY, FALSE, 0);

@@ -67,11 +67,6 @@ static Uint8* gNandTx;
 static Uint8* gNandRx;
 
 /************************************************************
-* Firmware upgrade  							            *
-************************************************************/
-static BYTE buffer[4096];
-
-/************************************************************
 * Function Declarations                                     *
 ************************************************************/
 
@@ -406,6 +401,7 @@ void upgradeFirmware(void)
     ASYNC_MEM_InfoHandle dummy;
 	FIL fPtr;
 
+	BYTE buffer[4096];
 	int index = 0;
 	int loop = 0;
 	UINT br = 0;
@@ -493,20 +489,18 @@ void upgradeFirmware(void)
 	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
 
 	/// download existing csv
-	if (REG_DOWNLOAD_CSV == TRUE)
-	{
-		while (isDownloadCsv) downloadCsv();
-	}
-
-	/// global erase
-	printf("global erase...\n");
-    if (NAND_globalErase(hNandInfo) != E_PASS) return;
-   	for(i=0;i<ACCESS_DELAY*20;i++);
+	printf("download csv....\n");
+	while (isDownloadCsv) downloadCsv();
 
 	/// disable all interrupts while accessing flash memory
 	printf("Swi_disable....\n");
 	Swi_disable();
     Hwi_disable();
+
+	/// global erase
+	printf("global erase...\n");
+    if (NAND_globalErase(hNandInfo) != E_PASS) return;
+   	for(i=0;i<ACCESS_DELAY*20;i++);
 
     /// Write the file data to the NAND flash
 	printf("write data to flash...\n");
