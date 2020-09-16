@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.3"
+#define FIRMWARE_VERSION 		"1.2.4"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -574,6 +574,12 @@ typedef struct
 ////////////////////////////////////////////////
 ///// FCT VAR/DOUBLE   /////////////////////////
 ////////////////////////////////////////////////
+
+#pragma DATA_SECTION(FCT_OIL_DENSITY,"CFG")
+	_EXTERN far VAR FCT_OIL_DENSITY;
+
+#pragma DATA_SECTION(FCT_TEMPERATURE,"CFG")
+	_EXTERN far VAR FCT_TEMPERATURE;
 
 #pragma DATA_SECTION(FCT_SALINITY,"CFG")
 	_EXTERN far VAR FCT_SALINITY;
