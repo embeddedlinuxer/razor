@@ -360,7 +360,8 @@ Uint8 Apply_Density_Correction(void)
 	}
 
 	/// check error 
-	checkError(REG_DENS_CORR,-10.0,10.0,ERR_DNS_LO,ERR_DNS_HI);
+	/// we check density error in API.c
+	//checkError(REG_DENS_CORR,-10.0,10.0,ERR_DNS_LO,ERR_DNS_HI);
 	
 	return 0; /// success
 }
