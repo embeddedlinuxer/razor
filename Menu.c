@@ -1699,7 +1699,6 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			if (isLogData) 
 			{
                 usbStatus = 1;
-				Clock_start(logData_Clock);
 			}
             else
             {

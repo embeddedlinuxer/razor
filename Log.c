@@ -49,14 +49,12 @@
 #define MAX_DATA_SIZE  	256
 #define MAX_CSV_SIZE   	4096*3
 
-static char HEADER_BUF[MAX_HEADER_SIZE];
-static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
+unsigned int g_ulMSCInstance = 0;
+static char LOG_HEADER[MAX_HEADER_SIZE] = {""};
+static char logFile[] = "0:/PDI/LOG_01_01_2020.csv";
 static USB_Handle usb_handle;
 static USB_Params usb_host_params;
 static FIL logWriteObject;
-unsigned int g_ulMSCInstance = 0;
-
-// TIME VARS
 static Uint8 current_day = 99;
 static int USB_RTC_SEC = 0;
 static int USB_RTC_MIN = 0;
@@ -219,6 +217,7 @@ MSCCallback(uint32_t ulInstance, uint32_t ulEvent, void *pvData)
             // Go back to the "no device" state and wait for a new connection.
             g_eState = STATE_NO_DEVICE;
             g_fsHasOpened = 0;
+			usbStatus = 0;
 			resetUsbStaticVars();
 
             break;
@@ -335,6 +334,7 @@ void resetUsbDriver(void)
    loadUsbDriver();
 }
 
+
 void 
 unloadUsbDriver(void)
 {
@@ -372,14 +372,12 @@ void resetUsbStaticVars(void)
 {
 	current_day = 99;
 	usbStatus = 0;
-	HEADER_BUF[0] = '\0';
 }
 
 void stopAccessingUsb(FRESULT fr)
 {
 	resetCsvStaticVars();
 	resetUsbStaticVars();
-	PDI_USBBufferFlush(USB_INSTANCE);
 
     /// find out why it failed
          if (fr == FR_DISK_ERR) usbStatus = 2;
@@ -405,17 +403,17 @@ void stopAccessingUsb(FRESULT fr)
 
 BOOL isUsbActive(void)
 {
-	static int stop_usb = 0; 
+	static int stop_usb = 0;
     if (stop_usb > REG_USB_TRY)
-    {    
+    {
         stopAccessingUsb(FR_TIMEOUT);
-        stop_usb = 0; 
-    }    
+        stop_usb = 0;
+    }
     else stop_usb++;
 
     if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) return FALSE;
-    else 
-    {    
+    else
+    {
         if (g_eState == STATE_DEVICE_ENUM)
         {
             if (USBHMSCDriveReady(g_ulMSCInstance) != 0) return FALSE;
@@ -423,27 +421,21 @@ BOOL isUsbActive(void)
             if (!g_fsHasOpened)
             {
                 if (FATFS_open(0U, NULL, &fatfsHandle) != FR_OK) return FALSE;
-                else g_fsHasOpened = 1; 
+                else g_fsHasOpened = 1;
             }
 
-            stop_usb = 0; 
+            stop_usb = 0;
             return TRUE;
         }
 
         return FALSE;
-    }  
+    }
 }
 
 
 void logData(void)
 {
-	if (!isLogData) return;
-
-	if (!isUsbActive()) 
-	{
-		Clock_start(logData_Clock);
-		return;
-	}
+	if (!isUsbActive()) return;
 
     static FRESULT fresult;
 	static int time_counter = 1;
@@ -453,25 +445,17 @@ void logData(void)
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
 	/// valid timestamp?
-   	if (tmp_sec == prev_sec) 
-	{
-		Clock_start(logData_Clock);
-		return;
-	}
+   	if (tmp_sec == prev_sec) return;
 	else 
 	{
 		prev_sec = tmp_sec;
 		time_counter++;
 	}
 
-	if (time_counter % REG_LOGGING_PERIOD != 0) 
-	{
-		Clock_start(logData_Clock);
-		return;
-	}
+	if (time_counter % REG_LOGGING_PERIOD != 0) return;
 	else time_counter = 0;
 
-	/// get usb time	
+	/// UPDATE TIME	
 	USB_RTC_SEC = tmp_sec;
 	if (USB_RTC_MIN != tmp_min) USB_RTC_MIN = tmp_min;
 	if (USB_RTC_HR != tmp_hr)   USB_RTC_HR = tmp_hr;
@@ -484,26 +468,21 @@ void logData(void)
    	{   
        	current_day = USB_RTC_DAY;
 
-       	// mkdir PDI
-       	fresult = f_mkdir("0:PDI");
-       	if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
-       	{
-           	stopAccessingUsb(fresult);
-           	return;
-       	}
+		// mkdir PDI
+        fresult = f_mkdir("0:/PDI");
+        if ((fresult != FR_EXIST) && (fresult != FR_OK))
+        {
+            stopAccessingUsb(fresult);
+            return;
+        }
 
         // get a file name
-        logFile[0] = '\0';
-        sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
+        sprintf(logFile,"0:/PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
         if (f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
         {
             fresult = f_close(&logWriteObject);
-            if (fresult == FR_OK) 
-			{
-				Clock_start(logData_Clock);
-				return;
-			}
+            if (fresult == FR_OK) return;
         }
 
 		/// open file
@@ -515,10 +494,9 @@ void logData(void)
        	}
 
        	/// write header1
-		HEADER_BUF[0] = '\0';
-		sprintf(HEADER_BUF,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
+		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
 
-       	if (f_puts(HEADER_BUF,&logWriteObject) == EOF) 
+       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
@@ -532,10 +510,9 @@ void logData(void)
        	}
 
        	/// write header2
-		HEADER_BUF[0] = '\0';
-       	sprintf(HEADER_BUF,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
+       	sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
 
-       	if (f_puts(HEADER_BUF,&logWriteObject) == EOF) 
+       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
@@ -549,10 +526,9 @@ void logData(void)
        	}
 
        	/// write header3
-		HEADER_BUF[0] = '\0';
-       	sprintf(HEADER_BUF,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
+       	sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
 
-       	if (f_puts(HEADER_BUF,&logWriteObject) == EOF) 
+       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
@@ -573,109 +549,108 @@ void logData(void)
            	return;
        	}
 
-       	/// flush BUF 
-		PDI_USBBufferFlush(USB_INSTANCE);
-		Clock_start(logData_Clock);
+       	/// flush LOG_BUF 
 		return;
    	}   
 
 	/// new DATA_BUF
-	int key;
 	char *DATA_BUF;
     DATA_BUF=(char *)malloc(MAX_DATA_SIZE*sizeof(char));
-
-	 key = Swi_disable();
 
 	/// get modbus data
 	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-	Swi_restore(key);
+   		/// open
+   		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+   		if (fresult != FR_OK)
+   		{
+			f_close(&logWriteObject); 
+   	    	stopAccessingUsb(fresult);
+			free(DATA_BUF);
+   	    	return;
+   		}
 
-   	/// open
-   	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-   	if (fresult != FR_OK)
-   	{
-		f_close(&logWriteObject); 
-       	stopAccessingUsb(fresult);
+		if (f_error(&logWriteObject) != 0)
+		{
+			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
+			free(DATA_BUF);
+			return;
+		}
+
+   		/// append mode 
+   		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
+   		if (fresult != FR_OK)
+   		{
+			f_close(&logWriteObject); 
+   	    	stopAccessingUsb(fresult);
+			free(DATA_BUF);
+   	    	return;
+   		}
+
+		if (f_error(&logWriteObject) != 0)
+		{
+			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
+			free(DATA_BUF);
+			return;
+		}
+
+   		/// write
+		int val = f_puts(DATA_BUF,&logWriteObject);
+  		if (val != strlen(DATA_BUF))
+   		{
+			f_close(&logWriteObject); 
+       		stopAccessingUsb(FR_DISK_ERR);
+			free(DATA_BUF);
+       		return;
+   		}
+
+		if (f_error(&logWriteObject) != 0)
+		{
+			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
+			free(DATA_BUF);
+			return;
+		}
+
+		/// sync
+   		fresult = f_sync(&logWriteObject);
+   		if (fresult != FR_OK)
+   		{    
+			f_close(&logWriteObject); 
+       		stopAccessingUsb(fresult);
+			free(DATA_BUF);
+       		return;
+   		}    
+
+		if (f_error(&logWriteObject) != 0)
+		{
+			f_close(&logWriteObject); 
+			PDI_USBBufferFlush(USB_INSTANCE);
+       		stopAccessingUsb(FR_DISK_ERR);
+			free(DATA_BUF);
+			return;
+		}
+
+   		/// close
+   		fresult = f_close(&logWriteObject);
+		if (fresult != FR_OK)
+   		{    
+       		stopAccessingUsb(fresult);
+			free(DATA_BUF);
+       		return;
+   		} 
+
+   		/// reset log buf
+		PDI_USBBufferFlush(USB_INSTANCE);
 		free(DATA_BUF);
        	return;
-   	}
-
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
-   	/// append mode 
-   	fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-   	if (fresult != FR_OK)
-   	{
-		f_close(&logWriteObject); 
-       	stopAccessingUsb(fresult);
-		free(DATA_BUF);
-       	return;
-   	}
-
-	if (f_error(&logWriteObject) != 0) { f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
-   	/// write
-	int val = f_puts(DATA_BUF,&logWriteObject);
-  	if (val != strlen(DATA_BUF))
-   	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-   		return;
-   	}
-
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
-	/// sync
-   	fresult = f_sync(&logWriteObject);
-   	if (fresult != FR_OK)
-   	{    
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(fresult);
-		free(DATA_BUF);
-   		return;
-   	}    
-
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
-   	/// close
-   	fresult = f_close(&logWriteObject);
-	if (fresult != FR_OK)
-   	{    
-   		stopAccessingUsb(fresult);
-		free(DATA_BUF);
-   		return;
-   	} 
-
-   	/// reset log buf
-	PDI_USBBufferFlush(USB_INSTANCE);
-	free(DATA_BUF);
-	Clock_start(logData_Clock);
-   	return;
 }
+
 
 
 BOOL downloadCsv(void)
@@ -685,11 +660,13 @@ BOOL downloadCsv(void)
 
 	FRESULT fr;	
 	FIL csvWriteObject;
-	char csvFileName[50] = 0;
+	char csvFileName[50] = {""};
 	int i, data_index;
 
 	/// get file name
 	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
+
+	usb_osalDelayMs(500);
 
 	/// open file
 	if (f_open(&csvWriteObject, csvFileName, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) 
@@ -698,8 +675,9 @@ BOOL downloadCsv(void)
 		return FALSE;;
 	}
 
+	/// create a buffer
 	char * CSV_BUF;
-	CSV_BUF = (char *)malloc(MAX_CSV_SIZE*sizeof(char));
+	CSV_BUF = (char*)malloc(MAX_CSV_SIZE*sizeof(char));
 
 	/// integer
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
@@ -791,13 +769,12 @@ BOOL downloadCsv(void)
 		return FALSE;
 	}
 
-	free(CSV_BUF);
-
 	fr = f_sync(&csvWriteObject);
 	if (fr != FR_OK)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
+		free(CSV_BUF);
 		return FALSE;
 	}
 	for (i=0;i<1000;i++) displayLcd("    Loading...  ",LCD1);
@@ -808,6 +785,7 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
+		free(CSV_BUF);
 		return FALSE;
 	}
 	printf("closing file%d\n",i);
@@ -816,6 +794,7 @@ BOOL downloadCsv(void)
 	printf("set flags\n");
     isCsvDownloadSuccess = TRUE;
     isCsvUploadSuccess = FALSE;
+	free(CSV_BUF);
     
     return TRUE;
 }
@@ -880,13 +859,10 @@ BOOL uploadCsv(void)
 	if (!isUsbActive()) return FALSE;
 	isUploadCsv = FALSE;
 
-	int id;
-	int i;
 	FIL fil;
-	char line[1024];
-	char csvFileName[50];
-	csvFileName[0] = '\0';
-	line[0] = '\0';
+	int i, id;
+	char line[1024] = {""};
+	char csvFileName[50] = {""};
 
 	/// get file name
 	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:%s.csv",CSV_FILES);

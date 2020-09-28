@@ -50,7 +50,8 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 	/// access usb drive
 	if (!isPdiUpgradeMode)
 	{
-   			 if (isDownloadCsv) Swi_post(Swi_downloadCsv);
+   			 if (isLogData) Swi_post(Swi_logData);
+   		else if (isDownloadCsv) Swi_post(Swi_downloadCsv);
    		else if (isScanCsvFiles) Swi_post(Swi_scanCsvFiles);
 		else if (isUploadCsv) Swi_post(Swi_uploadCsv);
 	}
