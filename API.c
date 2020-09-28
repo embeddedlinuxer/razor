@@ -1006,43 +1006,35 @@ double API2KGM3(const double KGM3_15, const double PROC_T)
 
 double API2KGM3_15(const double KGM3, const double PROC_T)
 {
-	if ((KGM3 > 1100) || (KGM3 < 500) || (PROC_T > 120) || (PROC_T < -20)) 
-	{
-		if (KGM3 > 1100) 
-		{
-			DIAGNOSTICS |= ERR_DNS_HI;
-			DIAGNOSTICS &= ~ERR_DNS_LO;
-		}
-		else if (KGM3 < 500) 
-		{
-			DIAGNOSTICS |= ERR_DNS_LO;
-			DIAGNOSTICS &= ~ERR_DNS_HI;
-		}
-
-		if (PROC_T > 120) 
-		{
-			DIAGNOSTICS |= ERR_TMP_HI;
-			DIAGNOSTICS &= ~ERR_TMP_LO;
-		}
-		else if (PROC_T < -20) 
-		{
-			DIAGNOSTICS |= ERR_TMP_LO;
-			DIAGNOSTICS &= ~ERR_TMP_HI;
-		}
-
-		return;
-	}
-	else
-	{
-		DIAGNOSTICS &= ~(ERR_DNS_HI | ERR_DNS_LO | ERR_TMP_HI | ERR_TMP_LO );
-	}
-
 	double dt 	= PROC_T - 15.0;
 	double a 	= 613.9723/pow(KGM3,2.0);
 	double vcf 	= pow(2.7172,(-a*dt-0.8*pow((a*dt),2.0)));
 	double rho	= KGM3/vcf;
 	double rho2	= 0.0;
 	double vdif	= 0.0;
+
+	if ((KGM3 > 1100) || (KGM3 < 500) || (DIAGNOSTICS & ERR_TMP_HI) || (DIAGNOSTICS & ERR_TMP_LO)) 
+	{
+		if (KGM3 > 1100) 
+		{
+			if (DIAGNOSTICS & ERR_DNS_HI) {}
+			else DIAGNOSTICS |= ERR_DNS_HI;
+			if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
+		}
+		else if (KGM3 < 500) 
+		{
+			if (DIAGNOSTICS & ERR_DNS_LO) {}
+			else DIAGNOSTICS |= ERR_DNS_LO;
+			if (DIAGNOSTICS & ERR_DNS_HI)	DIAGNOSTICS &= ~ERR_DNS_HI;
+		}
+
+		return rho2;	
+	}
+	else
+	{
+		if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
+		if (DIAGNOSTICS & ERR_DNS_HI) DIAGNOSTICS &= ~ERR_DNS_HI;
+	}
 
 	do	
 	{

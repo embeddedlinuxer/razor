@@ -173,7 +173,6 @@ _EXTERN float Round_N_Float (float v, int n);
 _EXTERN double sigfig (double v, int n);
 _EXTERN double truncate (double v, int n);
 _EXTERN void setupMenu (void);
-_EXTERN void logData(void);
 _EXTERN void loadUsbDriver(void);
 _EXTERN void resetUsbDriver(void);
 _EXTERN void resetGlobalVars(void);

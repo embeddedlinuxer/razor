@@ -50,8 +50,7 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 	/// access usb drive
 	if (!isPdiUpgradeMode)
 	{
-   			 if (isLogData) Swi_post(Swi_logData);
-   		else if (isDownloadCsv) Swi_post(Swi_downloadCsv);
+   			 if (isDownloadCsv) Swi_post(Swi_downloadCsv);
    		else if (isScanCsvFiles) Swi_post(Swi_scanCsvFiles);
 		else if (isUploadCsv) Swi_post(Swi_uploadCsv);
 	}
@@ -88,6 +87,9 @@ void Poll(void)
 	Uint8 err_f = FALSE;	// frequency calculation error
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
+
+	/// check errors
+	//checkErrors();
 
     /// Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;
@@ -153,21 +155,6 @@ Uint8 Read_Freq(void)
 	int key;
 	double freq;
 
-	if (FREQ_PULSE_COUNT_HI != 0) // this probably shouldn't happen
-	{
-		DIAGNOSTICS |= ERR_FRQ_HI;
-		return 1; // either freq too high or something went wrong in the counting
-	}
-	else DIAGNOSTICS &= ~ERR_FRQ_HI;
-		
-		
-	if (FREQ_U_SEC_ELAPSED == 0) // don't divide by zero
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
-		return 1;
-	}
-	else DIAGNOSTICS &= ~ERR_FRQ_LO;
-
 	key = Swi_disable();
 
 	/// #pulses divided by #microseconds
@@ -187,24 +174,29 @@ Uint8 Read_Freq(void)
 
 	Swi_restore(key);
 
-	/// error checking routine
-	if (REG_FREQ.calc_val == NAN)
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
+	/// error checking 
+    if ((REG_FREQ.calc_val > 1000) || (REG_FREQ.calc_val < 0) || (FREQ_PULSE_COUNT_HI != 0) || (FREQ_U_SEC_ELAPSED == 0) || (REG_FREQ.calc_val == NAN))
+    {
+        if ((REG_FREQ.calc_val > 1000) || (FREQ_PULSE_COUNT_HI != 0))
+        {
+            if (DIAGNOSTICS & ERR_FRQ_HI) {}
+            else DIAGNOSTICS |= ERR_FRQ_HI;
+            if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+        }
+        else if ((REG_FREQ.calc_val < 0) || (REG_FREQ.calc_val == NAN) || (FREQ_U_SEC_ELAPSED == 0))
+        {
+            if (DIAGNOSTICS & ERR_FRQ_LO) {}
+            else DIAGNOSTICS |= ERR_FRQ_LO;
+            if (DIAGNOSTICS & ERR_FRQ_HI)   DIAGNOSTICS &= ~ERR_FRQ_HI;
+        }
+
 		return 1;
-	}
-	else if ((REG_FREQ.calc_val < 0))
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
-		return 1;
-	}
-	else if ((REG_FREQ.calc_val > 1000))
-	{
-		DIAGNOSTICS |= ERR_FRQ_HI;
-		return 1;
-	}
-	else
-		DIAGNOSTICS &= ~(ERR_FRQ_HI | ERR_FRQ_LO);
+    }
+    else
+    {
+        if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+        if (DIAGNOSTICS & ERR_FRQ_HI) DIAGNOSTICS &= ~ERR_FRQ_HI;
+    }
 
 	return 0;
 }
@@ -213,6 +205,28 @@ Uint8 Read_Freq(void)
 void Read_User_Temperature(void)
 {
 	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJ, CALC_UNIT);
+
+	/// TEMPERATURE
+    if ((REG_TEMP_USER.calc_val > 120) || (REG_TEMP_USER.calc_val < -20))
+    {
+        if (REG_TEMP_USER.calc_val > 120)
+        {
+            if (DIAGNOSTICS & ERR_TMP_HI) {}
+            else DIAGNOSTICS |= ERR_TMP_HI;
+            if (DIAGNOSTICS & ERR_TMP_LO) DIAGNOSTICS &= ~ERR_TMP_LO;
+        }
+        else if (REG_TEMP_USER.calc_val < -20)
+        {
+            if (DIAGNOSTICS & ERR_TMP_LO) {}
+            else DIAGNOSTICS |= ERR_TMP_LO;
+            if (DIAGNOSTICS & ERR_TMP_HI) DIAGNOSTICS &= ~ERR_TMP_HI;
+        }
+    }
+    else
+    {
+        if (DIAGNOSTICS & ERR_TMP_LO) DIAGNOSTICS &= ~ERR_TMP_LO;
+        if (DIAGNOSTICS & ERR_TMP_HI) DIAGNOSTICS &= ~ERR_TMP_HI;
+    }
 }
 
 
@@ -359,10 +373,6 @@ Uint8 Apply_Density_Correction(void)
 	 /// [05/09/2018] Bentley requested we REMOVE 3rd-order calculations and only allow 2nd-order 
 	}
 
-	/// check error 
-	/// we check density error in API.c
-	//checkError(REG_DENS_CORR,-10.0,10.0,ERR_DNS_LO,ERR_DNS_HI);
-	
 	return 0; /// success
 }
 
@@ -500,29 +510,7 @@ void Capture_Sample(void)
         }
     }
     VAR_Update(&REG_TEMP_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
-/*
-    //Average Frequency//
-    sum = 0;
-    for (i=0;i<num_samples;i++)
-    {   
-        if ((DATALOG.F_BUFFER.head-i) < 0) //wrap around
-            sum += DATALOG.F_BUFFER.buff[DATALOG.F_BUFFER.head - i + MAX_BFR_SIZE_F];
-        else
-            sum += DATALOG.F_BUFFER.buff[DATALOG.F_BUFFER.head-i];
-    }
-    VAR_Update(&REG_FREQ_AVG, sum/(double)num_samples, CALC_UNIT);   //update average
 
-    //Average Reflected Power//
-    sum = 0;
-    for (i=0;i<num_samples;i++)
-    {
-        if ((DATALOG.RP_BUFFER.head-i) < 0) //wrap around
-            sum += DATALOG.RP_BUFFER.buff[DATALOG.RP_BUFFER.head - i + MAX_BFR_SIZE_F];
-        else
-            sum += DATALOG.RP_BUFFER.buff[DATALOG.RP_BUFFER.head-i];
-    }
-    REG_OIL_RP_AVG =  sum/(double)num_samples;    //update average
-*/
     Clock_start(Capture_Sample_Clock); // call this again in 1 sec
 }
 
@@ -660,12 +648,4 @@ void Apply_Density_Adj(void)
 
         VAR_Update(&REG_OIL_DENSITY,dens,CALC_UNIT);
     }
-}
-
-
-void checkError(double val, double boundLo, double boundHi, int errLo, int errHi)
-{
-	if (val < boundLo) DIAGNOSTICS |= errLo;
-	else if (val > boundHi) DIAGNOSTICS |= errHi;
-	else DIAGNOSTICS &= ~(errLo | errHi);
 }

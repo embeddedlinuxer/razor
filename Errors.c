@@ -25,6 +25,56 @@
 #define ERRORS_H
 #include "Globals.h"
 
+/*
+void checkErrors(void)
+{
+	/// FREQUENCY
+	if ((REG_FREQ.calc_val > 1000) || (REG_FREQ.calc_val < 0) || (FREQ_PULSE_COUNT_HI != 0) || (FREQ_U_SEC_ELAPSED == 0) || (REG_FREQ.calc_val == NAN))
+    {
+        if ((REG_FREQ.calc_val > 1000) || (FREQ_PULSE_COUNT_HI != 0))
+        {
+            if (DIAGNOSTICS & ERR_FRQ_HI) {}
+            else DIAGNOSTICS |= ERR_FRQ_HI;
+            if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+        }
+        else if ((REG_FREQ.calc_val < 0) || (REG_FREQ.calc_val == NAN) || (FREQ_U_SEC_ELAPSED == 0))
+        {
+            if (DIAGNOSTICS & ERR_FRQ_LO) {}
+            else DIAGNOSTICS |= ERR_FRQ_LO;
+            if (DIAGNOSTICS & ERR_FRQ_HI)   DIAGNOSTICS &= ~ERR_FRQ_HI;
+        }
+    }
+    else
+    {
+        if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+        if (DIAGNOSTICS & ERR_FRQ_HI) DIAGNOSTICS &= ~ERR_FRQ_HI;
+    }
+
+	/// TEMPERATURE
+	if ((REG_TEMP_USER.calc_val > 120) || (REG_TEMP_USER.calc_val < -20))
+    {
+        if (REG_TEMP_USER.calc_val > 120)
+        {
+            if (DIAGNOSTICS & ERR_TMP_HI) {}
+            else DIAGNOSTICS |= ERR_TMP_HI;
+            if (DIAGNOSTICS & ERR_TMP_LO) DIAGNOSTICS &= ~ERR_TMP_LO;
+        }
+        else if (REG_TEMP_USER.calc_val < -20)
+        {
+            if (DIAGNOSTICS & ERR_TMP_LO) {}
+            else DIAGNOSTICS |= ERR_TMP_LO;
+            if (DIAGNOSTICS & ERR_TMP_HI) DIAGNOSTICS &= ~ERR_TMP_HI;
+        }
+    }
+    else
+    {
+        if (DIAGNOSTICS & ERR_TMP_LO) DIAGNOSTICS &= ~ERR_TMP_LO;
+        if (DIAGNOSTICS & ERR_TMP_HI) DIAGNOSTICS &= ~ERR_TMP_HI;
+    }
+}
+*/
+
+
 void Update_Relays(void)
 {
 #ifndef HAPTIC_RELAY 
