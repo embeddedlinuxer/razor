@@ -102,7 +102,7 @@ const Uint32 MB_TBL_FLOAT[][4] = {
 	109	,   REGTYPE_DBL	,	REGPERM_PASSWD	,	(Uint32)&REG_AO_TRIMHI,		    // User-inputed measure of actual output current (20mA)
 	111	,   REGTYPE_DBL	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_ADJ,		// oil density offset
 	113	,   REGTYPE_SWI ,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_UNIT,		// oil density units i.e. kg/m^3@15C -or- API@60F
-	115	,   REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_DENS_CORR,		// adjustment to the watercut based on density correction
+	115	,   REGTYPE_DBL	,	REGPERM_READ_O	,	(Uint32)&REG_DENS_CORR,			// adjustment to the watercut based on density correction
 	117	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_D3,		// density correction third-order coefficient -- not used
 	119	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_D2,		// density correction second-order coefficient
 	121	, 	REGTYPE_VAR	,	REGPERM_PASSWD	,	(Uint32)&REG_DENSITY_D1,		// density correction first-order coefficient
@@ -225,6 +225,9 @@ const Uint32 MB_TBL_FLOAT[][4] = {
     232 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_RELAY_MODE,        // relay mode
     233 ,   REGTYPE_INT ,   REGPERM_READ_O  ,   (Uint32)&REG_DIAGNOSTICS,       // diagnostics 
     234 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&REG_USB_TRY,           // MAX_USB_TRY 
+    235 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_TEMP_UNIT,         // temperature unit 
+    236 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_DENS_CUNIT,        // density calc_unit
+    237 ,   REGTYPE_INT ,   REGPERM_PASSWD  ,   (Uint32)&REG_DENS_DUNIT,        // density display unit 
 
     402 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_AO_DAMPEN,         //
     403 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_SLAVE_ADDRESS,     //  
@@ -238,7 +241,9 @@ const Uint32 MB_TBL_FLOAT[][4] = {
     411 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_RELAY_DELAY,       // Relay Delay
     412 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_AO_MODE,           // AO mode
     413 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_OIL_DENS_CORR_MODE,// Disabled, Ai, Modbus, Manual
-    414 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_RELAY_MODE,        // relay mode
+    414 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_TEMP_UNIT,        	// temp unit 
+    415 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_DENS_CUNIT,       	// density calc unit
+    416 ,   REGTYPE_INT ,   REGPERM_FCT     ,   (Uint32)&FCT_DENS_DUNIT,        // density display unit 
 
 	0	, 	0			, 	0					, 	0
 };

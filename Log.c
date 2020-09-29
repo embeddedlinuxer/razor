@@ -698,6 +698,9 @@ BOOL downloadCsv(void)
     sprintf(CSV_BUF+strlen(CSV_BUF),"AO Mode,,230,int,1,RW,1,%d,\n",REG_AO_MODE); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"Density Correction Mode,,231,int,1,RW,1,%d,\n",REG_OIL_DENS_CORR_MODE);
     sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Mode,,232,int,1,RW,1,%d,\n",REG_RELAY_MODE); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Temperature Unit,,235,int,1,RW,1,%d,\n",REG_TEMP_UNIT); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Calc Unit,,236,int,1,RW,1,%d,\n",REG_DENS_CUNIT); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Disp Unit,,237,int,1,RW,1,%d,\n",REG_DENS_DUNIT); 
 
 	/// float or double
 	sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Adjust,,15,float,1,RW,1,%15.7f\n",REG_OIL_ADJUST.calc_val);
@@ -1088,6 +1091,18 @@ BOOL uploadCsv(void)
 		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = fvalue;
 
 		for (i=0;i<10;i++) line[0] = '\0';
+
+		/// set temperature units
+		REG_TEMPERATURE.unit = REG_TEMP_UNIT;
+        REG_TEMP_USER.unit = REG_TEMP_UNIT;
+        REG_TEMP_AVG.unit = REG_TEMP_UNIT;
+        REG_TEMP_ADJUST.unit = REG_TEMP_UNIT;
+        if (REG_TEMP_ADJUST.val != 0) VAR_Update(&REG_TEMP_ADJUST, REG_TEMP_ADJUST.calc_val, CALC_UNIT);
+
+		/// set density unit
+		REG_OIL_DENSITY.calc_unit = REG_DENS_CUNIT;
+		REG_OIL_DENSITY.unit = REG_DENS_DUNIT;
+		VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY.calc_val, CALC_UNIT);
 
 		/// print status -- we use print as an intended "delay"
 		if (isPdiUpgradeMode) 

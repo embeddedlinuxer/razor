@@ -1223,9 +1223,10 @@ fxnConfig_Analyzer_TempUnit(const Uint16 input)
         case BTN_BACK   : return onFxnBackPressed(FXN_CFG_ANALYZER_TEMPUNIT);
 		case BTN_ENTER 	:
 			(isCelsius) ? (REG_TEMPERATURE.unit = u_temp_C) : (REG_TEMPERATURE.unit = u_temp_F);
-			(isCelsius) ? (REG_TEMP_USER.unit = u_temp_C) : (REG_TEMP_USER.unit = u_temp_F);
-			(isCelsius) ? (REG_TEMP_AVG.unit = u_temp_C) : (REG_TEMP_AVG.unit = u_temp_F);
-			(isCelsius) ? (REG_TEMP_ADJUST.unit = u_temp_C) : (REG_TEMP_ADJUST.unit = u_temp_F);
+			REG_TEMP_USER.unit = REG_TEMPERATURE.unit;
+			REG_TEMP_AVG.unit = REG_TEMPERATURE.unit;
+			REG_TEMP_ADJUST.unit = REG_TEMPERATURE.unit;
+			REG_TEMP_UNIT = REG_TEMPERATURE.unit;
 			if (REG_TEMP_ADJUST.val != 0) VAR_Update(&REG_TEMP_ADJUST, REG_TEMP_ADJUST.calc_val, CALC_UNIT);
    	        Swi_post(Swi_writeNand);
 			return onNextMessagePressed(FXN_CFG_ANALYZER_TEMPUNIT, CHANGE_SUCCESS);
@@ -2784,6 +2785,7 @@ fxnConfig_DnsCorr_DispUnit(const Uint16 input)
 			return FXN_CFG_DNSCORR_DISPUNIT;
         case BTN_ENTER  : 
 			REG_OIL_DENSITY.unit = densityUnit[index];
+			REG_DENS_DUNIT = densityUnit[index];
 			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY.calc_val, CALC_UNIT);
    	       	Swi_post(Swi_writeNand);
             return onNextMessagePressed(FXN_CFG_DNSCORR_DISPUNIT, CHANGE_SUCCESS);
@@ -2960,6 +2962,7 @@ mnuConfig_DnsCorr_InputUnit(const Uint16 input)
             if (REG_OIL_DENSITY.calc_unit == densityUnit[index]) break;
         }
 
+		REG_DENSITY_UNIT.val = REG_OIL_DENSITY.calc_unit;
 	    sprintf(lcdLine1,"%16s",densityIndex[index]);
 	    updateDisplay(CFG_DNSCORR_INPUTUNIT, lcdLine1);
     }
@@ -3014,6 +3017,7 @@ fxnConfig_DnsCorr_InputUnit(const Uint16 input)
 			tempDensityVal = REG_OIL_DENSITY.calc_val;
 			tempLrvVal = REG_OIL_DENSITY_AI_LRV.calc_val;
 			tempUrvVal = REG_OIL_DENSITY_AI_URV.calc_val;
+			REG_DENS_CUNIT = densityUnit[index];
 			REG_OIL_DENSITY.calc_unit = densityUnit[index];
 			REG_OIL_DENSITY_AI_LRV.calc_unit = REG_OIL_DENSITY.calc_unit; 
 			REG_OIL_DENSITY_AI_URV.calc_unit = REG_OIL_DENSITY.calc_unit;

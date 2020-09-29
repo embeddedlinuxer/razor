@@ -53,6 +53,11 @@ void resetGlobalVars(void)
     COIL_UNLOCKED_FACTORY_DEFAULT.val   = FALSE;
 
     TEMP_STREAM                         = REG_STREAM.calc_val; // TEMP_STERAM == REG_STREAM.calc_val
+
+	/// restore density and temperature units
+	REG_TEMPERATURE.unit				= REG_TEMP_UNIT;
+	REG_OIL_DENSITY.unit				= REG_DENS_DUNIT;
+	REG_OIL_DENSITY.calc_unit			= REG_DENS_CUNIT;
 }
 
 
@@ -66,6 +71,9 @@ void storeUserDataToFactoryDefault(void)
 	FCT_TEMPERATURE.calc_unit	= REG_TEMPERATURE.calc_unit;
 	FCT_OIL_DENSITY.unit		= REG_OIL_DENSITY.unit;
 	FCT_OIL_DENSITY.calc_unit	= REG_OIL_DENSITY.calc_unit;
+	FCT_TEMP_UNIT				= REG_TEMPERATURE.unit;
+	FCT_DENS_CUNIT				= REG_OIL_DENSITY.calc_unit;
+	FCT_DENS_DUNIT				= REG_OIL_DENSITY.unit;
 
     // REGTYPE_INT
     FCT_AO_DAMPEN           = REG_AO_DAMPEN;
@@ -81,6 +89,9 @@ void storeUserDataToFactoryDefault(void)
 	FCT_AO_MODE				= REG_AO_MODE;
 	FCT_OIL_DENS_CORR_MODE	= REG_OIL_DENS_CORR_MODE; 
 	FCT_RELAY_MODE 			= REG_RELAY_MODE;
+	FCT_TEMP_UNIT			= REG_TEMP_UNIT; //u_temp_C
+	FCT_DENS_CUNIT			= REG_DENS_CUNIT;
+	FCT_DENS_DUNIT			= REG_DENS_DUNIT;
 
     // REGTYPE_DBL
     FCT_OIL_CALC_MAX        = REG_OIL_CALC_MAX;
@@ -179,6 +190,12 @@ void reloadFactoryDefault(void)
 	REG_AO_MODE				= FCT_AO_MODE;
 	REG_OIL_DENS_CORR_MODE	= FCT_OIL_DENS_CORR_MODE; 
 	REG_RELAY_MODE 			= FCT_RELAY_MODE;
+	REG_TEMP_UNIT 			= FCT_TEMP_UNIT;
+	REG_DENS_CUNIT 			= FCT_DENS_CUNIT;
+	REG_DENS_DUNIT 			= FCT_DENS_DUNIT;
+	REG_TEMPERATURE.unit	= FCT_TEMP_UNIT;
+	REG_OIL_DENSITY.calc_unit = FCT_DENS_CUNIT;
+	REG_OIL_DENSITY.unit = FCT_DENS_DUNIT;
 	
 	//////////////////////////////////////
 	// REGTYPE_DBL
@@ -596,6 +613,9 @@ void initializeAllRegisters(void)
 	FCT_AO_MODE				= 0;
 	FCT_OIL_DENS_CORR_MODE	= 0; 
 	FCT_RELAY_MODE 			= 0; // WATERCUT
+	FCT_TEMP_UNIT			= 32; //u_temp_C
+	FCT_DENS_CUNIT			= u_mpv_kg_cm;
+	FCT_DENS_DUNIT			= u_mpv_kg_cm;
 
     REG_USB_TRY             = 10; // (REGPERM_FCT)
     REG_SN_PIPE             = 0; // (REGPERM_FCT)
@@ -631,6 +651,9 @@ void initializeAllRegisters(void)
 	REG_OIL_DENS_CORR_MODE	= FCT_OIL_DENS_CORR_MODE; 
 	REG_RELAY_MODE 			= FCT_RELAY_MODE;
 	REG_DIAGNOSTICS 		= 0;
+	REG_TEMP_UNIT			= FCT_TEMP_UNIT;
+	REG_DENS_CUNIT			= FCT_DENS_CUNIT;
+	REG_DENS_DUNIT			= FCT_DENS_DUNIT;
 	
 	//////////////////////////////////////
 	// REGTYPE_LONGINT (REGPERM_FCT)
