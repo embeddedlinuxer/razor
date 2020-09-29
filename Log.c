@@ -49,19 +49,21 @@
 #define MAX_DATA_SIZE  	256
 #define MAX_CSV_SIZE   	4096*3
 
-unsigned int g_ulMSCInstance = 0;
-static char LOG_HEADER[MAX_HEADER_SIZE] = {""};
-static char logFile[] = "0:/PDI/LOG_01_01_2020.csv";
+static char LOG_HEADER[MAX_HEADER_SIZE];
+static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static USB_Handle usb_handle;
 static USB_Params usb_host_params;
 static FIL logWriteObject;
+unsigned int g_ulMSCInstance = 0; 
+
+// TIME VARS
 static Uint8 current_day = 99;
-static int USB_RTC_SEC = 0;
-static int USB_RTC_MIN = 0;
-static int USB_RTC_HR = 0;
-static int USB_RTC_DAY = 0;
-static int USB_RTC_MON = 0;
-static int USB_RTC_YR = 0;
+static int USB_RTC_SEC = 0; 
+static int USB_RTC_MIN = 0; 
+static int USB_RTC_HR = 0; 
+static int USB_RTC_DAY = 0; 
+static int USB_RTC_MON = 0; 
+static int USB_RTC_YR = 0; 
 static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
 
 /* ========================================================================== */
