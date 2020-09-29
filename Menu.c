@@ -175,10 +175,8 @@ Process_Menu(void)
 		/// reset usb driver
 		resetCsvStaticVars();
     	resetUsbStaticVars();
+		resetUsbDriver();
 	}
-
-	/// restart usb driver
-	resetUsbDriver();
 
 	char 	prevButtons[4];
 	Uint32	buttons[4];
@@ -2677,12 +2675,14 @@ mnuConfig_DnsCorr_CorrEnable(const Uint16 input)
 
     if (isUpdateDisplay) 
     {
-        if (REG_OIL_DENS_CORR_MODE == 1)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
-        else if (REG_OIL_DENS_CORR_MODE == 2)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
-        else if (REG_OIL_DENS_CORR_MODE == 3)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+        if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
+        else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
+        else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+		else // release alarms upon disabling density
+		{
+			if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
+	        if (DIAGNOSTICS & ERR_DNS_HI) DIAGNOSTICS &= ~ERR_DNS_HI;
+		}
 
         updateDisplay(CFG_DNSCORR_CORRENABLE, lcdLine1);
     }

@@ -89,9 +89,6 @@ void Poll(void)
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
 
-	/// check errors
-	//checkErrors();
-
     /// Read DIAGNOSTICS
     REG_DIAGNOSTICS = DIAGNOSTICS;
 
