@@ -47,23 +47,31 @@
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
+#define MAX_BUF_SIZE   	MAX_DATA_SIZE*32*8 // 64KB
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
+static char CSV_BUF[MAX_CSV_SIZE];
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
+
+static Uint8 try = 0;
+static Uint8 try2 = 0;
+static Uint8 try3 = 0;
+static Uint8 try4 = 0;
+static Uint8 current_day = 99;
+
+unsigned int g_ulMSCInstance = 0;
 static USB_Handle usb_handle;
 static USB_Params usb_host_params;
 static FIL logWriteObject;
-unsigned int g_ulMSCInstance = 0; 
 
 // TIME VARS
-static Uint8 current_day = 99;
-static int USB_RTC_SEC = 0; 
-static int USB_RTC_MIN = 0; 
-static int USB_RTC_HR = 0; 
-static int USB_RTC_DAY = 0; 
-static int USB_RTC_MON = 0; 
-static int USB_RTC_YR = 0; 
+static int USB_RTC_SEC = 0;
+static int USB_RTC_MIN = 0;
+static int USB_RTC_HR = 0;
+static int USB_RTC_DAY = 0;
+static int USB_RTC_MON = 0;
+static int USB_RTC_YR = 0;
 static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
 
 /* ========================================================================== */
@@ -219,7 +227,6 @@ MSCCallback(uint32_t ulInstance, uint32_t ulEvent, void *pvData)
             // Go back to the "no device" state and wait for a new connection.
             g_eState = STATE_NO_DEVICE;
             g_fsHasOpened = 0;
-			usbStatus = 0;
 			resetUsbStaticVars();
 
             break;
@@ -367,13 +374,20 @@ void resetCsvStaticVars(void)
 
 	/// disable usb access flags
 	CSV_FILES[0] = '\0';
+	CSV_BUF[0] = '\0'; 
 	csvCounter = 0;
 }
 
 void resetUsbStaticVars(void)
 {
 	current_day = 99;
+	try = 0;
+	try2 = 0;
+	try3 = 0;
+	try4 = 0;
 	usbStatus = 0;
+
+	LOG_HEADER[0] = '\0';
 }
 
 void stopAccessingUsb(FRESULT fr)
@@ -405,33 +419,70 @@ void stopAccessingUsb(FRESULT fr)
 
 BOOL isUsbActive(void)
 {
-	static int stop_usb = 0;
-    if (stop_usb > REG_USB_TRY)
+    if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) 
     {
-        stopAccessingUsb(FR_TIMEOUT);
-        stop_usb = 0;
+		/// no need to check unreachable triggers
+		try = 0; 
+		try2 = 0;
+		try3 = 0;
+
+		if (try4 > REG_USB_TRY) stopAccessingUsb(FR_INVALID_DRIVE);
+		else try4++;
+
+		return FALSE;
     }
-    else stop_usb++;
+	else
+	{
+		try4 = 0; /// no need to check unreachable trigger 
 
-    if (USBHCDMain(USB_INSTANCE, g_ulMSCInstance) != 0) return FALSE;
-    else
-    {
-        if (g_eState == STATE_DEVICE_ENUM)
-        {
-            if (USBHMSCDriveReady(g_ulMSCInstance) != 0) return FALSE;
+    	if (g_eState == STATE_DEVICE_ENUM)
+    	{
+			try3 = 0; /// no need to check unreachable trigger 
+   
+        	if (USBHMSCDriveReady(g_ulMSCInstance) != 0) 
+        	{
+				try2 = 0; /// no need to check unreachable trigger;
 
-            if (!g_fsHasOpened)
-            {
-                if (FATFS_open(0U, NULL, &fatfsHandle) != FR_OK) return FALSE;
-                else g_fsHasOpened = 1;
-            }
+				if (try > REG_USB_TRY) stopAccessingUsb(FR_INVALID_DRIVE);
+				else try++;
+            	
+				return FALSE;
+        	}
+			else
+			{
+				try = 0; /// no need to check unreachable trigger
 
-            stop_usb = 0;
-            return TRUE;
-        }
+				if (!g_fsHasOpened)
+        		{
+            		if (FATFS_open(0U, NULL, &fatfsHandle) == FR_OK) 
+            		{
+						try2 = 0; /// no need to check unreachable trigger
+                		g_fsHasOpened = 1;
+            		}
+            		else 
+            		{
+                		if (try2 > REG_USB_TRY) stopAccessingUsb(FR_INVALID_DRIVE);
+                		else try2++;
+                    	
+						return FALSE;
+            		}
+        		}
+			}
 
-        return FALSE;
-    }
+			return TRUE;
+    	}
+    	else 
+    	{
+			/// no need to check unreachable triggers
+			try = 0;
+			try2 = 0;
+
+        	if (try3 > REG_USB_TRY) stopAccessingUsb(FR_INVALID_DRIVE);
+        	else try3++;
+
+        	return FALSE;
+    	}
+	}		
 }
 
 
@@ -447,14 +498,20 @@ void logData(void)
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
 	/// valid timestamp?
-   	if (tmp_sec == prev_sec) return;
+   	if (tmp_sec == prev_sec) 
+	{
+		return;
+	}
 	else 
 	{
 		prev_sec = tmp_sec;
 		time_counter++;
 	}
 
-	if (time_counter % REG_LOGGING_PERIOD != 0) return;
+	if (time_counter % REG_LOGGING_PERIOD != 0) 
+	{
+		return;
+	}
 	else time_counter = 0;
 
 	/// UPDATE TIME	
@@ -470,21 +527,25 @@ void logData(void)
    	{   
        	current_day = USB_RTC_DAY;
 
-		// mkdir PDI
-        fresult = f_mkdir("0:/PDI");
-        if ((fresult != FR_EXIST) && (fresult != FR_OK))
-        {
-            stopAccessingUsb(fresult);
-            return;
-        }
+       	// mkdir PDI
+       	fresult = f_mkdir("0:PDI");
+       	if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
+       	{
+           	stopAccessingUsb(fresult);
+           	return;
+       	}
 
         // get a file name
-        sprintf(logFile,"0:/PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
+        logFile[0] = '\0';
+        sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
         if (f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
         {
             fresult = f_close(&logWriteObject);
-            if (fresult == FR_OK) return;
+            if (fresult == FR_OK) 
+			{
+				return;
+			}
         }
 
 		/// open file
@@ -496,6 +557,7 @@ void logData(void)
        	}
 
        	/// write header1
+		LOG_HEADER[0] = '\0';
 		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
@@ -512,6 +574,7 @@ void logData(void)
        	}
 
        	/// write header2
+		LOG_HEADER[0] = '\0';
        	sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
@@ -528,6 +591,7 @@ void logData(void)
        	}
 
        	/// write header3
+		LOG_HEADER[0] = '\0';
        	sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
@@ -662,13 +726,13 @@ BOOL downloadCsv(void)
 
 	FRESULT fr;	
 	FIL csvWriteObject;
-	char csvFileName[50] = {""};
-	int i, data_index;
+	CSV_BUF[0] = '\0';
+	char csvFileName[50] = 0;
+	int data_index;
+	int i;
 
 	/// get file name
 	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
-
-	usb_osalDelayMs(500);
 
 	/// open file
 	if (f_open(&csvWriteObject, csvFileName, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) 
@@ -676,10 +740,6 @@ BOOL downloadCsv(void)
 		isUpgradeFirmware = FALSE;
 		return FALSE;;
 	}
-
-	/// create a buffer
-	char * CSV_BUF;
-	CSV_BUF = (char*)malloc(MAX_CSV_SIZE*sizeof(char));
 
 	/// integer
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
@@ -767,7 +827,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		free(CSV_BUF);
 		return FALSE;
 	}
 
@@ -776,7 +835,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		free(CSV_BUF);
 		return FALSE;
 	}
 	for (i=0;i<1000;i++) displayLcd("    Loading...  ",LCD1);
@@ -787,7 +845,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		free(CSV_BUF);
 		return FALSE;
 	}
 	printf("closing file%d\n",i);
@@ -796,7 +853,6 @@ BOOL downloadCsv(void)
 	printf("set flags\n");
     isCsvDownloadSuccess = TRUE;
     isCsvUploadSuccess = FALSE;
-	free(CSV_BUF);
     
     return TRUE;
 }
@@ -861,10 +917,13 @@ BOOL uploadCsv(void)
 	if (!isUsbActive()) return FALSE;
 	isUploadCsv = FALSE;
 
+	int id;
+	int i;
 	FIL fil;
-	int i, id;
-	char line[1024] = {""};
-	char csvFileName[50] = {""};
+	char line[1024];
+	char csvFileName[50];
+	csvFileName[0] = '\0';
+	line[0] = '\0';
 
 	/// get file name
 	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:%s.csv",CSV_FILES);
