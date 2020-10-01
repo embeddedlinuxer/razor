@@ -765,7 +765,7 @@ mnuHomescreenDensity(const Uint16 input)
        	}
     }
 
-	sprintf(lcdLine1,"%.1f",REG_OIL_DENSITY.val);
+	sprintf(lcdLine1,"%.2f",REG_OIL_DENSITY.val);
     strcat (lcdLine1,densityIndex[index]);
     strcpy(linedp,lcdLine1);
     sprintf(lcdLine1,"%16s",linedp);
