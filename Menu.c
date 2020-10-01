@@ -751,6 +751,7 @@ mnuHomescreenDensity(const Uint16 input)
 	if (I2C_TXBUF.n > 0) return MNU_HOMESCREEN_DST;
 
 	static Uint8 index;
+	char linedp [MAX_LCD_WIDTH];
 
     if (isUpdateDisplay) 
     {
@@ -764,8 +765,11 @@ mnuHomescreenDensity(const Uint16 input)
        	}
     }
 
-	sprintf(lcdLine1,"%8.1f%s",REG_OIL_DENSITY.val,densityIndex[index]);
-	(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
+	sprintf(lcdLine1,"%.1f",REG_OIL_DENSITY.val);
+    strcat (lcdLine1,densityIndex[index]);
+    strcpy(linedp,lcdLine1);
+    sprintf(lcdLine1,"%16s",linedp);
+    (isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
 
 	 switch (input)  {
         case BTN_VALUE  : return onNextPressed(MNU_HOMESCREEN_DGN);
