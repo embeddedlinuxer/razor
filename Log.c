@@ -727,7 +727,7 @@ BOOL downloadCsv(void)
 	FRESULT fr;	
 	FIL csvWriteObject;
 	CSV_BUF[0] = '\0';
-	char csvFileName[50] = 0;
+	char csvFileName[50] = {0};
 	int data_index;
 	int i;
 
@@ -920,8 +920,8 @@ BOOL uploadCsv(void)
 	int id;
 	int i;
 	FIL fil;
-	char line[1024];
-	char csvFileName[50];
+	char line[1024] = {0};
+	char csvFileName[50] = {0};
 	csvFileName[0] = '\0';
 	line[0] = '\0';
 
