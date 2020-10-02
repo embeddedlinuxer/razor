@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.5"
+#define FIRMWARE_VERSION 		"1.2.3"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -173,6 +173,7 @@ _EXTERN float Round_N_Float (float v, int n);
 _EXTERN double sigfig (double v, int n);
 _EXTERN double truncate (double v, int n);
 _EXTERN void setupMenu (void);
+_EXTERN void logData(void);
 _EXTERN void loadUsbDriver(void);
 _EXTERN void resetUsbDriver(void);
 _EXTERN void resetGlobalVars(void);
@@ -573,12 +574,6 @@ typedef struct
 ////////////////////////////////////////////////
 ///// FCT VAR/DOUBLE   /////////////////////////
 ////////////////////////////////////////////////
-
-#pragma DATA_SECTION(FCT_OIL_DENSITY,"CFG")
-	_EXTERN far VAR FCT_OIL_DENSITY;
-
-#pragma DATA_SECTION(FCT_TEMPERATURE,"CFG")
-	_EXTERN far VAR FCT_TEMPERATURE;
 
 #pragma DATA_SECTION(FCT_SALINITY,"CFG")
 	_EXTERN far VAR FCT_SALINITY;

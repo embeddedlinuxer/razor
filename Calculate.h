@@ -45,6 +45,7 @@ _EXTERN void Poll(void);
 inline void Init_Data_Buffer(void);
 void Bfr_Add(FP_BFR* bfr, double val);
 void Update_Demo_Values(void);
+void checkError(double val, double boundLo, double boundHi, int errLo, int errHi);
 void Count_Freq_Pulses(Uint32 u_sec_elapsed);
 void Read_User_Temperature(void);
 Uint8 Apply_Density_Correction(void);

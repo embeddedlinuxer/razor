@@ -61,12 +61,6 @@ void storeUserDataToFactoryDefault(void)
     // UNLOCK SAFETY GUARD FOR FCT REGISTERS
     COIL_UNLOCKED_FACTORY_DEFAULT.val = TRUE;
 
-	/// UNITS
-	FCT_TEMPERATURE.unit		= REG_TEMPERATURE.unit;
-	FCT_TEMPERATURE.calc_unit	= REG_TEMPERATURE.calc_unit;
-	FCT_OIL_DENSITY.unit		= REG_OIL_DENSITY.unit;
-	FCT_OIL_DENSITY.calc_unit	= REG_OIL_DENSITY.calc_unit;
-
     // REGTYPE_INT
     FCT_AO_DAMPEN           = REG_AO_DAMPEN;
     FCT_SLAVE_ADDRESS       = REG_SLAVE_ADDRESS;
@@ -99,8 +93,6 @@ void storeUserDataToFactoryDefault(void)
 	FCT_DENS_ADJ 			= REG_DENS_ADJ;
 
     // REGTYPE_VAR
-    VAR_Update(&FCT_TEMPERATURE, 0.0, CALC_UNIT);
-    VAR_Update(&FCT_OIL_DENSITY, 0.0, CALC_UNIT);
     VAR_Update(&FCT_SALINITY, REG_SALINITY.calc_val, CALC_UNIT);
     VAR_Update(&FCT_OIL_ADJUST, REG_OIL_ADJUST.calc_val, CALC_UNIT);
     VAR_Update(&FCT_WATER_ADJUST, REG_WATER_ADJUST.calc_val, CALC_UNIT);
@@ -163,14 +155,25 @@ void reloadFactoryDefault(void)
 	// REGTYPE_INT 
 	//////////////////////////////////////
 
-	REG_DIAGNOSTICS 		= 0;
-	REG_PASSWORD			= 0;
 	REG_ANALYZER_MODE 	    = ANA_MODE_MID;
 	REG_AO_DAMPEN			= FCT_AO_DAMPEN;
 	REG_SLAVE_ADDRESS 		= FCT_SLAVE_ADDRESS;
 	REG_STOP_BITS 			= FCT_STOP_BITS;
 	REG_DENSITY_MODE 		= FCT_DENSITY_MODE;
+    REG_RTC_SEC				= 0;
+	REG_RTC_MIN				= 0;
+	REG_RTC_HR				= 0;
+	REG_RTC_DAY				= 0;
+	REG_RTC_MON				= 0;
+	REG_RTC_YR				= 0;
+	REG_RTC_SEC_IN			= 0;
+	REG_RTC_MIN_IN			= 0;
+	REG_RTC_HR_IN			= 0;
+	REG_RTC_DAY_IN			= 0;
+	REG_RTC_MON_IN			= 0;
+	REG_RTC_YR_IN			= 0;
 	REG_LOGGING_PERIOD		= FCT_LOGGING_PERIOD; // logging every 1 sec by default
+	REG_PASSWORD			= 0;
 	REG_STATISTICS			= FCT_STATISTICS;
 	REG_ACTIVE_ERROR 		= FCT_ACTIVE_ERROR;
 	REG_AO_ALARM_MODE		= FCT_AO_ALARM_MODE;
@@ -179,6 +182,7 @@ void reloadFactoryDefault(void)
 	REG_AO_MODE				= FCT_AO_MODE;
 	REG_OIL_DENS_CORR_MODE	= FCT_OIL_DENS_CORR_MODE; 
 	REG_RELAY_MODE 			= FCT_RELAY_MODE;
+	REG_DIAGNOSTICS 		= 0;
 	
 	//////////////////////////////////////
 	// REGTYPE_DBL
@@ -188,16 +192,15 @@ void reloadFactoryDefault(void)
 	REG_FIRMWARE_VERSION 	= 0;
 	REG_OIL_RP 				= 0;
     REG_WATER_RP            = 0;
-	REG_DENS_CORR 			= 0;
-	REG_OIL_RP_AVG 			= 0;
-	REG_AO_OUTPUT			= 0;
-	REG_OIL_PT 	            = 0;
 	REG_OIL_CALC_MAX 	    = FCT_OIL_CALC_MAX; 	// maximum watercut (for oil phase)
 	REG_OIL_PHASE_CUTOFF 	= FCT_OIL_PHASE_CUTOFF; //oil curve switch-over threshold
+	REG_OIL_RP_AVG 			= 0;
 	REG_AO_MANUAL_VAL		= FCT_AO_MANUAL_VAL;
     REG_AO_TRIMLO			= FCT_AO_TRIMLO;
 	REG_AO_TRIMHI 			= FCT_AO_TRIMHI;
 	REG_DENSITY_ADJ 		= FCT_DENSITY_ADJ;
+	REG_DENS_CORR 		= 0;
+	REG_AO_OUTPUT			= 0;
 	REG_OIL_DENSITY_MODBUS	= FCT_OIL_DENSITY_MODBUS;
 	REG_OIL_DENSITY_AI		= FCT_OIL_DENSITY_AI;
     REG_OIL_DENSITY_MANUAL	= FCT_OIL_DENSITY_MANUAL;
@@ -206,7 +209,8 @@ void reloadFactoryDefault(void)
 	REG_AI_MEASURE			= FCT_AI_MEASURE;
 	REG_AI_TRIMMED			= FCT_AI_TRIMMED;
 	REG_DENS_ADJ 			= FCT_DENS_ADJ;
- 	 
+	REG_OIL_PT 	            = 0;
+    
     //////////////////////////////////////
    	/// Watercut - 0.0
 	//////////////////////////////////////
@@ -544,34 +548,6 @@ void reloadFactoryDefault(void)
 	THROW_ERROR 		= 0;
 	DIAGNOSTICS 		= 0;
 	DIAGNOSTICS_MASK 	= 0xFFFFFFFF;
-
-    //////////////////////////////////////
-	///  Units
-    //////////////////////////////////////
-
-	REG_OIL_DENSITY.unit = FCT_OIL_DENSITY.unit;	
-	REG_OIL_DENSITY.calc_unit = FCT_OIL_DENSITY.calc_unit;	
-	REG_OIL_DENSITY_AI_URV.unit = FCT_OIL_DENSITY.unit;	
-	REG_OIL_DENSITY_AI_LRV.unit = FCT_OIL_DENSITY.unit;	
-
-	REG_TEMPERATURE.unit = FCT_TEMPERATURE.unit;	
-	REG_TEMP_USER.unit = FCT_TEMPERATURE.unit;	
-	REG_TEMP_ADJUST.unit = FCT_TEMPERATURE.unit;	
-	REG_TEMP_AVG.unit = FCT_TEMPERATURE.unit;	
-
-	VAR_Update(&REG_TEMPERATURE, 0.0, USER_UNIT);
-	VAR_Update(&REG_TEMP_USER, 0.0, USER_UNIT);
-	VAR_Update(&REG_TEMP_AVG, 0.0, USER_UNIT);
-	VAR_Update(&REG_TEMP_ADJUST, REG_TEMP_ADJUST.val, USER_UNIT);
-
-	VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY.calc_val, CALC_UNIT);
-	VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY.val, USER_UNIT);
-
-	VAR_Update(&REG_OIL_DENSITY_AI_LRV, REG_OIL_DENSITY_AI_LRV.calc_val, CALC_UNIT);
-	VAR_Update(&REG_OIL_DENSITY_AI_LRV, REG_OIL_DENSITY_AI_LRV.val, USER_UNIT);
-
-	VAR_Update(&REG_OIL_DENSITY_AI_URV, REG_OIL_DENSITY_AI_URV.calc_val, CALC_UNIT);
-	VAR_Update(&REG_OIL_DENSITY_AI_URV, REG_OIL_DENSITY_AI_URV.val, USER_UNIT);
 }
 
 
@@ -717,6 +693,7 @@ void initializeAllRegisters(void)
     VAR_Initialize(&FCT_OIL_ADJUST, c_volume_per_volume, u_vpv_volume_percent, 100.0, 100.0, var_no_alarm);
     VAR_Setup_Unit(&FCT_OIL_ADJUST, u_vpv_volume_percent, 100.0, -100.0, 100.0, -100.0);
     VAR_Update(&FCT_OIL_ADJUST, 0.0, CALC_UNIT);
+    //FCT_OIL_ADJUST.swi = Swi_FCT_OIL_ADJUST; // SAVE STERAM DEPENDENT DATA AFTER FCT_OIL_ADJUST UPDATED.
 
     //////////////////////////////////////
     /// Water Phase Adjust (17) - 0.0
@@ -819,21 +796,6 @@ void initializeAllRegisters(void)
     VAR_Setup_Unit(&FCT_STREAM, u_mfgr_specific_none, SMAX, 1.0, SMAX, 1.0);
     VAR_Update(&FCT_STREAM, 1.0, CALC_UNIT);
     //REG_STREAM.swi = Swi_REG_STREAM; // RESTORE STREAM DEPENDENT DATA AFTER CHANGING STREAM 
-
-	//////////////////////////////////////
-	/// Temperature - 0.0
-	//////////////////////////////////////
-
-	VAR_Initialize(&FCT_TEMPERATURE, c_temperature, u_temp_C, 10.0, 10.0, var_no_bound);
-	VAR_Setup_Unit(&FCT_TEMPERATURE, u_temp_C, 350.0, -50.0, 310, 0);
-	VAR_Update(&FCT_TEMPERATURE, 0.0, CALC_UNIT);
-
-	//////////////////////////////////////
-   	/// Oil Density @ Process Temperature - 865.443
-	//////////////////////////////////////
-
-	VAR_Initialize(&FCT_OIL_DENSITY, c_mass_per_volume, u_mpv_kg_cm, 10.0, 1000.0, var_no_bound|var_no_alarm);
-	VAR_Update(&FCT_OIL_DENSITY, 865.443, CALC_UNIT);
 
     //////////////////////////////////////
 	/// Oil Calibration Test Sample Value - 0.0
