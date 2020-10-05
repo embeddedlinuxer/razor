@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.3"
+#define FIRMWARE_VERSION 		"1.2.6"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -138,6 +138,7 @@ _EXTERN unsigned int phase_rollover_count;   		/*phase hold over RS*/
 _EXTERN int TEMP_STREAM;
 _EXTERN char lcdLine0[MAX_LCD_WIDTH];
 _EXTERN char lcdLine1[MAX_LCD_WIDTH];
+_EXTERN char lcdLine2[MAX_LCD_WIDTH*3];
 _EXTERN char globalId[MAX_LCD_WIDTH];
 _EXTERN char globalVal[MAX_LCD_WIDTH];
 _EXTERN char CSV_FILES[MAX_CSV_ARRAY_LENGTH];

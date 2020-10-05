@@ -187,24 +187,31 @@ Uint8 Read_Freq(void)
 
 	Swi_restore(key);
 
-	/// error checking routine
-	if (REG_FREQ.calc_val == NAN)
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
+	///
+	/// error checking
+	///
+	if ((REG_FREQ.calc_val > 1000) || (REG_FREQ.calc_val < 0) || (REG_FREQ.calc_val == NAN))
+    {
+        if (REG_FREQ.calc_val > 1000)
+        {
+            if (DIAGNOSTICS & ERR_FRQ_HI) {}
+            else DIAGNOSTICS |= ERR_FRQ_HI;
+            if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+        }
+        else
+        {
+            if (DIAGNOSTICS & ERR_FRQ_LO) {}
+            else DIAGNOSTICS |= ERR_FRQ_LO;
+            if (DIAGNOSTICS & ERR_FRQ_HI) DIAGNOSTICS &= ~ERR_FRQ_HI;
+        }
+
 		return 1;
-	}
-	else if ((REG_FREQ.calc_val < 0))
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
-		return 1;
-	}
-	else if ((REG_FREQ.calc_val > 1000))
-	{
-		DIAGNOSTICS |= ERR_FRQ_HI;
-		return 1;
-	}
-	else
-		DIAGNOSTICS &= ~(ERR_FRQ_HI | ERR_FRQ_LO);
+    }
+    else
+    {
+        if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+        if (DIAGNOSTICS & ERR_FRQ_HI) DIAGNOSTICS &= ~ERR_FRQ_HI;
+    }
 
 	return 0;
 }
@@ -214,9 +221,11 @@ void Read_User_Temperature(void)
 {
 	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJ, CALC_UNIT);
 
-	/// TEMPERATURE
-    if ((REG_TEMP_USER.calc_val > 120) || (REG_TEMP_USER.calc_val < -20))
-    {   
+	///
+	/// error checking
+	///
+	if ((REG_TEMP_USER.calc_val > 120) || (REG_TEMP_USER.calc_val < -20))
+    {
         if (REG_TEMP_USER.calc_val > 120)
         {
             if (DIAGNOSTICS & ERR_TMP_HI) {}
@@ -227,14 +236,14 @@ void Read_User_Temperature(void)
         {
             if (DIAGNOSTICS & ERR_TMP_LO) {}
             else DIAGNOSTICS |= ERR_TMP_LO;
-            if (DIAGNOSTICS & ERR_TMP_HI) DIAGNOSTICS &= ~ERR_TMP_HI;
+            if (DIAGNOSTICS & ERR_TMP_HI)   DIAGNOSTICS &= ~ERR_TMP_HI;
         }
-    }   
+    }
     else
-    {   
+    {
         if (DIAGNOSTICS & ERR_TMP_LO) DIAGNOSTICS &= ~ERR_TMP_LO;
         if (DIAGNOSTICS & ERR_TMP_HI) DIAGNOSTICS &= ~ERR_TMP_HI;
-    } 
+    }
 }
 
 
@@ -381,9 +390,6 @@ Uint8 Apply_Density_Correction(void)
 	 /// [05/09/2018] Bentley requested we REMOVE 3rd-order calculations and only allow 2nd-order 
 	}
 
-	/// check error 
-	checkError(REG_DENS_CORR,-10.0,10.0,ERR_DNS_LO,ERR_DNS_HI);
-	
 	return 0; /// success
 }
 
@@ -681,12 +687,4 @@ void Apply_Density_Adj(void)
 
         VAR_Update(&REG_OIL_DENSITY,dens,CALC_UNIT);
     }
-}
-
-
-void checkError(double val, double boundLo, double boundHi, int errLo, int errHi)
-{
-	if (val < boundLo) DIAGNOSTICS |= errLo;
-	else if (val > boundHi) DIAGNOSTICS |= errHi;
-	else DIAGNOSTICS &= ~(errLo | errHi);
 }
