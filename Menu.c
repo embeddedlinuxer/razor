@@ -175,7 +175,6 @@ Process_Menu(void)
 		/// reset usb driver
 		resetCsvStaticVars();
     	resetUsbStaticVars();
-		resetUsbDriver();
 	}
 
 	char 	prevButtons[4];
@@ -749,7 +748,6 @@ mnuHomescreenDensity(const Uint16 input)
 	if (I2C_TXBUF.n > 0) return MNU_HOMESCREEN_DST;
 
 	static Uint8 index;
-	char linedp [MAX_LCD_WIDTH];
 
     if (isUpdateDisplay) 
     {
@@ -765,8 +763,8 @@ mnuHomescreenDensity(const Uint16 input)
 
 	sprintf(lcdLine1,"%.2f",REG_OIL_DENSITY.val);
 	strcat(lcdLine1,densityIndex[index]);
-	strcpy(linedp,lcdLine1);
-	sprintf(lcdLine1,"%16s",linedp);
+	strcpy(lcdLine2,lcdLine1);
+	sprintf(lcdLine1,"%16s",lcdLine2);
 	(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
 
 	 switch (input)  {
@@ -2698,7 +2696,7 @@ mnuConfig_DnsCorr_CorrEnable(const Uint16 input)
 		case BTN_VALUE  : return onNextPressed(MNU_CFG_DNSCORR_DISPUNIT);
 		case BTN_STEP   : return onMnuStepPressed(FXN_CFG_DNSCORR_CORRENABLE,MNU_CFG_DNSCORR_CORRENABLE,CFG_DNSCORR_CORRENABLE);
 		case BTN_BACK   : return onNextPressed(MNU_CFG_DNSCORR);
-		default			: return MNU_CFG_DNSCORR_CORRENABLE;
+		default         : return MNU_CFG_DNSCORR_CORRENABLE;
 	}
 }
 
