@@ -1,5 +1,4 @@
-/* This Information is proprietary to Phase Dynamics Inc, Richardson, Texas 
-* and MAY NOT be copied by any method or incorporated into another program
+/* This Information is proprietary to Phase Dynamics Inc, Richardson, Texas * and MAY NOT be copied by any method or incorporated into another program
 * without the express written consent of Phase Dynamics Inc. This information
 * or any portion thereof remains the property of Phase Dynamics Inc.
 * The information contained herein is believed to be accurate and Phase
@@ -7,6 +6,7 @@
 * and conveys no license or title under any patent or copyright and makes
 * no representation or warranty that this Information is free from patent
 * or copyright infringement.
+*------------------------------------------------------------------------
 
 *------------------------------------------------------------------------
 * Menu.c
@@ -21,8 +21,10 @@
 * Currently, we cycle through the mnu
 * code with a maximum frequency of about 6.67 times per second
 * (minimum period = 0.15 seconds).
+*-------------------------------------------------------------------------
+* HISTORY:
+*       Aug-20-2019 : Daniel Koh : Created Ver 1.0.0 
 *------------------------------------------------------------------------*/
-
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
@@ -36,20 +38,26 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
-
 #define MENU_H
 #include "Menu.h"
 
 static int y = 0;
-static int blinker = 0;             	// MENU ID BLINKER 
-static BOOL isOn = FALSE;           	// LINE1 BLINKER
-static BOOL isMessage = FALSE;      	// Message to display? 
-static BOOL isPowerCycled = TRUE;  		// events at powercycle
+static int blinker = 0;             // MENU ID BLINKER 
+static BOOL isOn = FALSE;           // LINE1 BLINKER
+static BOOL isMessage = FALSE;      // Message to display? 
 static BOOL isTechModeRequested = FALSE;
+static Uint8 isPowerCycled = TRUE;  // loadUsbDriver only 1 time after power cycle
 
+extern void blinkLcdLine1(const char * textA, const char * textB);
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ///	
 ///	PROGRESS BAR FOR CAPTURING OIL
 ///	
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 static char prg0[]  = "[..............]";
 static char prg1[]  = "[#.............]";
 static char prg2[]  = "[##............]";
@@ -66,9 +74,14 @@ static char prg12[] = "[############..]";
 static char prg13[] = "[#############.]";
 static char prg14[] = "[##############]";
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ///	
 ///	DENSITY UNITS
 ///	
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 static const char * statusMode[2]    = {RELAY_OFF, RELAY_ON}; 
 static const char * phaseMode[2]     = {WATER_PHASE, OIL_PHASE}; 
 static const char * relayMode[4]     = {WATERCUT, PHASE, ERROR, MANUAL}; 
@@ -78,10 +91,13 @@ static const char * densityMode[4] 	 = {DISABLE, ANALOG_INPUT, MODBUS, MANUAL};
 static const char * densityIndex[8]  = {KG_M3, KG_M3_15C, API, API_60F, LBS_FT3, LBS_FT3_60F, SG, SG_15C}; 
 static const Uint8 densityUnit[8] 	 = {u_mpv_kg_cm, u_mpv_kg_cm_15C, u_mpv_deg_API, u_mpv_deg_API_60F, u_mpv_lbs_cf, u_mpv_lbs_cf_60F, u_mpv_sg, u_mpv_sg_15C};
 
-///
-/// FUNCTION DEFINITIONS
-///
-static void blinkLcdLine1(const char * textA, const char * textB);
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/////
+///// FUNCTION DEFINITIONS
+/////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 void setupMenu (void)
 {
@@ -99,6 +115,7 @@ void setupMenu (void)
 //////////////////////////////////////////////////////////////
 ////
 //// ISR_Process_Menu()
+//// 
 //// Clock Handle:       Process_Menu_Clock
 ////
 //////////////////////////////////////////////////////////////
@@ -544,7 +561,6 @@ onFxnValuePressed(const int fxnId, const BOOL isSigned, const int fdigit)
 
     return fxnId;
 }
-
 
 int
 onFxnEnterPressed(const int currentId, const double max, const double min, VAR * vregister, double * dregister, int * iregister)
@@ -2634,12 +2650,10 @@ mnuConfig_DnsCorr(const Uint16 input)
 	sprintf(lcdLine1, densityMode[REG_OIL_DENS_CORR_MODE]);
 	if (isUpdateDisplay) 
     {
-        if (REG_OIL_DENS_CORR_MODE == 1)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
-        else if (REG_OIL_DENS_CORR_MODE == 2)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
-        else if (REG_OIL_DENS_CORR_MODE == 3)
-			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+        if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
+        else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
+		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+		
         updateDisplay(CFG_DNSCORR, lcdLine1); 
     }
 	else displayLcd(lcdLine1, LCD1);
@@ -2667,6 +2681,7 @@ mnuConfig_DnsCorr_CorrEnable(const Uint16 input)
 		if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+		else DIAGNOSTICS &= ~(ERR_DNS_LO | ERR_DNS_HI);
 
 		updateDisplay(CFG_DNSCORR_CORRENABLE, lcdLine1);
 	}

@@ -28,7 +28,6 @@
 void Update_Relays(void)
 {
 #ifndef HAPTIC_RELAY 
-
 	// CHECK RELAY CONDITION
 	switch (REG_RELAY_MODE) 
 	{
@@ -72,27 +71,23 @@ void Update_Relays(void)
 }
 
 
-void 
-checkError(double val, double BOUND_LOW, double BOUND_HIGH, int ERR_LOW, int ERR_HIGH)
+void checkError(double val, double BOUND_LOW, double BOUND_HIGH, int ERR_LOW, int ERR_HIGH)
 {
-	if ((val > BOUND_HIGH) || (val < BOUND_LOW)) 
-    {    
-        if (val > BOUND_HIGH) 
-        {
-            if (~(DIAGNOSTICS & ERR_HIGH)) DIAGNOSTICS |= ERR_HIGH;
-            if (DIAGNOSTICS & ERR_LOW) DIAGNOSTICS &= ~ERR_LOW;
-        }
-        else
-        {
-            if (~(DIAGNOSTICS & ERR_LOW)) DIAGNOSTICS |= ERR_LOW;
-            if (DIAGNOSTICS & ERR_HIGH) DIAGNOSTICS &= ~ERR_HIGH;
-        }
-    }    
+    if (val < BOUND_LOW) 
+	{
+		if ((DIAGNOSTICS & ERR_LOW) == 0) DIAGNOSTICS |= ERR_LOW;
+		if (DIAGNOSTICS & ERR_HIGH) DIAGNOSTICS &= ~ERR_HIGH;
+	}
+    else if (val > BOUND_HIGH) 
+	{
+		if ((DIAGNOSTICS & ERR_HIGH) == 0) DIAGNOSTICS |= ERR_HIGH;
+		if (DIAGNOSTICS & ERR_LOW) DIAGNOSTICS &= ~ERR_LOW;
+	}
     else 
-    {    
-        if (DIAGNOSTICS & ERR_LOW) DIAGNOSTICS &= ~ERR_LOW;
-        if (DIAGNOSTICS & ERR_HIGH) DIAGNOSTICS &= ~ERR_HIGH;
-    } 
+	{
+		if (DIAGNOSTICS & ERR_HIGH) DIAGNOSTICS &= ~ERR_HIGH;
+		if (DIAGNOSTICS & ERR_LOW) DIAGNOSTICS &= ~ERR_LOW;
+	}
 
 	return;
 }

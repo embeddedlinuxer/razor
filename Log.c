@@ -41,14 +41,14 @@
 #include "nandwriter.h"
 
 #define USB3SS_EN
+#define DMA_MODE
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
+#define MAX_BUF_SIZE   	MAX_DATA_SIZE*32*8 // 64KB
 #define MAX_CSV_SIZE   	4096*3
-
-static FRESULT fr;	
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char CSV_BUF[MAX_CSV_SIZE];
@@ -72,7 +72,7 @@ static int USB_RTC_HR = 0;
 static int USB_RTC_DAY = 0;
 static int USB_RTC_MON = 0;
 static int USB_RTC_YR = 0;
-static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_RTC_YR;
+static int tmp_sec, tmp_min, tmp_hr, tmp_day, tmp_mon, tmp_yr;
 
 /* ========================================================================== */
 /*                                Prototypes                                  */
@@ -390,27 +390,27 @@ void resetUsbStaticVars(void)
 	LOG_HEADER[0] = '\0';
 }
 
-void stopAccessingUsb(FRESULT f)
+void stopAccessingUsb(FRESULT fr)
 {
 	resetCsvStaticVars();
 	resetUsbStaticVars();
 
     /// find out why it failed
-         if (f == FR_DISK_ERR) usbStatus = 2;
-    else if (f == FR_INT_ERR) usbStatus = 3;
-    else if (f == FR_NOT_READY) usbStatus = 4;
-    else if (f == FR_NO_FILE) usbStatus = 5;
-    else if (f == FR_NO_PATH) usbStatus = 6;
-    else if (f == FR_INVALID_NAME) usbStatus = 7;
-    else if (f == FR_DENIED) usbStatus = 8;
-    else if (f == FR_INVALID_OBJECT) usbStatus = 9;
-    else if (f == FR_WRITE_PROTECTED) usbStatus = 10;
-    else if (f == FR_INVALID_DRIVE) usbStatus = 11;
-    else if (f == FR_NOT_ENABLED) usbStatus = 12;
-    else if (f == FR_NO_FILESYSTEM) usbStatus = 13;
-    else if (f == FR_TIMEOUT) usbStatus = 14;
-    else if (f == FR_LOCKED) usbStatus = 15;
-    else if (f == FR_NOT_ENOUGH_CORE) usbStatus = 16;
+         if (fr == FR_DISK_ERR) usbStatus = 2;
+    else if (fr == FR_INT_ERR) usbStatus = 3;
+    else if (fr == FR_NOT_READY) usbStatus = 4;
+    else if (fr == FR_NO_FILE) usbStatus = 5;
+    else if (fr == FR_NO_PATH) usbStatus = 6;
+    else if (fr == FR_INVALID_NAME) usbStatus = 7;
+    else if (fr == FR_DENIED) usbStatus = 8;
+    else if (fr == FR_INVALID_OBJECT) usbStatus = 9;
+    else if (fr == FR_WRITE_PROTECTED) usbStatus = 10;
+    else if (fr == FR_INVALID_DRIVE) usbStatus = 11;
+    else if (fr == FR_NOT_ENABLED) usbStatus = 12;
+    else if (fr == FR_NO_FILESYSTEM) usbStatus = 13;
+    else if (fr == FR_TIMEOUT) usbStatus = 14;
+    else if (fr == FR_LOCKED) usbStatus = 15;
+    else if (fr == FR_NOT_ENOUGH_CORE) usbStatus = 16;
     else usbStatus = 2;
 
     return;
@@ -490,17 +490,21 @@ void logData(void)
 {
 	if (!isUsbActive()) return;
 
+    static FRESULT fresult;
 	static int time_counter = 1;
 	static int prev_sec = 0;
 	
+   	/// read rtc
+   	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
+
 	/// valid timestamp?
-   	if (CAL_RTC_SEC == prev_sec) 
+   	if (tmp_sec == prev_sec) 
 	{
 		return;
 	}
 	else 
 	{
-		prev_sec = CAL_RTC_SEC;
+		prev_sec = tmp_sec;
 		time_counter++;
 	}
 
@@ -511,12 +515,12 @@ void logData(void)
 	else time_counter = 0;
 
 	/// UPDATE TIME	
-	USB_RTC_SEC = CAL_RTC_SEC;
-	if (USB_RTC_MIN != CAL_RTC_MIN) USB_RTC_MIN = CAL_RTC_MIN;
-	if (USB_RTC_HR != CAL_RTC_HR)   USB_RTC_HR = CAL_RTC_HR;
-	if (USB_RTC_DAY != CAL_RTC_DAY) USB_RTC_DAY = CAL_RTC_DAY;
-	if (USB_RTC_MON != CAL_RTC_MON) USB_RTC_MON = CAL_RTC_MON;
-	if (USB_RTC_YR != CAL_RTC_YR)   USB_RTC_YR = CAL_RTC_YR;
+	USB_RTC_SEC = tmp_sec;
+	if (USB_RTC_MIN != tmp_min) USB_RTC_MIN = tmp_min;
+	if (USB_RTC_HR != tmp_hr)   USB_RTC_HR = tmp_hr;
+	if (USB_RTC_DAY != tmp_day) USB_RTC_DAY = tmp_day;
+	if (USB_RTC_MON != tmp_mon) USB_RTC_MON = tmp_mon;
+	if (USB_RTC_YR != tmp_yr)   USB_RTC_YR = tmp_yr;
 
    	/// A NEW FILE? 
    	if (current_day != USB_RTC_DAY) 
@@ -524,10 +528,10 @@ void logData(void)
        	current_day = USB_RTC_DAY;
 
        	// mkdir PDI
-       	fr = f_mkdir("0:PDI");
-       	if ((fr != FR_EXIST) && (fr != FR_OK)) 
+       	fresult = f_mkdir("0:PDI");
+       	if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
        	{
-           	stopAccessingUsb(fr);
+           	stopAccessingUsb(fresult);
            	return;
        	}
 
@@ -537,18 +541,18 @@ void logData(void)
 
         if (f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
         {
-            fr = f_close(&logWriteObject);
-            if (fr == FR_OK) 
+            fresult = f_close(&logWriteObject);
+            if (fresult == FR_OK) 
 			{
 				return;
 			}
         }
 
 		/// open file
-       	fr = f_open(&logWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
-       	if (fr != FR_OK) 
+       	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
+       	if (fresult != FR_OK) 
        	{
-           	stopAccessingUsb(fr);
+           	stopAccessingUsb(fresult);
            	return;
        	}
 
@@ -562,10 +566,10 @@ void logData(void)
            	return;
        	}
 
-       	fr = f_sync(&logWriteObject);
-       	if (fr != FR_OK)
+       	fresult = f_sync(&logWriteObject);
+       	if (fresult != FR_OK)
        	{
-           	stopAccessingUsb(fr);
+           	stopAccessingUsb(fresult);
            	return;
        	}
 
@@ -579,10 +583,10 @@ void logData(void)
            	return;
        	}
 
-       	fr = f_sync(&logWriteObject);
-       	if (fr != FR_OK)
+       	fresult = f_sync(&logWriteObject);
+       	if (fresult != FR_OK)
        	{
-           	stopAccessingUsb(fr);
+           	stopAccessingUsb(fresult);
            	return;
        	}
 
@@ -596,18 +600,18 @@ void logData(void)
            	return;
        	}
 
-       	fr = f_sync(&logWriteObject);
-       	if (fr != FR_OK)
+       	fresult = f_sync(&logWriteObject);
+       	if (fresult != FR_OK)
        	{
-           	stopAccessingUsb(fr);
+           	stopAccessingUsb(fresult);
            	return;
        	}
 
        	/// close file
-       	fr = f_close(&logWriteObject);
-       	if (fr != FR_OK)
+       	fresult = f_close(&logWriteObject);
+       	if (fresult != FR_OK)
        	{
-           	stopAccessingUsb(fr);
+           	stopAccessingUsb(fresult);
            	return;
        	}
 
@@ -623,11 +627,11 @@ void logData(void)
 	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
    		/// open
-   		fr = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-   		if (fr != FR_OK)
+   		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+   		if (fresult != FR_OK)
    		{
 			f_close(&logWriteObject); 
-   	    	stopAccessingUsb(fr);
+   	    	stopAccessingUsb(fresult);
 			free(DATA_BUF);
    	    	return;
    		}
@@ -642,11 +646,11 @@ void logData(void)
 		}
 
    		/// append mode 
-   		fr = f_lseek(&logWriteObject,f_size(&logWriteObject));
-   		if (fr != FR_OK)
+   		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
+   		if (fresult != FR_OK)
    		{
 			f_close(&logWriteObject); 
-   	    	stopAccessingUsb(fr);
+   	    	stopAccessingUsb(fresult);
 			free(DATA_BUF);
    	    	return;
    		}
@@ -680,11 +684,11 @@ void logData(void)
 		}
 
 		/// sync
-   		fr = f_sync(&logWriteObject);
-   		if (fr != FR_OK)
+   		fresult = f_sync(&logWriteObject);
+   		if (fresult != FR_OK)
    		{    
 			f_close(&logWriteObject); 
-       		stopAccessingUsb(fr);
+       		stopAccessingUsb(fresult);
 			free(DATA_BUF);
        		return;
    		}    
@@ -699,10 +703,10 @@ void logData(void)
 		}
 
    		/// close
-   		fr = f_close(&logWriteObject);
-		if (fr != FR_OK)
+   		fresult = f_close(&logWriteObject);
+		if (fresult != FR_OK)
    		{    
-       		stopAccessingUsb(fr);
+       		stopAccessingUsb(fresult);
 			free(DATA_BUF);
        		return;
    		} 
@@ -720,6 +724,7 @@ BOOL downloadCsv(void)
 	if (!isUsbActive()) return FALSE;
 	isDownloadCsv = FALSE;
 
+	FRESULT fr;	
 	FIL csvWriteObject;
 	CSV_BUF[0] = '\0';
 	char csvFileName[50] = 0;
@@ -859,6 +864,7 @@ void scanCsvFiles(void)
 	isScanCsvFiles = FALSE;
 
 	int i;
+	FRESULT res;
     static DIR dir;
     static FILINFO fno;
 	const char path[] = "0:";
@@ -879,8 +885,8 @@ void scanCsvFiles(void)
 
 	/// read file names
     for (;;) {
-        fr = f_readdir(&dir, &fno);
-        if (fr != FR_OK || fno.fname[0] == 0) break;
+        res = f_readdir(&dir, &fno);
+        if (res != FR_OK || fno.fname[0] == 0) break;
         if (fno.fattrib & AM_DIR) {} // directory
 		else // file
 		{ 

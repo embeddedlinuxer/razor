@@ -41,6 +41,7 @@
 #include <time.h>
 
 static double WC_RAW_AVG = 0;
+static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_RTC_YR;
 
 // This is a __HWI__ called by Count_Freq_Pulses_Clock.
 // Currently, it's called once every 0.5 seconds.
@@ -88,65 +89,50 @@ void Poll(void)
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
 
-	///
     /// Read DIAGNOSTICS
-	///
     REG_DIAGNOSTICS = DIAGNOSTICS;
 
-	///
     /// Read RTC
-	///
     Read_RTC(&CAL_RTC_SEC, &CAL_RTC_MIN, &CAL_RTC_HR, &CAL_RTC_DAY, &CAL_RTC_MON, &CAL_RTC_YR);
 
-	///
-	/// Read Frequency
-	///
+	// Read Frequency
 	err_f = Read_Freq();	
 
-	///
 	/// READ USER TEMPERATURE
-	///
 	Read_User_Temperature();
 
-	///
-	/// Read Watercut 
-	///
+	// Read Watercut 
 	if (!err_f) err_w = Read_WC(&WC);
 
-	///
-	/// Read Density
-	///
+	// Read Density
 	if ((REG_OIL_DENS_CORR_MODE != 0) && !(err_f | err_w) )
 	{
-		     if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);    	// AI DENSITY
-		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT); 	// MODBUS DENSITY
-		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);	// MANUAL DENSITY
+		// get density from various sources 
+		     if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
+		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
+		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
 
 		err_d = Apply_Density_Correction();
 
 		if (!err_d)
 		{
-			// add adjustment from density correction (if any)
+			/// add adjustment from density correction (if any)
 			WC += REG_DENS_CORR;
 
-			// max oil-phase watercut (WC > 85%)
+			/// max oil-phase watercut (WC > 85%)
 			if (WC > REG_OIL_CALC_MAX) WC = 100.00;	
 		}
 	}
     else
     {
-        if (REG_DENS_CORR != 0) REG_DENS_CORR = 0;
-		if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
-        if (DIAGNOSTICS & ERR_DNS_HI) DIAGNOSTICS &= ~ERR_DNS_HI;
+        REG_DENS_CORR = 0;
     }
 	
 	if ((err_f | err_w | err_d) == FALSE)
 	{
 		COIL_AO_ALARM.val = FALSE;
 
-		///
 		/// update REG_WATERCUT here
-		///
     	VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
 
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
@@ -174,16 +160,19 @@ Uint8 Read_Freq(void)
 	{
 		if (FREQ_PULSE_COUNT_HI != 0) 
 		{
-			if (~(DIAGNOSTICS & ERR_FRQ_HI)) DIAGNOSTICS |= ERR_FRQ_HI;
 			if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+			if ((DIAGNOSTICS & ERR_FRQ_HI) == 0) DIAGNOSTICS |= ERR_FRQ_HI;
 		}
-		else // FREQ_U_SEC_ELAPSED == 0
+		else if (FREQ_U_SEC_ELAPSED == 0) 
 		{
-			if (~(DIAGNOSTICS & ERR_FRQ_LO)) DIAGNOSTICS |= ERR_FRQ_LO;
 			if (DIAGNOSTICS & ERR_FRQ_HI) DIAGNOSTICS &= ~ERR_FRQ_HI;
+			if ((DIAGNOSTICS & ERR_FRQ_LO) == 0) DIAGNOSTICS |= ERR_FRQ_LO;
 		}
-
-		return 1; // either freq too high or something went wrong in the counting
+	}
+	else 
+	{
+		if (DIAGNOSTICS & ERR_FRQ_HI) DIAGNOSTICS &= ~ERR_FRQ_HI;
+		if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
 	}
 		
 	key = Swi_disable();

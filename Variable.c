@@ -710,8 +710,8 @@ BOOL VAR_CheckSet_Bounds(VAR* v, double* t)
         {/* t within range */
             v->STAT &= var_bound_lo ^ 0xFFFFFFFF;
             v->STAT &= var_bound_hi ^ 0xFFFFFFFF;
-            if (DIAGNOSTICS & ERR_VAR_LO) DIAGNOSTICS &= ~ERR_VAR_LO;
-            if (DIAGNOSTICS & ERR_VAR_HI) DIAGNOSTICS &= ~ERR_VAR_HI;
+           	if (DIAGNOSTICS & ERR_VAR_LO) DIAGNOSTICS &= ~ERR_VAR_LO;
+           	if (DIAGNOSTICS & ERR_VAR_HI) DIAGNOSTICS &= ~ERR_VAR_HI;
         }
     }
     else

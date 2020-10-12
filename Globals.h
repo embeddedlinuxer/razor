@@ -123,14 +123,6 @@ _EXTERN int REG_RTC_HR;			// RTC read-only: hours
 _EXTERN int REG_RTC_DAY;		// RTC read-only: day
 _EXTERN int REG_RTC_MON;		// RTC read-only: month
 _EXTERN int REG_RTC_YR;			// RTC read-only: year
-
-_EXTERN int CAL_RTC_SEC;		// RTC read-only: seconds
-_EXTERN int CAL_RTC_MIN;		// RTC read-only: minutes
-_EXTERN int CAL_RTC_HR;			// RTC read-only: hours
-_EXTERN int CAL_RTC_DAY;		// RTC read-only: day
-_EXTERN int CAL_RTC_MON;		// RTC read-only: month
-_EXTERN int CAL_RTC_YR;			// RTC read-only: year
-
 _EXTERN int REG_RTC_SEC_IN;		// RTC read-only: seconds
 _EXTERN int REG_RTC_MIN_IN;		// RTC read-only: minutes
 _EXTERN int REG_RTC_HR_IN;		// RTC read-only: hours

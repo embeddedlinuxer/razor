@@ -33,7 +33,6 @@
 
 _EXTERN Uint32 DIAGNOSTICS;
 _EXTERN Uint32 DIAGNOSTICS_MASK;
-
 _EXTERN void checkError(double val, double BOUND_LOW, double BOUND_HIGH, int ERR_LOW, int ERR_HIGH);
 
 /////////////////////////////////////////////
