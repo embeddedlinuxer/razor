@@ -11,7 +11,6 @@
 #include <ti/board/src/lcdkOMAPL138/include/board_internal.h>
 #include <ti/drv/usb/example/common/hardware.h>
 #include <ti/drv/uart/UART_stdio.h>
-#include <ti/drv/usb/usb_drv.h>
 #include <ti/csl/soc.h>
 #include <ti/csl/cslr_usb.h>
 #include <ti/csl/cslr_syscfg.h>
@@ -20,34 +19,25 @@
 #include "ti/csl/arch/arm9/V0/csl_cp15.h"
 #include "fatfs_port_usbmsc.h"
 #include "fs_shell_app_utils.h"
-#include <ti/drv/usb/usb_drv.h>
-#include <ti/drv/usb/usb_osal.h>
+#include "hw_soc.h"
 #include "usblib.h"
 #include "usbhost.h"
 #include "usbhmsc.h"
 #include "usb_drv.h"
+#include "usb_osal.h"
 #include "timer.h"
 #include "types.h"
-#include "fatfs_port_usbmsc.h"
-#include "fs_shell_app_utils.h"
-#include "usb_osal.h"
-#include "usblib.h"
-#include "usbhost.h"
-#include "hw_soc.h"
-#include "usbhmsc.h"
 #include "Globals.h"
 #include "Variable.h"
 #include "Menu.h"
 #include "nandwriter.h"
 
 #define USB3SS_EN
-#define DMA_MODE
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
-#define MAX_BUF_SIZE   	MAX_DATA_SIZE*32*8 // 64KB
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
