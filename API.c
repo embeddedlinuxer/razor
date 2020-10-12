@@ -1013,29 +1013,6 @@ double API2KGM3_15(const double KGM3, const double PROC_T)
 	double rho2	= 0.0;
 	double vdif	= 0.0;
 
-	if ((KGM3 > 1100) || (KGM3 < 500) || (DIAGNOSTICS & ERR_TMP_HI) || (DIAGNOSTICS & ERR_TMP_LO)) 
-	{
-		if (KGM3 > 1100) 
-		{
-			if (DIAGNOSTICS & ERR_DNS_HI) {}
-			else DIAGNOSTICS |= ERR_DNS_HI;
-			if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
-		}
-		else if (KGM3 < 500) 
-		{
-			if (DIAGNOSTICS & ERR_DNS_LO) {}
-			else DIAGNOSTICS |= ERR_DNS_LO;
-			if (DIAGNOSTICS & ERR_DNS_HI)	DIAGNOSTICS &= ~ERR_DNS_HI;
-		}
-
-		return rho2;	
-	}
-	else
-	{
-		if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
-		if (DIAGNOSTICS & ERR_DNS_HI) DIAGNOSTICS &= ~ERR_DNS_HI;
-	}
-
 	do	
 	{
 		a 		= 613.9723/pow(rho,2.0);

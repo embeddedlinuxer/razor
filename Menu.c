@@ -761,10 +761,7 @@ mnuHomescreenDensity(const Uint16 input)
        	}
     }
 
-	sprintf(lcdLine1,"%.2f",REG_OIL_DENSITY.val);
-	strcat(lcdLine1,densityIndex[index]);
-	strcpy(lcdLine2,lcdLine1);
-	sprintf(lcdLine1,"%16s",lcdLine2);
+	sprintf(lcdLine1,"%8.1f%s",REG_OIL_DENSITY.val,densityIndex[index]);
 	(isUpdateDisplay) ? updateDisplay(DENSITY, lcdLine1) : displayLcd(lcdLine1, LCD1);
 
 	 switch (input)  {
@@ -2673,30 +2670,28 @@ Uint16
 mnuConfig_DnsCorr_CorrEnable(const Uint16 input)
 {
 	if (I2C_TXBUF.n > 0) return MNU_CFG_DNSCORR_CORRENABLE;
+	    
+    sprintf(lcdLine1, densityMode[REG_OIL_DENS_CORR_MODE]);
 
-	sprintf(lcdLine1, densityMode[REG_OIL_DENS_CORR_MODE]);
+    if (isUpdateDisplay) 
+    {
+        if (REG_OIL_DENS_CORR_MODE == 1)
+			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
+        else if (REG_OIL_DENS_CORR_MODE == 2)
+			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
+        else if (REG_OIL_DENS_CORR_MODE == 3)
+			VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
 
-	if (isUpdateDisplay)
+        updateDisplay(CFG_DNSCORR_CORRENABLE, lcdLine1);
+    }
+    else displayLcd(lcdLine1, LCD1);
+
+	switch (input)	
 	{
-		if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
-		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
-		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
-		else // release alarms upon disabling density
-		{
-			if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
-			if (DIAGNOSTICS & ERR_DNS_HI) DIAGNOSTICS &= ~ERR_DNS_HI;
-		}
-
-		updateDisplay(CFG_DNSCORR_CORRENABLE, lcdLine1);
-	}
-	else displayLcd(lcdLine1, LCD1);
-
-	switch (input)
-	{
-		case BTN_VALUE  : return onNextPressed(MNU_CFG_DNSCORR_DISPUNIT);
-		case BTN_STEP   : return onMnuStepPressed(FXN_CFG_DNSCORR_CORRENABLE,MNU_CFG_DNSCORR_CORRENABLE,CFG_DNSCORR_CORRENABLE);
-		case BTN_BACK   : return onNextPressed(MNU_CFG_DNSCORR);
-		default         : return MNU_CFG_DNSCORR_CORRENABLE;
+        case BTN_VALUE 	: return onNextPressed(MNU_CFG_DNSCORR_DISPUNIT);
+		case BTN_STEP 	: return onMnuStepPressed(FXN_CFG_DNSCORR_CORRENABLE,MNU_CFG_DNSCORR_CORRENABLE,CFG_DNSCORR_CORRENABLE);
+		case BTN_BACK 	: return onNextPressed(MNU_CFG_DNSCORR);
+		default			: return MNU_CFG_DNSCORR_CORRENABLE;
 	}
 }
 
