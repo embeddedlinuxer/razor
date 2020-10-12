@@ -687,7 +687,9 @@ BOOL VAR_CheckSet_Bounds(VAR* v, double* t)
             t[0]     = v->bound_hi_set;
 
             if ((v->STAT & var_no_alarm)==0)
-                DIAGNOSTICS |= ERR_VAR_HI;
+			{
+            	if ((DIAGNOSTICS & ERR_VAR_HI) == 0) DIAGNOSTICS |= ERR_VAR_HI;
+			}
 
             r = FALSE;
         }
@@ -698,7 +700,9 @@ BOOL VAR_CheckSet_Bounds(VAR* v, double* t)
             t[0]     = v->bound_lo_set;
 
 			if ((v->STAT & var_no_alarm)==0)
-                DIAGNOSTICS |= ERR_VAR_LO;
+			{
+            	if ((DIAGNOSTICS & ERR_VAR_LO) == 0) DIAGNOSTICS |= ERR_VAR_LO;
+			}
 
             r = FALSE;
         }
@@ -706,7 +710,8 @@ BOOL VAR_CheckSet_Bounds(VAR* v, double* t)
         {/* t within range */
             v->STAT &= var_bound_lo ^ 0xFFFFFFFF;
             v->STAT &= var_bound_hi ^ 0xFFFFFFFF;
-            DIAGNOSTICS &= ~(ERR_VAR_LO | ERR_VAR_HI);
+            if (DIAGNOSTICS & ERR_VAR_LO) DIAGNOSTICS &= ~ERR_VAR_LO;
+            if (DIAGNOSTICS & ERR_VAR_HI) DIAGNOSTICS &= ~ERR_VAR_HI;
         }
     }
     else

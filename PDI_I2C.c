@@ -62,6 +62,7 @@ static BOOL isVREFDead = FALSE;
 static BOOL isRTCDead = FALSE;
 static BOOL isDENSDead = FALSE;
 static BOOL isAODead = FALSE;
+static BOOL isOk = TRUE;
 
 static Uint8 tryTemp = 0;
 static Uint8 tryVref = 0;
@@ -69,24 +70,19 @@ static Uint8 tryRtc = 0;
 static Uint8 tryDens = 0;
 static Uint8 tryAo = 0;
 
-static BOOL isOk = TRUE;
-extern void delayInt(Uint32 count);
+///
+/// function declaration
+///
 static inline void Pulse_ePin(int read, int write, Uint8 lcd_data);
 static inline void Pulse_ePin_Manual(int read, int write, Uint8 lcd_data);
-static inline Uint8 I2C_Wait_For_TXRDY(void)
-{
-    Uint32 count = 0;
-
-	while(1)
-	{
-		if ( CSL_FEXT(i2cRegs->ICSTR,I2C_ICSTR_ICXRDY) == 1) break;
-
-		count++;
-		if (count > 0xFFFF) return 1; // fail
-	}
-
-	return 0; // success
-}
+static inline Uint8 I2C_Wait_For_TXRDY(void);
+static void startNextI2cClock(Clock_Handle handle);
+static void setStop(void);
+static void setStart(void);
+static void setTx(void);
+static void setRx(void);
+static void I2C_DS1340_Write(int RTC_ADDR, int RTC_DATA);
+static void setLcdExpander(void);
 
 //******************************************************************************   
 //Function Name     : Bcd2Hex(unsigned char BCDValue)   
@@ -1996,8 +1992,6 @@ while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE)
 
 }
 
-
-
 void Read_RTC(int* p_sec, int* p_min, int* p_hr, int* p_day, int* p_mon, int* p_yr)
 {
     if (isOk)
@@ -2074,7 +2068,7 @@ static inline errorCounter(Uint8 i2c_slave, Uint32 I2C_KEY)
 }
 
 
-void startNextI2cClock(Clock_Handle handle)
+static void startNextI2cClock(Clock_Handle handle)
 {
     if (handle == I2C_ADC_Read_Temp_Clock)
     {
@@ -2134,8 +2128,7 @@ void startNextI2cClock(Clock_Handle handle)
 }
 
 
-void
-setLcdExpander(void)
+static void setLcdExpander(void)
 {
 	setTx();
 	i2cRegs->ICSAR = CSL_FMK(I2C_ICSAR_SADDR,I2C_SLAVE_ADDR_XPANDR); 	//Set slave address to 0x20
@@ -2143,36 +2136,47 @@ setLcdExpander(void)
 }
 
 
-void
-setStop(void)
+static void setStop(void)
 {
 	I2C_START_CLR;
 	I2C_STOP_SET;
 	I2C_Wait_For_Stop();
 }
 
-void
-setStart(void)
+static void setStart(void)
 {
 	I2C_STOP_SET; 
 	I2C_START_SET;
 	I2C_Wait_For_Start();
 }
 
-void
-setTx(void)
+static void setTx(void)
 {
 	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,DISABLE); //mask the ICRRDY interrupt
-    	I2C_TX_MODE; // I2C in TX MODE
+   	I2C_TX_MODE; // I2C in TX MODE
 	I2C_RM_ON;
 	I2C_MASTER_MODE;
 }
 
-void
-setRx(void)
+static void setRx(void)
 {
-    	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
+   	CSL_FINST(i2cRegs->ICIMR,I2C_ICIMR_ICRRDY,ENABLE); // unmask the ICRRDY interrupt
 	I2C_RX_MODE; // I2C in RX mode 
 	I2C_RM_OFF;
 	I2C_MASTER_MODE;
+}
+
+static inline Uint8 I2C_Wait_For_TXRDY(void)
+{
+    Uint32 count = 0;
+
+	while(1)
+	{
+		if ( CSL_FEXT(i2cRegs->ICSTR,I2C_ICSTR_ICXRDY) == 1) break;
+
+		count++;
+		if (count > 0xFFFF) return 1; // fail
+	}
+
+	return 0; // success
 }

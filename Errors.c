@@ -29,25 +29,6 @@ void Update_Relays(void)
 {
 #ifndef HAPTIC_RELAY 
 
-/*
-////////////////////////////////////////////////////////////////////////////
-// don't do this if we're using the relay as haptic feedback
-////////////////////////////////////////////////////////////////////////////
-	if (DIAGNOSTICS & DIAGNOSTICS_MASK) //non-masked error detected
-	{
-		if (COIL_RELAY[0] == FALSE)
-		{
-			COIL_RELAY[0] = 1;
-			CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT,1);
-		}
-	}
-	else if (COIL_RELAY[0] == TRUE)
-	{
-		COIL_RELAY[0] = 0;
-		CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT,0);
-	}
-*/
-
 	// CHECK RELAY CONDITION
 	switch (REG_RELAY_MODE) 
 	{
@@ -88,4 +69,30 @@ void Update_Relays(void)
 	}	
 
 #endif
+}
+
+
+void 
+checkError(double val, double BOUND_LOW, double BOUND_HIGH, int ERR_LOW, int ERR_HIGH)
+{
+	if ((val > BOUND_HIGH) || (val < BOUND_LOW)) 
+    {    
+        if (val > BOUND_HIGH) 
+        {
+            if (~(DIAGNOSTICS & ERR_HIGH)) DIAGNOSTICS |= ERR_HIGH;
+            if (DIAGNOSTICS & ERR_LOW) DIAGNOSTICS &= ~ERR_LOW;
+        }
+        else
+        {
+            if (~(DIAGNOSTICS & ERR_LOW)) DIAGNOSTICS |= ERR_LOW;
+            if (DIAGNOSTICS & ERR_HIGH) DIAGNOSTICS &= ~ERR_HIGH;
+        }
+    }    
+    else 
+    {    
+        if (DIAGNOSTICS & ERR_LOW) DIAGNOSTICS &= ~ERR_LOW;
+        if (DIAGNOSTICS & ERR_HIGH) DIAGNOSTICS &= ~ERR_HIGH;
+    } 
+
+	return;
 }

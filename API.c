@@ -1013,6 +1013,12 @@ double API2KGM3_15(const double KGM3, const double PROC_T)
 	double rho2	= 0.0;
 	double vdif	= 0.0;
 
+	///
+	/// error checking
+	///
+	checkError(KGM3,500,1100,ERR_DNS_LO,ERR_DNS_HI);
+	if ((DIAGNOSTICS & ERR_DNS_HI) || (DIAGNOSTICS & ERR_DNS_LO) || (DIAGNOSTICS & ERR_TMP_HI) || (DIAGNOSTICS & ERR_TMP_LO)) return rho2;
+
 	do	
 	{
 		a 		= 613.9723/pow(rho,2.0);

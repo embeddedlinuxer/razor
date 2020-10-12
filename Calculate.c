@@ -41,7 +41,6 @@
 #include <time.h>
 
 static double WC_RAW_AVG = 0;
-static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_RTC_YR;
 
 // This is a __HWI__ called by Count_Freq_Pulses_Clock.
 // Currently, it's called once every 0.5 seconds.
@@ -89,50 +88,65 @@ void Poll(void)
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
 
+	///
     /// Read DIAGNOSTICS
+	///
     REG_DIAGNOSTICS = DIAGNOSTICS;
 
+	///
     /// Read RTC
+	///
     Read_RTC(&CAL_RTC_SEC, &CAL_RTC_MIN, &CAL_RTC_HR, &CAL_RTC_DAY, &CAL_RTC_MON, &CAL_RTC_YR);
 
-	// Read Frequency
+	///
+	/// Read Frequency
+	///
 	err_f = Read_Freq();	
 
+	///
 	/// READ USER TEMPERATURE
+	///
 	Read_User_Temperature();
 
-	// Read Watercut 
+	///
+	/// Read Watercut 
+	///
 	if (!err_f) err_w = Read_WC(&WC);
 
-	// Read Density
+	///
+	/// Read Density
+	///
 	if ((REG_OIL_DENS_CORR_MODE != 0) && !(err_f | err_w) )
 	{
-		// get density from various sources 
-		     if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
-		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
-		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
+		     if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);    	// AI DENSITY
+		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT); 	// MODBUS DENSITY
+		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);	// MANUAL DENSITY
 
 		err_d = Apply_Density_Correction();
 
 		if (!err_d)
 		{
-			/// add adjustment from density correction (if any)
+			// add adjustment from density correction (if any)
 			WC += REG_DENS_CORR;
 
-			/// max oil-phase watercut (WC > 85%)
+			// max oil-phase watercut (WC > 85%)
 			if (WC > REG_OIL_CALC_MAX) WC = 100.00;	
 		}
 	}
     else
     {
-        REG_DENS_CORR = 0;
+        if (REG_DENS_CORR != 0) REG_DENS_CORR = 0;
+		if (DIAGNOSTICS & ERR_DNS_LO) DIAGNOSTICS &= ~ERR_DNS_LO;
+        if (DIAGNOSTICS & ERR_DNS_HI) DIAGNOSTICS &= ~ERR_DNS_HI;
     }
 	
 	if ((err_f | err_w | err_d) == FALSE)
 	{
 		COIL_AO_ALARM.val = FALSE;
 
+		///
 		/// update REG_WATERCUT here
+		///
     	VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
 
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
@@ -153,58 +167,59 @@ Uint8 Read_Freq(void)
 	int key;
 	double freq;
 
-	if (FREQ_PULSE_COUNT_HI != 0) // this probably shouldn't happen
+	///
+	/// check errors
+	///
+	if ((FREQ_PULSE_COUNT_HI != 0) || (FREQ_U_SEC_ELAPSED == 0)) // this probably shouldn't happen
 	{
-		DIAGNOSTICS |= ERR_FRQ_HI;
+		if (FREQ_PULSE_COUNT_HI != 0) 
+		{
+			if (~(DIAGNOSTICS & ERR_FRQ_HI)) DIAGNOSTICS |= ERR_FRQ_HI;
+			if (DIAGNOSTICS & ERR_FRQ_LO) DIAGNOSTICS &= ~ERR_FRQ_LO;
+		}
+		else // FREQ_U_SEC_ELAPSED == 0
+		{
+			if (~(DIAGNOSTICS & ERR_FRQ_LO)) DIAGNOSTICS |= ERR_FRQ_LO;
+			if (DIAGNOSTICS & ERR_FRQ_HI) DIAGNOSTICS &= ~ERR_FRQ_HI;
+		}
+
 		return 1; // either freq too high or something went wrong in the counting
 	}
-	else DIAGNOSTICS &= ~ERR_FRQ_HI;
 		
-		
-	if (FREQ_U_SEC_ELAPSED == 0) // don't divide by zero
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
-		return 1;
-	}
-	else DIAGNOSTICS &= ~ERR_FRQ_LO;
-
 	key = Swi_disable();
 
+	///
 	/// #pulses divided by #microseconds
+	///
 	freq = ((double)FREQ_PULSE_COUNT_LO) / ((double)FREQ_U_SEC_ELAPSED); 
 
+	///
 	/// oscillator board uses 80x divider
+	///
 	freq *= 80;	
 
+	///
 	/// apply PDI_FREQ_F0 / PDI_FREQ_F1
+	///
     freq += PDI_FREQ_F1*REG_TEMPERATURE.calc_val + PDI_FREQ_F0;
 
+	///
     /// apply REG_OIL_INDEX
+	///
     freq += REG_OIL_INDEX.calc_val;
 
+	///
 	/// update frequency
+	///
 	VAR_Update(&REG_FREQ, freq, CALC_UNIT); 	
 
 	Swi_restore(key);
 
-	/// error checking routine
-	if (REG_FREQ.calc_val == NAN)
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
-		return 1;
-	}
-	else if ((REG_FREQ.calc_val < 0))
-	{
-		DIAGNOSTICS |= ERR_FRQ_LO;
-		return 1;
-	}
-	else if ((REG_FREQ.calc_val > 1000))
-	{
-		DIAGNOSTICS |= ERR_FRQ_HI;
-		return 1;
-	}
-	else
-		DIAGNOSTICS &= ~(ERR_FRQ_HI | ERR_FRQ_LO);
+	///
+	/// error checking
+	///
+	checkError(REG_FREQ.calc_val, 0, 1000, ERR_FRQ_LO, ERR_FRQ_HI);
+	if ((DIAGNOSTICS & ERR_FRQ_HI) || (DIAGNOSTICS & ERR_FRQ_LO)) return 1;
 
 	return 0;
 }
@@ -213,6 +228,11 @@ Uint8 Read_Freq(void)
 void Read_User_Temperature(void)
 {
 	VAR_Update(&REG_TEMP_USER, REG_TEMPERATURE.calc_val + REG_TEMP_ADJUST.calc_val + PDI_TEMP_ADJ, CALC_UNIT);
+
+	///
+	/// error checking
+	///
+	checkError(REG_TEMP_USER.calc_val, -20, 120, ERR_TMP_LO, ERR_TMP_HI);
 }
 
 
@@ -359,9 +379,6 @@ Uint8 Apply_Density_Correction(void)
 	 /// [05/09/2018] Bentley requested we REMOVE 3rd-order calculations and only allow 2nd-order 
 	}
 
-	/// check error 
-	checkError(REG_DENS_CORR,-10.0,10.0,ERR_DNS_LO,ERR_DNS_HI);
-	
 	return 0; /// success
 }
 
@@ -659,12 +676,4 @@ void Apply_Density_Adj(void)
 
         VAR_Update(&REG_OIL_DENSITY,dens,CALC_UNIT);
     }
-}
-
-
-void checkError(double val, double boundLo, double boundHi, int errLo, int errHi)
-{
-	if (val < boundLo) DIAGNOSTICS |= errLo;
-	else if (val > boundHi) DIAGNOSTICS |= errHi;
-	else DIAGNOSTICS &= ~(errLo | errHi);
 }
