@@ -483,10 +483,14 @@ void logData(void)
 	static int prev_sec = 0;
 	int i;
 	
+	///	
    	/// read rtc
+	///	
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
+	///	
 	/// valid timestamp?
+	///	
    	if (tmp_sec == prev_sec) return;
 	else 
 	{
@@ -497,10 +501,14 @@ void logData(void)
 	if (time_counter % REG_LOGGING_PERIOD != 0) return;
 	else time_counter = 0;
 
+	///	
 	/// check usb active
+	///	
 	if (!isUsbActive()) return;
 
+	///	
 	/// UPDATE TIME	
+	///	
 	USB_RTC_SEC = tmp_sec;
 	if (USB_RTC_MIN != tmp_min) USB_RTC_MIN = tmp_min;
 	if (USB_RTC_HR != tmp_hr)   USB_RTC_HR = tmp_hr;
@@ -508,12 +516,13 @@ void logData(void)
 	if (USB_RTC_MON != tmp_mon) USB_RTC_MON = tmp_mon;
 	if (USB_RTC_YR != tmp_yr)   USB_RTC_YR = tmp_yr;
 
+	///	
    	/// A NEW FILE? 
+	///	
    	if (current_day != USB_RTC_DAY) 
    	{   
        	current_day = USB_RTC_DAY;
 
-       	// mkdir PDI
        	fresult = f_mkdir("0:PDI");
        	if ((fresult != FR_EXIST) && (fresult != FR_OK)) 
        	{
@@ -521,7 +530,6 @@ void logData(void)
            	return;
        	}
 
-        // get a file name
         logFile[0] = '\0';
         snprintf(logFile,sizeof(logFile),"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
@@ -531,7 +539,6 @@ void logData(void)
             if (fresult == FR_OK) return;
         }
 
-		/// open file
        	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_CREATE_ALWAYS);
        	if (fresult != FR_OK) 
        	{
@@ -539,7 +546,9 @@ void logData(void)
            	return;
        	}
 
+		///
        	/// write header1
+		///
 		LOG_HEADER[0] = '\0';
 		snprintf(LOG_HEADER,sizeof(LOG_HEADER),"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
 
@@ -556,7 +565,9 @@ void logData(void)
            	return;
        	}
 
+		///
        	/// write header2
+		///
 		LOG_HEADER[0] = '\0';
        	snprintf(LOG_HEADER,sizeof(LOG_HEADER),"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
 
@@ -573,7 +584,9 @@ void logData(void)
            	return;
        	}
 
+		///
        	/// write header3
+		///
 		LOG_HEADER[0] = '\0';
        	snprintf(LOG_HEADER,sizeof(LOG_HEADER),"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
 
@@ -590,7 +603,6 @@ void logData(void)
            	return;
        	}
 
-       	/// close file
        	fresult = f_close(&logWriteObject);
        	if (fresult != FR_OK)
        	{
@@ -601,20 +613,30 @@ void logData(void)
 		return;
    	}   
 
+	///	
 	/// new DATA_BUF
+	///	
 	char * DATA_BUF;
     if (!(DATA_BUF = (char*)malloc(MAX_DATA_SIZE*sizeof(char)))) return;
 
+	///	
 	/// need some dalay
+	///	
 	for (i=0; i<100000; i++);
 
+	///	
 	/// get modbus data
+	///	
 	snprintf(DATA_BUF,sizeof(DATA_BUF),"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
+	///	
 	/// need some dalay
+	///	
 	for (i=0; i<100000; i++);
 
+	///	
    	/// open
+	///	
    	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
    	if (fresult != FR_OK)
    	{
@@ -624,7 +646,9 @@ void logData(void)
        	return;
    	}
 
+	///	
   	/// append mode 
+	///	
   	fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
   	if (fresult != FR_OK)
   	{
@@ -634,7 +658,9 @@ void logData(void)
        	return;
    	}
 
+	///	
 	/// write
+	///	
 	int val = f_puts(DATA_BUF,&logWriteObject);
   	if (val != strlen(DATA_BUF))
    	{
@@ -644,7 +670,9 @@ void logData(void)
 		return;
    	}
 
+	///	
 	/// sync
+	///	
    	fresult = f_sync(&logWriteObject);
    	if (fresult != FR_OK)
 	{    
@@ -654,10 +682,14 @@ void logData(void)
 		return;
    	}    
 
+	///	
 	/// need some dalay
+	///	
 	for (i=0; i<100000; i++);
 
+	///	
 	/// close
+	///	
 	fresult = f_close(&logWriteObject);
 	if (fresult != FR_OK)
    	{    

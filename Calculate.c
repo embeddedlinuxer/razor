@@ -32,22 +32,27 @@
 *       Jul-18-2018 : Daniel Koh : Migraged to linux platform
 *------------------------------------------------------------------------*/
 
-#include "Globals.h"
-#include "Utils.h"
-#include "stdlib.h"
-#define CALCULATE_H
-#include "Calculate.h"
 #include <limits.h>
 #include <time.h>
+#include <stdlib.h>
+
+#include "Globals.h"
+#include "Utils.h"
+
+#define CALCULATE_H
+
+#include "Calculate.h"
 
 static double WC_RAW_AVG = 0;
 static int CAL_RTC_SEC, CAL_RTC_MIN, CAL_RTC_HR, CAL_RTC_DAY, CAL_RTC_MON, CAL_RTC_YR;
 
-// This is a __HWI__ called by Count_Freq_Pulses_Clock.
-// Currently, it's called once every 0.5 seconds.
+//// This is a __HWI__ called by Count_Freq_Pulses_Clock.
+//// Currently, it's called once every 0.5 seconds.
 void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 {
-	/// access usb drive
+	///
+	/// handle usb tasks 
+	///
 	if (!isPdiUpgradeMode)
 	{
    			 if (isLogData) Swi_post(Swi_logData);
@@ -56,28 +61,42 @@ void Count_Freq_Pulses(Uint32 u_sec_elapsed)
 		else if (isUploadCsv) Swi_post(Swi_uploadCsv);
 	}
 
-    // disable counter
+	///
+    /// disable counter
+	///
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,DISABLE); 
 
-    //stop counter timer
+	///
+    /// stop counter timer
+	///
     Timer_stop(counterTimerHandle); 
 
-    //Update global variables
+	///
+    /// udUate global variables
+	///
     FREQ_PULSE_COUNT_LO = tmr3Regs->TIM12; //store counter value to global var (lower)
     FREQ_PULSE_COUNT_HI = tmr3Regs->TIM34; //store counter value to global var (upper)
     FREQ_U_SEC_ELAPSED = u_sec_elapsed;
 
-    //reset counter value to zero (upper & lower)
+	///
+    /// reset counter value to zero (upper & lower)
+	///
     tmr3Regs->TIM12 = 0;
     tmr3Regs->TIM34 = 0;
 
-    //re-enable counter
+	///
+    /// re-enable counter
+	///
     CSL_FINST(tmr3Regs->TCR,TMR_TCR_ENAMODE12,EN_ONCE); 
 
-    //start counter timer
+	/// 
+    /// start counter timer
+	/// 
     Timer_start(counterTimerHandle);
 
-    // Post Swi_Poll below
+	/// 
+    /// followed by Swi_Poll below
+	/// 
     Swi_post(Swi_Poll);
 }
 
@@ -89,22 +108,34 @@ void Poll(void)
 	Uint8 err_w = FALSE;	// watercut calculation error
 	Uint8 err_d = FALSE;	// density correction error
 
-    /// Read RTC
+	///
+    /// read rtc
+	///
     Read_RTC(&CAL_RTC_SEC, &CAL_RTC_MIN, &CAL_RTC_HR, &CAL_RTC_DAY, &CAL_RTC_MON, &CAL_RTC_YR);
 
-	// Read Frequency
+	///
+	/// read frequency
+	///
 	err_f = Read_Freq();	
 
-	/// READ USER TEMPERATURE
+	///
+	/// read user temp 
+	///
 	Read_User_Temperature();
 
-	// Read Watercut 
+	///
+	/// read Watercut 
+	///
 	if (!err_f) err_w = Read_WC(&WC);
 
-	// Read Density
+	///
+	/// read density
+	///
 	if ((REG_OIL_DENS_CORR_MODE != 0) && !(err_f | err_w) )
 	{
-		// get density from various sources 
+		///
+		/// get density source 
+		///
 		     if (REG_OIL_DENS_CORR_MODE == 1) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_AI, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 2) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MODBUS, CALC_UNIT);
 		else if (REG_OIL_DENS_CORR_MODE == 3) VAR_Update(&REG_OIL_DENSITY, REG_OIL_DENSITY_MANUAL, CALC_UNIT);
@@ -113,10 +144,14 @@ void Poll(void)
 
 		if (!err_d)
 		{
+			///
 			/// add adjustment from density correction (if any)
+			///
 			WC += REG_DENS_CORR;
 
+			///
 			/// max oil-phase watercut (WC > 85%)
+			///
 			if (WC > REG_OIL_CALC_MAX) WC = 100.00;	
 		}
 	}
@@ -129,7 +164,9 @@ void Poll(void)
 	{
 		COIL_AO_ALARM.val = FALSE;
 
+		///
 		/// update REG_WATERCUT here
+		///
     	VAR_Update(&REG_WATERCUT,WC,CALC_UNIT);
 
 		REG_AO_OUTPUT = (16*(REG_WATERCUT.val/100)) + 4; 
@@ -261,7 +298,9 @@ Uint8 Read_WC(float *WC)
 
 	if (COIL_OIL_PHASE.val)
 	{
-		// Find the two data point our temperature falls between
+		///
+		/// find the two data point our temperature falls between
+		///
 		for (i=1;i<REG_TEMP_OIL_NUM_CURVES-3;i++)
 			if ( REG_TEMPS_OIL[i] > REG_TEMP_USER.calc_val ) break;
 
@@ -279,7 +318,9 @@ Uint8 Read_WC(float *WC)
 
 		w = Interpolate(ot[0], REG_TEMPS_OIL[i], ot[1], REG_TEMPS_OIL[j], REG_TEMP_USER.calc_val);
 
-		// Note: As with the old code, we check for the cutoff using RAW watercut calculation
+		///
+		/// Note: As with the old code, we check for the cutoff using RAW watercut calculation
+		///
 		if ((w > REG_OIL_PHASE_CUTOFF) && (REG_OIL_PHASE_CUTOFF > 0)) // use the second curve (i+3)     
 		{
 			for (i=1;i<REG_TEMP_OIL_NUM_CURVES-3;i++)
@@ -309,24 +350,32 @@ Uint8 Read_WC(float *WC)
             if (w > REG_OIL_CALC_MAX) w = REG_OIL_CALC_MAX;    
 	
 			*/
+			///
     		/// average REG_WATERCUT_RAW
+			///
    			WC_RAW_AVG *= (REG_PROC_AVGING.calc_val-1);
    			WC_RAW_AVG += w;
    			WC_RAW_AVG /= REG_PROC_AVGING.calc_val;
 
+			///
 			/// add REG_OIL_ADJUST
+			///
             *WC = (float)WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
 		}
 		else
 		{
 		    REG_WATERCUT_RAW = w;
 	
+			///
     		/// average REG_WATERCUT_RAW
+			///
    			WC_RAW_AVG *= (REG_PROC_AVGING.calc_val-1);
    			WC_RAW_AVG += w;
    			WC_RAW_AVG /= REG_PROC_AVGING.calc_val;
 
+			///
 			/// add REG_OIL_ADJUST
+			///
             *WC = (float)WC_RAW_AVG + REG_OIL_ADJUST.calc_val;
 
 			/*
@@ -351,14 +400,21 @@ Uint8 Apply_Density_Correction(void)
 {
 	double dens = 0.0;
 	
+	///
 	/// get current density in units of kg/m3 @ 15C
+	///
 	dens = Convert(REG_OIL_DENSITY.class, REG_OIL_DENSITY.calc_unit, u_mpv_kg_cm_15C, REG_OIL_DENSITY.calc_val, 0, 0);
 
+	///
     /// Razor does not use REG_DENSITY_CAL_VAL
+	///
     REG_DENSITY_CAL_VAL.calc_val = 0.0; // DKOH Oct 22, 2019
 
 	if ((REG_WATERCUT_RAW + REG_OIL_ADJUST.calc_val) <= 5.0)
-	{/// hold last value of Dadj if WC > 5.0%, otherwise calculate new Dadj
+	{
+		///
+		/// hold last value of Dadj if WC > 5.0%, otherwise calculate new Dadj
+		///
 		REG_DENS_CORR = (REG_DENSITY_D2.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val) * (dens - REG_DENSITY_CAL_VAL.calc_val)) +
 					      (REG_DENSITY_D1.calc_val * (dens - REG_DENSITY_CAL_VAL.calc_val)) + 
 					       REG_DENSITY_D0.calc_val;
@@ -448,21 +504,17 @@ void Capture_Sample(void)
     ///
     /// Numbe of samples 
     ///
-    if  (REG_PROC_AVGING.calc_val > DATALOG.WC_BUFFER.n)
-        num_samples = DATALOG.WC_BUFFER.n;
-    else
-        num_samples = REG_PROC_AVGING.calc_val;
-
+    if (REG_PROC_AVGING.calc_val > DATALOG.WC_BUFFER.n) num_samples = DATALOG.WC_BUFFER.n;
+    else num_samples = REG_PROC_AVGING.calc_val;
+        
     /// 
     /// Watercut averaging
     /// 
     sum = 0;
     for (i=0;i<num_samples;i++)
     {   
-        if ((DATALOG.WC_BUFFER.head-i) < 0) //wrap around
-            sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i + MAX_BFR_SIZE_F];
-        else
-            sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i];
+        if ((DATALOG.WC_BUFFER.head-i) < 0) sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i + MAX_BFR_SIZE_F]; // wrap around
+        else sum += DATALOG.WC_BUFFER.buff[DATALOG.WC_BUFFER.head-i];
     }   
     REG_WATERCUT_AVG.calc_val = sum/(double)num_samples;
 
@@ -471,7 +523,9 @@ void Capture_Sample(void)
     ///
 	if (COIL_BEGIN_OIL_CAP.val)
     {
-        // UPDATE STREAM DATA WHILE CAPTURING OIL
+    	///
+        /// UPDATE STREAM DATA WHILE CAPTURING OIL
+    	///
         STREAM_WATERCUT_AVG[(int)REG_STREAM.calc_val-1] = REG_WATERCUT_AVG.calc_val;
         STREAM_SAMPLES[(int)REG_STREAM.calc_val-1] = num_samples;
         sprintf(STREAM_TIMESTAMP[(int)REG_STREAM.calc_val-1],"%.2u:%.2u %.2u/%.2u/20%.2u",CAL_RTC_HR,CAL_RTC_MIN,CAL_RTC_MON,CAL_RTC_DAY,CAL_RTC_YR);
@@ -502,29 +556,7 @@ void Capture_Sample(void)
         }
     }
     VAR_Update(&REG_TEMP_AVG, sum / (double)num_samples, CALC_UNIT);   //update average
-/*
-    //Average Frequency//
-    sum = 0;
-    for (i=0;i<num_samples;i++)
-    {   
-        if ((DATALOG.F_BUFFER.head-i) < 0) //wrap around
-            sum += DATALOG.F_BUFFER.buff[DATALOG.F_BUFFER.head - i + MAX_BFR_SIZE_F];
-        else
-            sum += DATALOG.F_BUFFER.buff[DATALOG.F_BUFFER.head-i];
-    }
-    VAR_Update(&REG_FREQ_AVG, sum/(double)num_samples, CALC_UNIT);   //update average
 
-    //Average Reflected Power//
-    sum = 0;
-    for (i=0;i<num_samples;i++)
-    {
-        if ((DATALOG.RP_BUFFER.head-i) < 0) //wrap around
-            sum += DATALOG.RP_BUFFER.buff[DATALOG.RP_BUFFER.head - i + MAX_BFR_SIZE_F];
-        else
-            sum += DATALOG.RP_BUFFER.buff[DATALOG.RP_BUFFER.head-i];
-    }
-    REG_OIL_RP_AVG =  sum/(double)num_samples;    //update average
-*/
     Clock_start(Capture_Sample_Clock); // call this again in 1 sec
 }
 
@@ -534,7 +566,9 @@ void Calibrate_Oil(void)
 	float t;
 	double sg = 1.0;
 
+	///
     /// REG_DENS_ADJ is used entered density offset 
+	///
     if ((REG_OIL_DENS_CORR_MODE != 0) && (((REG_ANALYZER_MODE&0xFF)==ANA_MODE_LOW)||((REG_ANALYZER_MODE&0xFF)==ANA_MODE_MID)))
     {   
         sg = Convert(c_mass_per_volume, FC.density.calc_unit, u_mpv_sg_15C, FC.density.calc_val, 0, FC.density.aux);
@@ -542,7 +576,9 @@ void Calibrate_Oil(void)
     }   
     else sg = 1.0;
 
+	///
 	/// calibrate "current" stream
+	///
     if (REG_STREAM.calc_val == TEMP_STREAM)
     {   
         if (REG_PROC_AVGING.calc_val < DATALOG.WC_BUFFER.n)
@@ -572,8 +608,7 @@ void Calibrate_Oil(void)
             VAR_Update(&REG_OIL_ADJUST, t, CALC_UNIT);
         }
     }   
-	/// calibrate "saved" stream
-    else
+    else /// calibrate "saved" stream
     {   
         if (REG_PROC_AVGING.calc_val < STREAM_SAMPLES[TEMP_STREAM-1])
         {
