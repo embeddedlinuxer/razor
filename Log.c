@@ -478,31 +478,27 @@ BOOL isUsbActive(void)
 
 void logData(void)
 {
-	if (!isUsbActive()) return;
-
     static FRESULT fresult;
 	static int time_counter = 1;
 	static int prev_sec = 0;
+	int i;
 	
    	/// read rtc
    	Read_RTC(&tmp_sec, &tmp_min, &tmp_hr, &tmp_day, &tmp_mon, &tmp_yr);
 
 	/// valid timestamp?
-   	if (tmp_sec == prev_sec) 
-	{
-		return;
-	}
+   	if (tmp_sec == prev_sec) return;
 	else 
 	{
 		prev_sec = tmp_sec;
 		time_counter++;
 	}
 
-	if (time_counter % REG_LOGGING_PERIOD != 0) 
-	{
-		return;
-	}
+	if (time_counter % REG_LOGGING_PERIOD != 0) return;
 	else time_counter = 0;
+
+	/// check usb active
+	if (!isUsbActive()) return;
 
 	/// UPDATE TIME	
 	USB_RTC_SEC = tmp_sec;
@@ -527,15 +523,12 @@ void logData(void)
 
         // get a file name
         logFile[0] = '\0';
-        sprintf(logFile,"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
+        snprintf(logFile,sizeof(logFile),"0:PDI/LOG_%02d_%02d_20%02d.csv",USB_RTC_MON, USB_RTC_DAY, USB_RTC_YR); 
 
         if (f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING) == FR_OK) 
         {
             fresult = f_close(&logWriteObject);
-            if (fresult == FR_OK) 
-			{
-				return;
-			}
+            if (fresult == FR_OK) return;
         }
 
 		/// open file
@@ -548,7 +541,7 @@ void logData(void)
 
        	/// write header1
 		LOG_HEADER[0] = '\0';
-		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
+		snprintf(LOG_HEADER,sizeof(LOG_HEADER),"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
@@ -565,7 +558,7 @@ void logData(void)
 
        	/// write header2
 		LOG_HEADER[0] = '\0';
-       	sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
+       	snprintf(LOG_HEADER,sizeof(LOG_HEADER),"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
@@ -582,7 +575,7 @@ void logData(void)
 
        	/// write header3
 		LOG_HEADER[0] = '\0';
-       	sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
+       	snprintf(LOG_HEADER,sizeof(LOG_HEADER),"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
@@ -605,106 +598,77 @@ void logData(void)
            	return;
        	}
 
-       	/// flush LOG_BUF 
 		return;
    	}   
 
 	/// new DATA_BUF
-	char *DATA_BUF;
-    DATA_BUF=(char *)malloc(MAX_DATA_SIZE*sizeof(char));
+	char * DATA_BUF;
+    if (!(DATA_BUF = (char*)malloc(MAX_DATA_SIZE*sizeof(char)))) return;
+
+	/// need some dalay
+	for (i=0; i<100000; i++);
 
 	/// get modbus data
-	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+	snprintf(DATA_BUF,sizeof(DATA_BUF),"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-   		/// open
-   		fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
-   		if (fresult != FR_OK)
-   		{
-			f_close(&logWriteObject); 
-   	    	stopAccessingUsb(fresult);
-			free(DATA_BUF);
-   	    	return;
-   		}
+	/// need some dalay
+	for (i=0; i<100000; i++);
 
-		if (f_error(&logWriteObject) != 0)
-		{
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-       		stopAccessingUsb(FR_DISK_ERR);
-			free(DATA_BUF);
-			return;
-		}
-
-   		/// append mode 
-   		fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
-   		if (fresult != FR_OK)
-   		{
-			f_close(&logWriteObject); 
-   	    	stopAccessingUsb(fresult);
-			free(DATA_BUF);
-   	    	return;
-   		}
-
-		if (f_error(&logWriteObject) != 0)
-		{
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-       		stopAccessingUsb(FR_DISK_ERR);
-			free(DATA_BUF);
-			return;
-		}
-
-   		/// write
-		int val = f_puts(DATA_BUF,&logWriteObject);
-  		if (val != strlen(DATA_BUF))
-   		{
-			f_close(&logWriteObject); 
-       		stopAccessingUsb(FR_DISK_ERR);
-			free(DATA_BUF);
-       		return;
-   		}
-
-		if (f_error(&logWriteObject) != 0)
-		{
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-       		stopAccessingUsb(FR_DISK_ERR);
-			free(DATA_BUF);
-			return;
-		}
-
-		/// sync
-   		fresult = f_sync(&logWriteObject);
-   		if (fresult != FR_OK)
-   		{    
-			f_close(&logWriteObject); 
-       		stopAccessingUsb(fresult);
-			free(DATA_BUF);
-       		return;
-   		}    
-
-		if (f_error(&logWriteObject) != 0)
-		{
-			f_close(&logWriteObject); 
-			PDI_USBBufferFlush(USB_INSTANCE);
-       		stopAccessingUsb(FR_DISK_ERR);
-			free(DATA_BUF);
-			return;
-		}
-
-   		/// close
-   		fresult = f_close(&logWriteObject);
-		if (fresult != FR_OK)
-   		{    
-       		stopAccessingUsb(fresult);
-			free(DATA_BUF);
-       		return;
-   		} 
-
-   		/// reset log buf
-		PDI_USBBufferFlush(USB_INSTANCE);
+   	/// open
+   	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
+   	if (fresult != FR_OK)
+   	{
+		f_close(&logWriteObject); 
+       	stopAccessingUsb(fresult);
 		free(DATA_BUF);
        	return;
+   	}
+
+  	/// append mode 
+  	fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
+  	if (fresult != FR_OK)
+  	{
+		f_close(&logWriteObject); 
+       	stopAccessingUsb(fresult);
+		free(DATA_BUF);
+       	return;
+   	}
+
+	/// write
+	int val = f_puts(DATA_BUF,&logWriteObject);
+  	if (val != strlen(DATA_BUF))
+   	{
+		f_close(&logWriteObject); 
+		stopAccessingUsb(FR_DISK_ERR);
+		free(DATA_BUF);
+		return;
+   	}
+
+	/// sync
+   	fresult = f_sync(&logWriteObject);
+   	if (fresult != FR_OK)
+	{    
+		f_close(&logWriteObject); 
+		stopAccessingUsb(fresult);
+		free(DATA_BUF);
+		return;
+   	}    
+
+	/// need some dalay
+	for (i=0; i<100000; i++);
+
+	/// close
+	fresult = f_close(&logWriteObject);
+	if (fresult != FR_OK)
+   	{    
+		stopAccessingUsb(fresult);
+		free(DATA_BUF);
+		return;
+   	} 
+
+	PDI_USBBufferFlush(USB_INSTANCE);
+	free(DATA_BUF);
+	return;
 }
 
 
@@ -722,7 +686,7 @@ BOOL downloadCsv(void)
 	int i;
 
 	/// get file name
-	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:P%06d.csv",REG_SN_PIPE);
+	(isPdiUpgradeMode) ? snprintf(csvFileName,sizeof(csvFileName),"0:%s.csv",PDI_RAZOR_PROFILE) : snprintf(csvFileName,sizeof(csvFileName),"0:P%06d.csv",REG_SN_PIPE);
 
 	/// open file
 	if (f_open(&csvWriteObject, csvFileName, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) 
@@ -732,84 +696,84 @@ BOOL downloadCsv(void)
 	}
 
 	/// integer
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d,\n",REG_AO_DAMPEN); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Slave Address,,204,int,1,RW,1,%d,\n",REG_SLAVE_ADDRESS); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Stop Bits,,205,int,1,RW,1,%d,\n",REG_STOP_BITS); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Mode,,206,int,1,RW,1,%d,\n",REG_DENSITY_MODE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 0,,219,int,1,RW,1,%d,\n",REG_MODEL_CODE[0]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 1,,220,int,1,RW,1,%d,\n",REG_MODEL_CODE[1]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 2,,221,int,1,RW,1,%d,\n",REG_MODEL_CODE[2]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 3,,222,int,1,RW,1,%d,\n",REG_MODEL_CODE[3]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Logging Period,,223,int,1,RW,1,%d,\n",REG_LOGGING_PERIOD); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Alarm Mode,,227,int,1,RW,1,%d,\n",REG_AO_ALARM_MODE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Phase Hold Over,,228,int,1,RW,1,%d,\n",REG_PHASE_HOLD_CYCLES); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Delay,,229,int,1,RW,1,%d,\n",REG_RELAY_DELAY); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Mode,,230,int,1,RW,1,%d,\n",REG_AO_MODE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Correction Mode,,231,int,1,RW,1,%d,\n",REG_OIL_DENS_CORR_MODE);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Mode,,232,int,1,RW,1,%d,\n",REG_RELAY_MODE); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d,\n",REG_AO_DAMPEN); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Slave Address,,204,int,1,RW,1,%d,\n",REG_SLAVE_ADDRESS); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Stop Bits,,205,int,1,RW,1,%d,\n",REG_STOP_BITS); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Density Mode,,206,int,1,RW,1,%d,\n",REG_DENSITY_MODE); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Model Code 0,,219,int,1,RW,1,%d,\n",REG_MODEL_CODE[0]); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Model Code 1,,220,int,1,RW,1,%d,\n",REG_MODEL_CODE[1]); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Model Code 2,,221,int,1,RW,1,%d,\n",REG_MODEL_CODE[2]); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Model Code 3,,222,int,1,RW,1,%d,\n",REG_MODEL_CODE[3]); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Logging Period,,223,int,1,RW,1,%d,\n",REG_LOGGING_PERIOD); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AO Alarm Mode,,227,int,1,RW,1,%d,\n",REG_AO_ALARM_MODE); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Phase Hold Over,,228,int,1,RW,1,%d,\n",REG_PHASE_HOLD_CYCLES); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Relay Delay,,229,int,1,RW,1,%d,\n",REG_RELAY_DELAY); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AO Mode,,230,int,1,RW,1,%d,\n",REG_AO_MODE); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Density Correction Mode,,231,int,1,RW,1,%d,\n",REG_OIL_DENS_CORR_MODE);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Relay Mode,,232,int,1,RW,1,%d,\n",REG_RELAY_MODE); 
 
 	/// float or double
-	sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Adjust,,15,float,1,RW,1,%15.7f\n",REG_OIL_ADJUST.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Temp Adjust,,31,float,1,RW,1,%15.7f\n",REG_TEMP_ADJUST.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Proc Avg,,35,float,1,RW,1,%15.7f\n",REG_PROC_AVGING.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Index,,37,float,1,RW,1,%15.7f\n",REG_OIL_INDEX.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P0,,39,float,1,RW,1,%15.7f\n",REG_OIL_P0.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P1,,41,float,1,RW,1,%15.7f\n",REG_OIL_P1.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Low,,43,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_LOW.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil High,,45,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_HIGH.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Sample Period,,47,float,1,RW,1,%5.1f,\n",REG_SAMPLE_PERIOD.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO LRV,,49,float,1,RW,1,%15.7f\n",REG_AO_LRV.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO URV,,51,float,1,RW,1,%15.7f\n",REG_AO_URV.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Baud Rate,,55,float,1,RW,1,%10.1f,\n",REG_BAUD_RATE.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Calc Max,,67,float,1,RW,1,%15.7f,\n",REG_OIL_CALC_MAX); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Dual Curve Cutoff,,69,float,1,RW,1,%15.7f\n",REG_OIL_PHASE_CUTOFF);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Stream,,73,float,1,RW,1,%10.1f,\n",REG_STREAM.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim Low,,107,float,1,RW,1,%15.7f\n",REG_AO_TRIMLO); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim High,,109,float,1,RW,1,%15.7f\n",REG_AO_TRIMHI); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Adj,,111,float,1,RW,1,%15.7f\n",REG_DENSITY_ADJ);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Unit,,113,float,1,RW,1,%10.0f,\n",REG_DENSITY_UNIT.val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D3,,117,float,1,RW,1,%15.7f\n",REG_DENSITY_D3.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D2,,119,float,1,RW,1,%15.7f\n",REG_DENSITY_D2.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D1,,121,float,1,RW,1,%15.7f\n",REG_DENSITY_D1.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D0,,123,float,1,RW,1,%15.7f\n",REG_DENSITY_D0.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Dens Calibration Val,,125,float,1,RW,1,%15.7f,\n",REG_DENSITY_CAL_VAL.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Setpoint,,151,float,1,RW,1,%15.7f,\n",REG_RELAY_SETPOINT.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density Manual,,161,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_MANUAL); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI LRV,,163,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_LRV.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI URV,,165,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_URV.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim Low,,169,float,1,RW,1,%15.7f\n",REG_AI_TRIMLO); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim High,,171,float,1,RW,1,%15.7f\n",REG_AI_TRIMHI); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T0,,179,float,1,RW,1,%15.7f\n",REG_OIL_T0.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T1,,181,float,1,RW,1,%15.7f\n",REG_OIL_T1.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Temp Adj,,781,float,1,RW,1,%15.7f\n",PDI_TEMP_ADJ);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F0,,783,float,1,RW,1,%15.7f\n",PDI_FREQ_F0);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F1,,785,float,1,RW,1,%15.7f\n",PDI_FREQ_F1);
+	snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Adjust,,15,float,1,RW,1,%15.7f\n",REG_OIL_ADJUST.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Temp Adjust,,31,float,1,RW,1,%15.7f\n",REG_TEMP_ADJUST.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Proc Avg,,35,float,1,RW,1,%15.7f\n",REG_PROC_AVGING.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Index,,37,float,1,RW,1,%15.7f\n",REG_OIL_INDEX.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil P0,,39,float,1,RW,1,%15.7f\n",REG_OIL_P0.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil P1,,41,float,1,RW,1,%15.7f\n",REG_OIL_P1.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Low,,43,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_LOW.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil High,,45,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_HIGH.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Sample Period,,47,float,1,RW,1,%5.1f,\n",REG_SAMPLE_PERIOD.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AO LRV,,49,float,1,RW,1,%15.7f\n",REG_AO_LRV.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AO URV,,51,float,1,RW,1,%15.7f\n",REG_AO_URV.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Baud Rate,,55,float,1,RW,1,%10.1f,\n",REG_BAUD_RATE.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Calc Max,,67,float,1,RW,1,%15.7f,\n",REG_OIL_CALC_MAX); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Dual Curve Cutoff,,69,float,1,RW,1,%15.7f\n",REG_OIL_PHASE_CUTOFF);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Stream,,73,float,1,RW,1,%10.1f,\n",REG_STREAM.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AO Trim Low,,107,float,1,RW,1,%15.7f\n",REG_AO_TRIMLO); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AO Trim High,,109,float,1,RW,1,%15.7f\n",REG_AO_TRIMHI); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Density Adj,,111,float,1,RW,1,%15.7f\n",REG_DENSITY_ADJ);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Density Unit,,113,float,1,RW,1,%10.0f,\n",REG_DENSITY_UNIT.val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"D3,,117,float,1,RW,1,%15.7f\n",REG_DENSITY_D3.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"D2,,119,float,1,RW,1,%15.7f\n",REG_DENSITY_D2.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"D1,,121,float,1,RW,1,%15.7f\n",REG_DENSITY_D1.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"D0,,123,float,1,RW,1,%15.7f\n",REG_DENSITY_D0.calc_val);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Dens Calibration Val,,125,float,1,RW,1,%15.7f,\n",REG_DENSITY_CAL_VAL.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Relay Setpoint,,151,float,1,RW,1,%15.7f,\n",REG_RELAY_SETPOINT.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Density Manual,,161,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_MANUAL); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Density AI LRV,,163,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_LRV.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Density AI URV,,165,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_URV.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AI Trim Low,,169,float,1,RW,1,%15.7f\n",REG_AI_TRIMLO); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"AI Trim High,,171,float,1,RW,1,%15.7f\n",REG_AI_TRIMHI); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil T0,,179,float,1,RW,1,%15.7f\n",REG_OIL_T0.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil T1,,181,float,1,RW,1,%15.7f\n",REG_OIL_T1.calc_val); 
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"PDI Temp Adj,,781,float,1,RW,1,%15.7f\n",PDI_TEMP_ADJ);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"PDI Freq F0,,783,float,1,RW,1,%15.7f\n",PDI_FREQ_F0);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"PDI Freq F1,,785,float,1,RW,1,%15.7f\n",PDI_FREQ_F1);
 
 	/// extended 60K
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Number of Oil Temperature Curves,,60001,float,1,RW,1,%15.7f\n",REG_TEMP_OIL_NUM_CURVES);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Temperature List,,60003,float,1,RW,10,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_TEMPS_OIL[0],REG_TEMPS_OIL[1],REG_TEMPS_OIL[2],REG_TEMPS_OIL[3],REG_TEMPS_OIL[4],REG_TEMPS_OIL[5],REG_TEMPS_OIL[6],REG_TEMPS_OIL[7],REG_TEMPS_OIL[8],REG_TEMPS_OIL[9]);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Number of Oil Temperature Curves,,60001,float,1,RW,1,%15.7f\n",REG_TEMP_OIL_NUM_CURVES);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Temperature List,,60003,float,1,RW,10,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_TEMPS_OIL[0],REG_TEMPS_OIL[1],REG_TEMPS_OIL[2],REG_TEMPS_OIL[3],REG_TEMPS_OIL[4],REG_TEMPS_OIL[5],REG_TEMPS_OIL[6],REG_TEMPS_OIL[7],REG_TEMPS_OIL[8],REG_TEMPS_OIL[9]);
 
 	for (data_index=0;data_index<10;data_index++)
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve %d,,%d,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",data_index,60023+data_index*8,REG_COEFFS_TEMP_OIL[data_index][0],REG_COEFFS_TEMP_OIL[data_index][1],REG_COEFFS_TEMP_OIL[data_index][2],REG_COEFFS_TEMP_OIL[data_index][3]);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Oil Curve %d,,%d,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",data_index,60023+data_index*8,REG_COEFFS_TEMP_OIL[data_index][0],REG_COEFFS_TEMP_OIL[data_index][1],REG_COEFFS_TEMP_OIL[data_index][2],REG_COEFFS_TEMP_OIL[data_index][3]);
 
 	/// long int	
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Measurement Section,,301,long,1,RW,1,%d\n",REG_MEASSECTION_SN);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Back Board,,303,long,1,RW,1,%d\n",REG_BACKBOARD_SN);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Safety Barrier,,305,long,1,RW,1,%d\n",REG_SAFETYBARRIER_SN);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Power Supply,,307,long,1,RW,1,%d\n",REG_POWERSUPPLY_SN);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Processor Board,,309,long,1,RW,1,%d\n",REG_PROCESSOR_SN);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Display Board,,311,long,1,RW,1,%d\n",REG_DISPLAY_SN);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - RF Board,,313,long,1,RW,1,%d\n",REG_RF_SN);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Assembly,,315,long,1,RW,1,%d\n",REG_ASSEMBLY_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - Measurement Section,,301,long,1,RW,1,%d\n",REG_MEASSECTION_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - Back Board,,303,long,1,RW,1,%d\n",REG_BACKBOARD_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - Safety Barrier,,305,long,1,RW,1,%d\n",REG_SAFETYBARRIER_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - Power Supply,,307,long,1,RW,1,%d\n",REG_POWERSUPPLY_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - Processor Board,,309,long,1,RW,1,%d\n",REG_PROCESSOR_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - Display Board,,311,long,1,RW,1,%d\n",REG_DISPLAY_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - RF Board,,313,long,1,RW,1,%d\n",REG_RF_SN);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"SN - Assembly,,315,long,1,RW,1,%d\n",REG_ASSEMBLY_SN);
 
 	/// hardware part serial number
 	for (data_index=0;data_index<8;data_index++)
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Electronic SN %d,,%d,long,1,RW,1,%d\n",data_index,317+2*data_index,REG_ELECTRONICS_SN[data_index]);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Electronic SN %d,,%d,long,1,RW,1,%d\n",data_index,317+2*data_index,REG_ELECTRONICS_SN[data_index]);
 
 	/// stream dependent data
 	for (data_index=0;data_index<60;data_index++)
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+4*data_index,STREAM_OIL_ADJUST[data_index]);
+    snprintf(CSV_BUF+strlen(CSV_BUF),sizeof(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+4*data_index,STREAM_OIL_ADJUST[data_index]);
 
 	/// write
 	fr = f_puts(CSV_BUF,&csvWriteObject);
@@ -916,7 +880,7 @@ BOOL uploadCsv(void)
 	line[0] = '\0';
 
 	/// get file name
-	(isPdiUpgradeMode) ? sprintf(csvFileName,"0:%s.csv",PDI_RAZOR_PROFILE) : sprintf(csvFileName,"0:%s.csv",CSV_FILES);
+	(isPdiUpgradeMode) ? snprintf(csvFileName,sizeof(csvFileName),"0:%s.csv",PDI_RAZOR_PROFILE) : snprintf(csvFileName,sizeof(csvFileName),"0:%s.csv",CSV_FILES);
 
 	/// open file
 	if (f_open(&fil, csvFileName, FA_READ) != FR_OK) return FALSE;
