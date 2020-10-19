@@ -552,14 +552,11 @@ void logData(void)
 	char *DATA_BUF;
     DATA_BUF=(char *)malloc(MAX_DATA_SIZE*sizeof(char));
 
-	/// need some dealy
-	for (i=0; i<1000000; i++);
-
 	/// get modbus data
 	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
 	/// need some dealy
-	for (i=0; i<1000000; i++);
+	for (i=0; i<2000000; i++);
 
 	/// open
    	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
@@ -627,9 +624,6 @@ void logData(void)
 		free(DATA_BUF);
    		return;
    	}    
-
-	/// need some dealy
-	for (i=0; i<1000000; i++);
 
 	if (f_error(&logWriteObject) != 0)
 	{
