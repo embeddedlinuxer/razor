@@ -448,9 +448,6 @@ void logData(void)
 	if (time_counter % REG_LOGGING_PERIOD != 0) return;
 	else time_counter = 0;
 
-	/// check usb driver
-	if (!isUsbActive()) return;
-
 	/// UPDATE TIME	
 	USB_RTC_SEC = tmp_sec;
 	if (USB_RTC_MIN != tmp_min) USB_RTC_MIN = tmp_min;
@@ -458,6 +455,9 @@ void logData(void)
 	if (USB_RTC_DAY != tmp_day) USB_RTC_DAY = tmp_day;
 	if (USB_RTC_MON != tmp_mon) USB_RTC_MON = tmp_mon;
 	if (USB_RTC_YR != tmp_yr)   USB_RTC_YR = tmp_yr;
+
+	/// check usb driver
+	if (!isUsbActive()) return;
 
    	/// A NEW FILE? 
    	if (current_day != USB_RTC_DAY) 
@@ -556,7 +556,7 @@ void logData(void)
 	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
 	/// need some dealy
-	for (i=0; i<2000000; i++);
+	for (i=0; i<1000000; i++);
 
 	/// open
    	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
@@ -624,6 +624,9 @@ void logData(void)
 		free(DATA_BUF);
    		return;
    	}    
+
+	/// need some dealy
+	for (i=0; i<1000000; i++);
 
 	if (f_error(&logWriteObject) != 0)
 	{
