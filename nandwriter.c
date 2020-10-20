@@ -490,7 +490,7 @@ void upgradeFirmware(void)
 
 	/// download existing csv
 	printf("download csv....\n");
-	while (isDownloadCsv) downloadCsv();
+	//while (isDownloadCsv) downloadCsv();
 
 	/// disable all interrupts while accessing flash memory
 	printf("Swi_disable....\n");
