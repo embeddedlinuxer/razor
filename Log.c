@@ -42,6 +42,7 @@
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
+static char LOG_DATA[MAX_DATA_SIZE];
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static USB_Handle usb_handle;
 static USB_Params usb_host_params;
@@ -554,14 +555,18 @@ void logData(void)
 
 	if (DATA_BUF == NULL) return;
 
-	/// dealy
-	//for (i=0; i<1500000; i++);
-
 	/// get modbus data
+	Swi_disable();
+
 	sprintf(DATA_BUF,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
+	Swi_enable();
+
 	/// dealy
-	for (i=0; i<1500000; i++);
+	for (i=0; i<10000000; i++);
+
+	/// get data
+	strcpy(LOG_DATA,DATA_BUF);
 
 	/// open
    	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
@@ -576,7 +581,6 @@ void logData(void)
 	if (f_error(&logWriteObject) != 0)
 	{
 		f_close(&logWriteObject); 
-		PDI_USBBufferFlush(USB_INSTANCE);
    		stopAccessingUsb(FR_DISK_ERR);
 		free(DATA_BUF);
 		return;
@@ -595,14 +599,13 @@ void logData(void)
 	if (f_error(&logWriteObject) != 0)
 	{
 		f_close(&logWriteObject); 
-		PDI_USBBufferFlush(USB_INSTANCE);
    		stopAccessingUsb(FR_DISK_ERR);
 		free(DATA_BUF);
 		return;
 	}
 
   	/// write
-	int val = f_puts(DATA_BUF,&logWriteObject);
+	int val = f_puts(LOG_DATA,&logWriteObject);
   	if (val != strlen(DATA_BUF))
    	{
 		f_close(&logWriteObject); 
@@ -614,7 +617,6 @@ void logData(void)
 	if (f_error(&logWriteObject) != 0)
 	{
 		f_close(&logWriteObject); 
-		PDI_USBBufferFlush(USB_INSTANCE);
    		stopAccessingUsb(FR_DISK_ERR);
 		free(DATA_BUF);
 		return;
@@ -632,12 +634,11 @@ void logData(void)
 	}    
 
 	/// dealy
-	for (i=0; i<1500000; i++);
+	for (i=0; i<1000000; i++);
 
 	if (f_error(&logWriteObject) != 0)
 	{
 		f_close(&logWriteObject); 
-		PDI_USBBufferFlush(USB_INSTANCE);
    		stopAccessingUsb(FR_DISK_ERR);
 		free(DATA_BUF);
 		return;
@@ -652,8 +653,6 @@ void logData(void)
    		return;
    	} 
 
-	/// reset log buf
-	PDI_USBBufferFlush(USB_INSTANCE);
 	free(DATA_BUF);
    	return;
 }
