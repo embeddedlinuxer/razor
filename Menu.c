@@ -34,6 +34,7 @@
 #include "nandwriter.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "Watchdog.h"
 #include "ModbusRTU.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -330,8 +331,11 @@ Process_Menu(void)
         Swi_restore(key);
 		EnableButtonInts();
 
-        // WILL BLINK MENU ID
+        /// WILL BLINK MENU ID
         blinkMenu();
+
+		/// Reset watchdog timer. Otherwise, resets the system. 
+     	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	}
 }
 
