@@ -380,6 +380,9 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
    			for(i=0;i<ACCESS_DELAY;i++);
    		}
 
+		/// watchdog timer reactive
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
    	} while (pageCnt < totalPageCnt);
 
    	NAND_protectBlocks(hNandInfo);
@@ -469,6 +472,9 @@ void upgradeFirmware(void)
 			index++;
    		}
 
+		/// watchdog timer reactive
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
 	    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 		displayLcd(lcdLine1,1);	
     }
@@ -516,5 +522,11 @@ void upgradeFirmware(void)
 	printf("success....\n");
 	isUpdateDisplay=TRUE;
 	updateDisplay("UPGRADE FIRMWARE","   POWER CYCLE  ");
-	while(1) displayLcd("   POWER CYCLE  ",1);
+	while(1) 
+	{
+		/// watchdog timer reactive
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
+		displayLcd("   POWER CYCLE  ",1);
+	}
 }

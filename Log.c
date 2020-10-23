@@ -1123,7 +1123,13 @@ BOOL uploadCsv(void)
 		f_unlink(csvFileName);
 	}
 
-    while (1) displayLcd("   REMOVE USB   ", 1);
+    while (1) 
+	{
+		/// watchdog timer reactive
+        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
+		displayLcd("  POWER CYCLE   ", 1);
+	}
 
 	return TRUE;
 }
