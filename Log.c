@@ -601,7 +601,7 @@ void logData(void)
    		return;
    	}
 
-	for (i=0; i<1000000; i++);
+	for (i=0; i<5000000; i++);
 
 	/// close
    	fresult = f_close(&logWriteObject);
