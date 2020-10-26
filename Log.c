@@ -40,6 +40,7 @@
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
 #define MAX_CSV_SIZE   	4096*3
+#define LOGGING_DELAY	1000000
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char LOG_DATA[MAX_DATA_SIZE];
@@ -567,7 +568,7 @@ void logData(void)
 	Swi_enable();
 
 	/// dealy
-	for (i=0; i<5000000; i++);
+	for (i=0; i<LOGGING_DELAY*10; i++);
 
 	/// get data
 	strcpy(LOG_DATA,DATA_BUF);
@@ -601,7 +602,7 @@ void logData(void)
    		return;
    	}
 
-	for (i=0; i<5000000; i++);
+	for (i=0; i<LOGGING_DELAY; i++);
 
 	/// close
    	fresult = f_close(&logWriteObject);
