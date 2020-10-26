@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.6"
+#define FIRMWARE_VERSION 		"1.2.7"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -108,6 +108,7 @@
 #define MAX_CSV_ARRAY_LENGTH		2048	
 #define PDI_RAZOR_PROFILE 			"pdi_razor_profile"
 #define PDI_RAZOR_FIRMWARE 			"0:pdi_razor_firmware.ais"
+#define PDI_RAZOR_FIRMWARE_DONE 	"0:pdi_razor_firmware.done"
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////

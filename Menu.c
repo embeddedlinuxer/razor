@@ -3677,8 +3677,7 @@ fxnSecurityInfo_Restart(const Uint16 input)
 	{
 		case BTN_STEP 	:
 			if (!isEntered) return FXN_SECURITYINFO_RESTART;
-            unloadUsbDriver();
-			_c_int00();					// go to entry point
+			for (;;);
 			return MNU_SECURITYINFO_RESTART;
 		case BTN_BACK 	:
 			isEntered = FALSE;
@@ -3731,8 +3730,7 @@ fxnSecurityInfo_FactReset(const Uint16 input)
             COIL_LOCKED_SOFT_FACTORY_RESET.val = FALSE;   // Unlock SOFT_RESET in reloadFactoryDefault()
             COIL_LOCKED_HARD_FACTORY_RESET.val = TRUE;    // lock HARD_RESET in reloadFactoryDefault()
             Swi_post(Swi_writeNand);
-            unloadUsbDriver();
-			_c_int00();			
+			for (;;);
 		case BTN_ENTER 	:
 			isEntered = TRUE;
 			return FXN_SECURITYINFO_FACTRESET;

@@ -27,8 +27,8 @@
 #define WATCHDOG_H_
 
 #include <ti/csl/csl_types.h>
-#include <wd_timer.h>
-#include <hw_wd_timer.h>
+#include <ti/csl/src/ip/wd_timer/V0/wd_timer.h>
+#include <ti/csl/src/ip/wd_timer/V0/hw_wd_timer.h>
 #include <ti/csl/csl_wdt.h>
 #include <ti/csl/csl_wd_timer.h>
 #include <ti/csl/cslr_wd_timer.h> 

@@ -458,7 +458,11 @@ void logData(void)
 	if (USB_RTC_YR != tmp_yr)   USB_RTC_YR = tmp_yr;
 
 	/// check usb driver
-	if (!isUsbActive()) return;
+	if (!isUsbActive()) 
+	{
+        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		return;
+	}
 
    	/// A NEW FILE? 
    	if (current_day != USB_RTC_DAY) 
@@ -563,7 +567,7 @@ void logData(void)
 	Swi_enable();
 
 	/// dealy
-	for (i=0; i<10000000; i++);
+	for (i=0; i<5000000; i++);
 
 	/// get data
 	strcpy(LOG_DATA,DATA_BUF);
@@ -578,14 +582,6 @@ void logData(void)
        	return;
    	}
 
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
 	/// append mode 
   	fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
   	if (fresult != FR_OK)
@@ -596,17 +592,8 @@ void logData(void)
        	return;
    	}
 
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
   	/// write
-	int val = f_puts(LOG_DATA,&logWriteObject);
-  	if (val != strlen(DATA_BUF))
+  	if (f_puts(LOG_DATA,&logWriteObject) != strlen(DATA_BUF))
    	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
@@ -614,35 +601,7 @@ void logData(void)
    		return;
    	}
 
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
-	/// sync
-   	fresult = f_sync(&logWriteObject);
-   	if (fresult != FR_OK)
-   	{    
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(fresult);
-		free(DATA_BUF);
-   		return;
-   	
-	}    
-
-	/// dealy
 	for (i=0; i<1000000; i++);
-
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
 
 	/// close
    	fresult = f_close(&logWriteObject);
@@ -938,7 +897,6 @@ BOOL uploadCsv(void)
 		float fvalue8 = atof(regval8);
 		float fvalue9 = atof(regval9);
 
-
 		/// 1-dimensional array
 		id = atoi(regid);
 		if ((id>0) && (id<1000)) updateVars(id,fvalue);
@@ -1100,6 +1058,7 @@ BOOL uploadCsv(void)
 		}
 
 		displayLcd("    Loading...  ",1);
+        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	}	
 
 	/// close file
@@ -1111,6 +1070,7 @@ BOOL uploadCsv(void)
 
 	/// update FACTORY DEFAULT
    	storeUserDataToFactoryDefault();
+    TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	Swi_post(Swi_writeNand);	
 	isCsvUploadSuccess = TRUE;
     isCsvDownloadSuccess = FALSE;
@@ -1127,8 +1087,7 @@ BOOL uploadCsv(void)
 	{
 		/// watchdog timer reactive
         TimerWatchdogReactivate(CSL_TMR_1_REGS);
-
-		displayLcd("  POWER CYCLE   ", 1);
+		displayLcd("   REMOVE USB   ",1);
 	}
 
 	return TRUE;

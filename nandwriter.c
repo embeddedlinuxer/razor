@@ -399,7 +399,7 @@ void upgradeFirmware(void)
 	NAND_InfoHandle hNandInfo;
 	Uint32 numPagesAIS;
     Uint8 *aisPtr;
-    Int32 i, status, bytesRead, aisAllocSize, aisFileSize = 0;
+    Int32 i, status, aisAllocSize, aisFileSize = 0;
     VUint16 *addr_flash;
     ASYNC_MEM_InfoHandle dummy;
 	FIL fPtr;
@@ -485,7 +485,6 @@ void upgradeFirmware(void)
 	displayLcd(lcdLine1,1);	
 
 	/// close
-	printf("closing file...\n");
     if (f_close(&fPtr) != FR_OK) 
 	{
 		displayLcd(lcdLine1,1);	
@@ -495,38 +494,26 @@ void upgradeFirmware(void)
 	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
 
 	/// download existing csv
-	printf("download csv....\n");
 	while (isDownloadCsv) downloadCsv();
 
 	/// disable all interrupts while accessing flash memory
-	printf("Swi_disable....\n");
 	Swi_disable();
-    Hwi_disable();
 
 	/// global erase
-	printf("global erase...\n");
     if (NAND_globalErase(hNandInfo) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*20;i++);
 
     /// Write the file data to the NAND flash
-	printf("write data to flash...\n");
     if (USB_writeData(hNandInfo, aisPtr, numPagesAIS) != E_PASS) return;
    	for(i=0;i<ACCESS_DELAY*100;i++);
 
 	/// re-enable interrupts
-	printf("Swi_enable....\n");
-	Hwi_enable();
     Swi_enable();
 
-	/// success
-	printf("success....\n");
-	isUpdateDisplay=TRUE;
-	updateDisplay("UPGRADE FIRMWARE","   POWER CYCLE  ");
-	while(1) 
-	{
-		/// watchdog timer reactive
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	/// success. force to trigger watchdog enabling uploadProfile()
+    isUpdateDisplay=TRUE;
+    updateDisplay("UPGRADE FIRMWARE","   Restarting   ");
 
-		displayLcd("   POWER CYCLE  ",1);
-	}
+	/// change firmware name not to redo upgrade
+    while (1) displayLcd("   Restarting   ",1);
 }
