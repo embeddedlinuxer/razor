@@ -40,7 +40,7 @@
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
 #define MAX_CSV_SIZE   	4096*3
-#define LOGGING_DELAY	1000000
+#define LOG_DELAY		1000000
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char LOG_DATA[MAX_DATA_SIZE];
@@ -461,7 +461,7 @@ void logData(void)
 	/// check usb driver
 	if (!isUsbActive()) 
 	{
-        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		return;
 	}
 
@@ -551,6 +551,7 @@ void logData(void)
            	return;
        	}
 
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		return;
    	}   
 
@@ -568,7 +569,7 @@ void logData(void)
 	Swi_enable();
 
 	/// dealy
-	for (i=0; i<LOGGING_DELAY*10; i++);
+	for (i=0; i<LOG_DELAY*5; i++);
 
 	/// get data
 	strcpy(LOG_DATA,DATA_BUF);
@@ -583,6 +584,14 @@ void logData(void)
        	return;
    	}
 
+	if (f_error(&logWriteObject) != 0)
+	{
+		f_close(&logWriteObject); 
+   		stopAccessingUsb(FR_DISK_ERR);
+		free(DATA_BUF);
+		return;
+	}
+
 	/// append mode 
   	fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
   	if (fresult != FR_OK)
@@ -593,8 +602,17 @@ void logData(void)
        	return;
    	}
 
+	if (f_error(&logWriteObject) != 0)
+	{
+		f_close(&logWriteObject); 
+   		stopAccessingUsb(FR_DISK_ERR);
+		free(DATA_BUF);
+		return;
+	}
+
   	/// write
-  	if (f_puts(LOG_DATA,&logWriteObject) != strlen(DATA_BUF))
+	int val = f_puts(LOG_DATA,&logWriteObject);
+  	if (val != strlen(DATA_BUF))
    	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
@@ -602,7 +620,35 @@ void logData(void)
    		return;
    	}
 
-	for (i=0; i<LOGGING_DELAY; i++);
+	if (f_error(&logWriteObject) != 0)
+	{
+		f_close(&logWriteObject); 
+   		stopAccessingUsb(FR_DISK_ERR);
+		free(DATA_BUF);
+		return;
+	}
+
+	/// sync
+   	fresult = f_sync(&logWriteObject);
+   	if (fresult != FR_OK)
+   	{    
+		f_close(&logWriteObject); 
+   		stopAccessingUsb(fresult);
+		free(DATA_BUF);
+   		return;
+   	
+	}    
+
+	/// dealy
+	for (i=0; i<LOG_DELAY*5; i++);
+
+	if (f_error(&logWriteObject) != 0)
+	{
+		f_close(&logWriteObject); 
+   		stopAccessingUsb(FR_DISK_ERR);
+		free(DATA_BUF);
+		return;
+	}
 
 	/// close
    	fresult = f_close(&logWriteObject);
@@ -613,6 +659,7 @@ void logData(void)
    		return;
    	} 
 
+	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
    	return;
 }
@@ -761,6 +808,7 @@ BOOL downloadCsv(void)
     isCsvUploadSuccess = FALSE;
 	free(CSV_BUF);
     
+	TimerWatchdogReactivate(CSL_TMR_1_REGS);
     return TRUE;
 }
 
@@ -804,6 +852,7 @@ void scanCsvFiles(void)
 				isScanSuccess = TRUE;
 			}
         }
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
     }
 	for (i=0;i<10;i++) printf("read files...");
 
@@ -897,6 +946,7 @@ BOOL uploadCsv(void)
 		float fvalue7 = atof(regval7);
 		float fvalue8 = atof(regval8);
 		float fvalue9 = atof(regval9);
+
 
 		/// 1-dimensional array
 		id = atoi(regid);
@@ -1058,8 +1108,8 @@ BOOL uploadCsv(void)
 			displayLcd(" PROFILE UPLOAD ",0);
 		}
 
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		displayLcd("    Loading...  ",1);
-        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	}	
 
 	/// close file
@@ -1071,7 +1121,6 @@ BOOL uploadCsv(void)
 
 	/// update FACTORY DEFAULT
    	storeUserDataToFactoryDefault();
-    TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	Swi_post(Swi_writeNand);	
 	isCsvUploadSuccess = TRUE;
     isCsvDownloadSuccess = FALSE;
@@ -1086,9 +1135,8 @@ BOOL uploadCsv(void)
 
     while (1) 
 	{
-		/// watchdog timer reactive
-        TimerWatchdogReactivate(CSL_TMR_1_REGS);
-		displayLcd("   REMOVE USB   ",1);
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		displayLcd("   REMOVE USB   ", 1);
 	}
 
 	return TRUE;
