@@ -512,8 +512,8 @@ void upgradeFirmware(void)
 
 	/// success. force to trigger watchdog enabling uploadProfile()
     isUpdateDisplay=TRUE;
-    updateDisplay("UPGRADE FIRMWARE","   Restarting   ");
+    updateDisplay("FIRMWARE UPGRADE","     Wait...    ");
 
 	/// change firmware name not to redo upgrade
-    while (1) displayLcd("   Restarting   ",1);
+    while (1) displayLcd("     Wait...    ",1);
 }

@@ -561,6 +561,8 @@ void logData(void)
 
 	if (DATA_BUF == NULL) return;
 
+	for (i=0; i<LOG_DELAY*2; i++);
+
 	/// get modbus data
 	Swi_disable();
 
@@ -569,7 +571,7 @@ void logData(void)
 	Swi_enable();
 
 	/// dealy
-	for (i=0; i<LOG_DELAY*5; i++);
+	for (i=0; i<LOG_DELAY*3; i++);
 
 	/// get data
 	strcpy(LOG_DATA,DATA_BUF);
@@ -628,19 +630,14 @@ void logData(void)
 		return;
 	}
 
-	/// sync
-   	fresult = f_sync(&logWriteObject);
-   	if (fresult != FR_OK)
+	/// close
+   	fresult = f_close(&logWriteObject);
+	if (fresult != FR_OK)
    	{    
-		f_close(&logWriteObject); 
    		stopAccessingUsb(fresult);
 		free(DATA_BUF);
    		return;
-   	
-	}    
-
-	/// dealy
-	for (i=0; i<LOG_DELAY*5; i++);
+   	} 
 
 	if (f_error(&logWriteObject) != 0)
 	{
@@ -650,14 +647,8 @@ void logData(void)
 		return;
 	}
 
-	/// close
-   	fresult = f_close(&logWriteObject);
-	if (fresult != FR_OK)
-   	{    
-   		stopAccessingUsb(fresult);
-		free(DATA_BUF);
-   		return;
-   	} 
+	/// dealy
+	for (i=0; i<LOG_DELAY*3; i++);
 
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
