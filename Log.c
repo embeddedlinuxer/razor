@@ -561,8 +561,6 @@ void logData(void)
 
 	if (DATA_BUF == NULL) return;
 
-	for (i=0; i<LOG_DELAY*2; i++);
-
 	/// get modbus data
 	Swi_disable();
 
@@ -570,8 +568,8 @@ void logData(void)
 
 	Swi_enable();
 
-	/// dealy
-	for (i=0; i<LOG_DELAY*3; i++);
+	/// delay
+	for (i=0;i<LOG_DELAY;i++);
 
 	/// get data
 	strcpy(LOG_DATA,DATA_BUF);
@@ -647,8 +645,8 @@ void logData(void)
 		return;
 	}
 
-	/// dealy
-	for (i=0; i<LOG_DELAY*3; i++);
+	/// delay
+	for (i=0;i<LOG_DELAY;i++);
 
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);

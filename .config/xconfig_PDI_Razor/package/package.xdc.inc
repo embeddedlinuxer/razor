@@ -1,10 +1,10 @@
 package.xdc
 package.xs
 package/xconfig_PDI_Razor.sch
-package/.vers_g180
-package/.vers_r170
-package/.vers_b160
-package/.xdc-A65
+package/.vers_g200
+package/.vers_r200
+package/.vers_b200
+package/.xdc-G16
 package/xconfig_PDI_Razor.java
 package/xconfig_PDI_Razor.class
 package/package_xconfig_PDI_Razor.c

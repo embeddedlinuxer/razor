@@ -13,7 +13,6 @@ MEMORY
 
 SECTIONS
 {
-
 	.aemif_mem :
 	{
 	} > FLASH_BOOT, RUN_START(NANDStart)
