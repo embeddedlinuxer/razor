@@ -20,12 +20,12 @@
     </makefiles>
     <targets>
         <target name="ti.targets.elf.C674"
-            version="ti.targets.elf.C674{1,0,8.1,0"
-            rawVersion="8.1.0"
+            version="ti.targets.elf.C674{1,0,8.3,4"
+            rawVersion="8.3.4"
             platform="ti.platforms.evmDA830"
             isa="674"
             suffix="e674"
-            rootDir="C:/ti/ccsv6/tools/compiler/ti-cgt-c6000_8.1.0"
+            rootDir="G:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.4"
             os="undefined"
             rts="ti.targets.rts6000">
             <model endian="little"
