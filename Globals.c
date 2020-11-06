@@ -144,7 +144,7 @@ void reloadFactoryDefault(void)
     isCsvUploadSuccess = FALSE;
     isPdiUpgradeMode = FALSE;
 
-	sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
+	System_sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
 	model_code_int = (int*)model_code;
 	for (i=0;i<4;i++) REG_MODEL_CODE[i] = model_code_int[i];
 
@@ -1336,7 +1336,7 @@ void setDemoValues(void)
 	// default value for dual-curve is '5' (0 through 5, so 6 in total)
 	REG_TEMP_OIL_NUM_CURVES = 5;
 
-    sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
+    System_sprintf(model_code,DEFAULT_MODEL_CODE); //default model code
 	model_code_int = (int*)model_code;
 	for (i=0;i<4;i++) REG_MODEL_CODE[i] = model_code_int[i];
 }

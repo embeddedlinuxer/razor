@@ -528,7 +528,7 @@ void Capture_Sample(void)
     	///
         STREAM_WATERCUT_AVG[(int)REG_STREAM.calc_val-1] = REG_WATERCUT_AVG.calc_val;
         STREAM_SAMPLES[(int)REG_STREAM.calc_val-1] = num_samples;
-        sprintf(STREAM_TIMESTAMP[(int)REG_STREAM.calc_val-1],"%.2u:%.2u %.2u/%.2u/20%.2u",CAL_RTC_HR,CAL_RTC_MIN,CAL_RTC_MON,CAL_RTC_DAY,CAL_RTC_YR);
+        System_sprintf(STREAM_TIMESTAMP[(int)REG_STREAM.calc_val-1],"%.2u:%.2u %.2u/%.2u/20%.2u",CAL_RTC_HR,CAL_RTC_MIN,CAL_RTC_MON,CAL_RTC_DAY,CAL_RTC_YR);
         Swi_post(Swi_writeNand);
     }
 
