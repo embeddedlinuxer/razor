@@ -678,8 +678,7 @@ BOOL downloadCsv(void)
 	}
 
 	/// create a buffer
-	char * CSV_BUF;
-	CSV_BUF = (char*)malloc(MAX_CSV_SIZE*sizeof(char));
+	char CSV_BUF[MAX_CSV_SIZE] = {""};
 
 	/// integer
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
@@ -767,7 +766,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		free(CSV_BUF);
 		return FALSE;
 	}
 
@@ -776,7 +774,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		free(CSV_BUF);
 		return FALSE;
 	}
 	for (i=0;i<1000;i++) displayLcd("    Loading...  ",LCD1);
@@ -787,7 +784,6 @@ BOOL downloadCsv(void)
 	{
 		resetUsbDriver();
 		stopAccessingUsb(fr);
-		free(CSV_BUF);
 		return FALSE;
 	}
 	printf("closing file%d\n",i);
@@ -796,7 +792,6 @@ BOOL downloadCsv(void)
 	printf("set flags\n");
     isCsvDownloadSuccess = TRUE;
     isCsvUploadSuccess = FALSE;
-	free(CSV_BUF);
     
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
     return TRUE;
