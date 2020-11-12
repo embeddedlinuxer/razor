@@ -562,10 +562,7 @@ void logData(void)
 
 	Swi_enable();
 
-	if ((i > 200) && (i < 0)) return;
-	
-	/// delay
-	for (i=0;i<LOG_DELAY;i++);
+	if ((i > 200) || (i < 140)) return;
 
 	/// open
    	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
@@ -613,6 +610,9 @@ void logData(void)
    		stopAccessingUsb(FR_DISK_ERR);
 		return;
 	}
+	
+	/// delay
+	for (i=0;i<LOG_DELAY;i++);
 
 	/// close
    	fresult = f_close(&logWriteObject);
