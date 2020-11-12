@@ -71,6 +71,7 @@
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/example/common"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/soc/omapl138"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/src/include"/>
+									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/src/musb"/>
 									<listOptionValue builtIn="false" value="${PDK_INSTALL_PATH}/ti/drv/usb/example/shell"/>
 									<listOptionValue builtIn="false" value="${SRC_ROOT}/OMAP-L138/Common/include"/>
 									<listOptionValue builtIn="false" value="${SRC_ROOT}/Common/include"/>

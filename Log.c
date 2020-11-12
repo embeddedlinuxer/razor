@@ -42,6 +42,7 @@
 #define MAX_CSV_SIZE   	4096*3
 #define LOG_DELAY		1000000
 
+static char DATA_BUF[MAX_DATA_SIZE];
 static char LOG_HEADER[MAX_HEADER_SIZE];
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static USB_Handle usb_handle;
@@ -554,24 +555,14 @@ void logData(void)
 		return;
    	}   
 
-	/// new DATA_BUF
-	char *DATA_BUF;
-    DATA_BUF=(char *)malloc(MAX_DATA_SIZE*sizeof(char));
-
-	/// error checking
-	if (DATA_BUF == NULL) return;
-
 	/// get modbus data
 	Swi_disable();
 
 	i = System_snprintf(DATA_BUF,MAX_DATA_SIZE,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-	if ((i > 0) && (i < 200)) Swi_enable();
-	else 
-	{
-		free(DATA_BUF);
-		return;
-	}
+	Swi_enable();
+
+	if ((i > 200) && (i < 0)) return;
 	
 	/// delay
 	for (i=0;i<LOG_DELAY;i++);
@@ -582,7 +573,6 @@ void logData(void)
    	{
 		f_close(&logWriteObject); 
        	stopAccessingUsb(fresult);
-		free(DATA_BUF);
        	return;
    	}
 
@@ -590,7 +580,6 @@ void logData(void)
 	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
 		return;
 	}
 
@@ -600,7 +589,6 @@ void logData(void)
   	{
 		f_close(&logWriteObject); 
        	stopAccessingUsb(fresult);
-		free(DATA_BUF);
        	return;
    	}
 
@@ -608,7 +596,6 @@ void logData(void)
 	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
 		return;
 	}
 
@@ -617,7 +604,6 @@ void logData(void)
    	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
    		return;
    	}
 
@@ -625,7 +611,6 @@ void logData(void)
 	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
 		return;
 	}
 
@@ -634,7 +619,6 @@ void logData(void)
 	if (fresult != FR_OK)
    	{    
    		stopAccessingUsb(fresult);
-		free(DATA_BUF);
    		return;
    	} 
 
@@ -642,7 +626,6 @@ void logData(void)
 	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
 		return;
 	}
 
@@ -650,7 +633,6 @@ void logData(void)
 	for (i=0;i<LOG_DELAY;i++);
 
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
-	free(DATA_BUF);
    	return;
 }
 
