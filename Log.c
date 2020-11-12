@@ -562,7 +562,7 @@ void logData(void)
 
 	Swi_enable();
 
-	if ((i > 200) && (i < 0)) return;
+	if ((i > 200) || (i < 140)) return;
 	
 	/// delay
 	for (i=0;i<LOG_DELAY;i++);
