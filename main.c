@@ -41,6 +41,7 @@ extern void Init_Data_Buffer(void);
 extern void resetGlobalVars(void);
 
 void Init_BoardClocks(void);
+static inline void Init_USB_HighSpeed(void);
 static inline void Init_Counter_3(void);
 static inline void initHardwareObjects(void);
 static inline void initSoftwareObjects(void);
@@ -68,6 +69,9 @@ int main (void)
 
     /// INITIALIZE EVERYTHING ELSE
 	Init_All();
+
+    /// INITIALIZE USB HIGHSPEED 
+    Init_USB_HighSpeed();
 
     /// osal delay timer reset
     delayTimerSetup();
@@ -221,4 +225,13 @@ static inline void Init_Counter_3(void)
 
     // Start counter timer
     Timer_start(counterTimerHandle);
+}
+
+static inline void Init_USB_HighSpeed(void)
+{
+    int key;
+
+    key = Hwi_disable();
+    CSL_FINS(usbRegs->POWER,USB_OTG_POWER_HSEN,1);
+    Hwi_restore(key);
 }
