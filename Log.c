@@ -568,12 +568,6 @@ void logData(void)
 
     Swi_enable();
 
-	if ((i > 200) || (i < 150)) 
-	{
-		free(DATA_BUF);
-		return;
-	}
-
 	/// open
    	fresult = f_open(&logWriteObject, logFile, FA_WRITE | FA_OPEN_EXISTING);
    	if (fresult != FR_OK)
@@ -583,14 +577,6 @@ void logData(void)
 		free(DATA_BUF);
        	return;
    	}
-
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
 
 	/// append mode 
   	fresult = f_lseek(&logWriteObject,f_size(&logWriteObject));
@@ -602,14 +588,6 @@ void logData(void)
        	return;
    	}
 
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
   	/// write
 	if (f_puts(DATA_BUF,&logWriteObject) == EOF)
    	{
@@ -618,17 +596,6 @@ void logData(void)
 		free(DATA_BUF);
    		return;
    	}
-
-	if (f_error(&logWriteObject) != 0)
-	{
-		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
-		free(DATA_BUF);
-		return;
-	}
-
-	/// delay 0.2 sec
-    usb_osalDelayMs(200);	
 
 	/// close
    	fresult = f_close(&logWriteObject);
