@@ -562,11 +562,11 @@ void logData(void)
 	if (DATA_BUF == NULL) return;
 
 	/// get modbus data
-	key = Swi_disable();
+	Swi_disable();
 
 	i = System_snprintf(DATA_BUF,MAX_DATA_SIZE,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
-    Swi_restore(key);
+    Swi_enable();
 
 	if ((i > 200) || (i < 150)) 
 	{
@@ -602,6 +602,14 @@ void logData(void)
        	return;
    	}
 
+	if (f_error(&logWriteObject) != 0)
+	{
+		f_close(&logWriteObject); 
+   		stopAccessingUsb(FR_DISK_ERR);
+		free(DATA_BUF);
+		return;
+	}
+
   	/// write
 	if (f_puts(DATA_BUF,&logWriteObject) == EOF)
    	{
@@ -611,6 +619,17 @@ void logData(void)
    		return;
    	}
 
+	if (f_error(&logWriteObject) != 0)
+	{
+		f_close(&logWriteObject); 
+   		stopAccessingUsb(FR_DISK_ERR);
+		free(DATA_BUF);
+		return;
+	}
+
+	/// delay 0.2 sec
+    usb_osalDelayMs(200);	
+
 	/// close
    	fresult = f_close(&logWriteObject);
 	if (fresult != FR_OK)
@@ -619,9 +638,6 @@ void logData(void)
 		free(DATA_BUF);
    		return;
    	} 
-
-	/// delay 0.3 sec
-    usb_osalDelayMs(300);	
 
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
