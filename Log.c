@@ -620,8 +620,8 @@ void logData(void)
    		return;
    	} 
 
-	/// delay 0.1 sec
-    usb_osalDelayMs(500);	
+	/// delay 0.3 sec
+    usb_osalDelayMs(300);	
 
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
