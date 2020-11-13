@@ -611,9 +611,6 @@ void logData(void)
    		return;
    	}
 
-	/// delay 0.1 sec
-    usb_osalDelayMs(100);	
-
 	/// close
    	fresult = f_close(&logWriteObject);
 	if (fresult != FR_OK)
@@ -624,7 +621,7 @@ void logData(void)
    	} 
 
 	/// delay 0.1 sec
-    usb_osalDelayMs(100);	
+    usb_osalDelayMs(500);	
 
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
