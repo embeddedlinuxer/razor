@@ -577,12 +577,11 @@ void logData(void)
    	}
 
   	/// write
-	if (f_puts(DATA_BUF,&logWriteObject) == EOF)
+	if (f_puts(DATA_BUF,&logWriteObject) != i)
    	{
 		f_close(&logWriteObject); 
-   		stopAccessingUsb(FR_DISK_ERR);
 		free(DATA_BUF);
-        DATA_BUF = NULL;
+	    usb_osalDelayMs(1000); // delay upon f_puts failing
    		return;
    	}
 
@@ -599,7 +598,6 @@ void logData(void)
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
     DATA_BUF = NULL;
-    reloadUsbDriver();
    	return;
 }
 
