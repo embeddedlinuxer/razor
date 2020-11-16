@@ -1,4 +1,5 @@
 
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -324,21 +325,7 @@ void loadUsbDriver(void)
 
 void resetUsbDriver(void)
 {
-   unloadUsbDriver();
-   loadUsbDriver();
-}
-
-
-void 
-unloadUsbDriver(void)
-{
-    USBHCDReset(USB_INSTANCE);
-    USBHMSCDriveClose(g_ulMSCInstance);
-    usb_handle->isOpened = 0;
-    g_fsHasOpened = 0;
-    if (g_fsHasOpened) FATFS_close(fatfsHandle);
-
-    usb_osalDelayMs(500);
+    USBHCDReset(g_ulMSCInstance);
 }
 
 
@@ -555,7 +542,6 @@ void logData(void)
 
 	/// new DATA_BUF
 	char *DATA_BUF;
-    int key;
     DATA_BUF=(char *)malloc(MAX_DATA_SIZE*sizeof(char));
 
 	/// error checking
@@ -575,6 +561,7 @@ void logData(void)
 		f_close(&logWriteObject); 
        	stopAccessingUsb(fresult);
 		free(DATA_BUF);
+        DATA_BUF = NULL;
        	return;
    	}
 
@@ -585,17 +572,22 @@ void logData(void)
 		f_close(&logWriteObject); 
        	stopAccessingUsb(fresult);
 		free(DATA_BUF);
+        DATA_BUF = NULL;
        	return;
    	}
 
   	/// write
-	if (f_puts(DATA_BUF,&logWriteObject) == EOF)
+    int x = f_puts(DATA_BUF,&logWriteObject);
+	if (x == EOF)
    	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
 		free(DATA_BUF);
+        DATA_BUF = NULL;
    		return;
    	}
+
+    //printf("f_puts %d bytes\n",x);
 
 	/// close
    	fresult = f_close(&logWriteObject);
@@ -603,11 +595,13 @@ void logData(void)
    	{    
    		stopAccessingUsb(fresult);
 		free(DATA_BUF);
+        DATA_BUF = NULL;
    		return;
    	} 
 
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
+    DATA_BUF = NULL;
    	return;
 }
 
