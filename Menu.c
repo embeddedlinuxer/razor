@@ -176,7 +176,7 @@ Process_Menu(void)
 		/// reset usb driver
 		resetCsvStaticVars();
     	resetUsbStaticVars();
-		resetUsbDriver();
+		reloadUsbDriver();
 	}
 
 	char 	prevButtons[4];
@@ -1703,7 +1703,7 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
 			isLogData = isEnabled;
 			if (isLogData) 
 			{
-				resetUsbDriver();
+				reloadUsbDriver();
                 usbStatus = 1;
 			}
             else

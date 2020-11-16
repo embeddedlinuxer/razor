@@ -176,7 +176,7 @@ _EXTERN double truncate (double v, int n);
 _EXTERN void setupMenu (void);
 _EXTERN void logData(void);
 _EXTERN void loadUsbDriver(void);
-_EXTERN void resetUsbDriver(void);
+_EXTERN void reloadUsbDriver(void);
 _EXTERN void resetGlobalVars(void);
 _EXTERN void delayTimerSetup(void);
 _EXTERN void Init_Data_Buffer(void);

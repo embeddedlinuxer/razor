@@ -323,7 +323,7 @@ void loadUsbDriver(void)
     usb_osalDelayMs(500);
 }
 
-void resetUsbDriver(void)
+void reloadUsbDriver(void)
 {
     USBHCDReset(g_ulMSCInstance);
 }
@@ -577,8 +577,7 @@ void logData(void)
    	}
 
   	/// write
-    int x = f_puts(DATA_BUF,&logWriteObject);
-	if (x == EOF)
+	if (f_puts(DATA_BUF,&logWriteObject) == EOF)
    	{
 		f_close(&logWriteObject); 
    		stopAccessingUsb(FR_DISK_ERR);
@@ -586,8 +585,6 @@ void logData(void)
         DATA_BUF = NULL;
    		return;
    	}
-
-    //printf("f_puts %d bytes\n",x);
 
 	/// close
    	fresult = f_close(&logWriteObject);
@@ -602,6 +599,7 @@ void logData(void)
 	TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	free(DATA_BUF);
     DATA_BUF = NULL;
+    reloadUsbDriver();
    	return;
 }
 
@@ -713,7 +711,7 @@ BOOL downloadCsv(void)
 	fr = f_puts(CSV_BUF,&csvWriteObject);
 	if (fr == EOF)
 	{
-		resetUsbDriver();
+		reloadUsbDriver();
 		stopAccessingUsb(fr);
 		return FALSE;
 	}
@@ -721,7 +719,7 @@ BOOL downloadCsv(void)
 	fr = f_sync(&csvWriteObject);
 	if (fr != FR_OK)
 	{
-		resetUsbDriver();
+		reloadUsbDriver();
 		stopAccessingUsb(fr);
 		return FALSE;
 	}
@@ -731,7 +729,7 @@ BOOL downloadCsv(void)
 	fr = f_close(&csvWriteObject);
 	if (fr != FR_OK)
 	{
-		resetUsbDriver();
+		reloadUsbDriver();
 		stopAccessingUsb(fr);
 		return FALSE;
 	}
