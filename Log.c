@@ -326,8 +326,9 @@ void loadUsbDriver(void)
 
 void resetUsbDriver(void)
 {
-   unloadUsbDriver();
-   loadUsbDriver();
+   //unloadUsbDriver();
+   //loadUsbDriver();
+   USBHCDReset(g_ulMSCInstance);
 }
 
 
