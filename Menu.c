@@ -205,7 +205,8 @@ Process_Menu(void)
 		if (!COIL_LOCKED_SOFT_FACTORY_RESET.val && !COIL_LOCKED_HARD_FACTORY_RESET.val) 
 		{
 			Swi_post(Swi_writeNand);
-            for (;;);
+            unloadUsbDriver();
+            _c_int00();
 		}
 
 		Semaphore_pend(Menu_sem, BIOS_WAIT_FOREVER); 		// wait until next Menu_sem post

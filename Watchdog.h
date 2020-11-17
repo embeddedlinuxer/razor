@@ -41,8 +41,7 @@
 ///////////////////////////////////////////////////
 
 #define TMR_CFG_64BIT_WATCHDOG      (0x0000001Bu)
-//#define TMR_PERIOD_LSB32          (0x06FFFFFF)
-#define TMR_PERIOD_LSB32            (0x0DFFFFFE)
+#define TMR_PERIOD_LSB32            (0x06FFFFFF)
 #define TMR_PERIOD_MSB32            (0x0)
 #define TMR_PRD12                   (0x18)
 #define TMR_PRD34                   (0x1C)

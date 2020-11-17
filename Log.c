@@ -326,7 +326,22 @@ void loadUsbDriver(void)
 
 void resetUsbDriver(void)
 {
+   //unloadUsbDriver();
+   //loadUsbDriver();
    USBHCDReset(g_ulMSCInstance);
+}
+
+
+void 
+unloadUsbDriver(void)
+{
+    USBHCDReset(USB_INSTANCE);
+    USBHMSCDriveClose(g_ulMSCInstance);
+    usb_handle->isOpened = 0;
+    g_fsHasOpened = 0;
+    if (g_fsHasOpened) FATFS_close(fatfsHandle);
+
+    usb_osalDelayMs(500);
 }
 
 
