@@ -34,7 +34,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.16"
+#define FIRMWARE_VERSION 		"1.2.12"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -176,9 +176,10 @@ _EXTERN double truncate (double v, int n);
 _EXTERN void setupMenu (void);
 _EXTERN void logData(void);
 _EXTERN void loadUsbDriver(void);
-_EXTERN void reloadUsbDriver(void);
+_EXTERN void resetUsbDriver(void);
 _EXTERN void resetGlobalVars(void);
 _EXTERN void delayTimerSetup(void);
+_EXTERN void unloadUsbDriver(void);
 _EXTERN void Init_Data_Buffer(void);
 _EXTERN void Init_Data_Buffer(void);
 _EXTERN void initializeAllRegisters(void);

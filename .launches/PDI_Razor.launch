@@ -40,7 +40,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.Spectrum Digital XDS510USB Emulator/C674X_0" value="PDI_Razor"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:PDI_Razor}"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.G:\workspace\PDI_Razor\targetConfigs\LCDKC6748.ccxml.Spectrum Digital XDS510USB Emulator_0/C674X_0" value="G:/workspace\PDI_Razor\Debug\PDI_Razor.out"/>
-<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.G:\workspace\PDI_Razor\targetConfigs\LCDKC6748.ccxml.Texas Instruments XDS2xx USB Debug Probe_0/C674X_0" value="G:/workspace\PDI_Razor\Debug\PDI_Razor.out"/>
+<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.G:\workspace\PDI_Razor\targetConfigs\LCDKC6748.ccxml.Texas Instruments XDS2xx USB Debug Probe_0/C674X_0" value="G:/workspace\PDI_Razor\Release\PDI_Razor.out"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.G:\workspace_8\PDI_Razor\targetConfigs\LCDKC6748.ccxml.Texas Instruments XDS2xx USB Debug Probe_0/C674X_0" value="G:/workspace_8\PDI_Razor\Debug\PDI_Razor.out"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.G:\workspace_no_usb\PDI_Razor\targetConfigs\LCDKC6748.ccxml.Texas Instruments XDS2xx USB Debug Probe_0/C674X_0" value="G:/workspace_no_usb\PDI_Razor\Release\PDI_Razor.out"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.G:\workspace_upgrade\PDI_Razor\targetConfigs\LCDKC6748.ccxml.Texas Instruments XDS2xx USB Debug Probe_0/C674X_0" value="G:/workspace_upgrade\PDI_Razor\Release\PDI_Razor.out"/>

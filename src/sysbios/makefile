@@ -17,11 +17,11 @@ CCOPTS = -mv6740 --abi=eabi -q -mi10 -mo -pdr -pden -pds=238 -pds=880 -pds1110  
 
 BIOS_INC = -I"G:/ti/win/bios_6_75_02_00/packages/"
 ANNEX_INCS = 
-INCS = $(BIOS_INC) $(ANNEX_INCS) -I"G:/ti/win/uia_2_30_01_02/packages/" -I"G:/ti/win/ccs910/ccs/ccs_base/" -I"G:/ti/win/bios_6_75_02_00/packages/" -I"G:/ti/win/customPkg/packages/" -I"G:/ti/win/pdk_omapl138_1_0_8/packages/" -I"G:/ti/win/ccs910/xdctools_3_55_02_22_core/packages/" -I"../" -I"/packages//"  -IG:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.3/include
+INCS = $(BIOS_INC) $(ANNEX_INCS) -I"G:/ti/win/uia_2_30_01_02/packages/" -I"G:/ti/win/bios_6_75_02_00/packages/" -I"G:/ti/win/customPkg/packages/" -I"G:/ti/win/pdk_omapl138_1_0_8/packages/" -I"G:/ti/win/ccs910/xdctools_3_55_02_22_core/packages/" -I"../" -I"/packages//"  -IG:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.4/include
 
-CC = G:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.3/bin/cl6x -c $(CCOPTS)
-ASM = G:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.3/bin/cl6x -c $(CCOPTS)
-AR = G:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.3/bin/ar6x rq
+CC = G:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.4/bin/cl6x -c $(CCOPTS)
+ASM = G:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.4/bin/cl6x -c $(CCOPTS)
+AR = G:/ti/win/ccs910/ccs/tools/compiler/ti-cgt-c6000_8.3.4/bin/ar6x rq
 
 DEL = G:/ti/win/ccs910/xdctools_3_55_02_22_core/packages/../bin/rm -f
 CP = G:/ti/win/ccs910/xdctools_3_55_02_22_core/packages/../bin/cp -f
