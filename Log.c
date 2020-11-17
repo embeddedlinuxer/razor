@@ -39,7 +39,7 @@
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
-#define MAX_BUF_SIZE	4096
+#define MAX_BUF_SIZE	512
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
