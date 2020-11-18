@@ -1,3 +1,30 @@
+/*------------------------------------------------------------------------
+* This Information is proprietary to Phase Dynamics Inc, Richardson, Texas
+* and MAY NOT be copied by any method or incorporated into another program
+* without the express written consent of Phase Dynamics Inc. This information
+* or any portion thereof remains the property of Phase Dynamics Inc.
+* The information contained herein is believed to be accurate and Phase
+* Dynamics Inc assumes no responsibility or liability for its use in any way
+* and conveys no license or title under any patent or copyright and makes
+* no representation or warranty that this Information is free from patent
+* or copyright infringement.
+*
+* Copyright (c) 2018 Phase Dynamics Inc. ALL RIGHTS RESERVED.
+*------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------
+* Log.c 
+*-------------------------------------------------------------------------
+* Covers all usb activities including data logging, csv file uploading and 
+* downloading.
+* We were having a nightmare to figure out the proper heap/stack/task memory size.
+* It is extremely important to assign exact amount of memore size to 
+* either a heap or a task stack memory. If the stack memory is too large, 
+* then it will take too long to iniialize the memory, and then Watchdog timer will 
+* expire because the wathchdog timer can't hold that long.
+* If the memory is too small, then upgradeFirmware will fail to read and write
+* to the flash meory because the upgrade process requires lots of stack memory.
+*-------------------------------------------------------------------------*/
 
 #include <stdlib.h>
 #include <string.h>
