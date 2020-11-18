@@ -463,25 +463,25 @@ void upgradeFirmware(void)
 	for (;;) {
 		for (i=0;i<5;i++) buffer[0] = '\0';
      	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;
-		for (i=0;i<20;i++) displayLcd("FIRMWARE UPGRADE",0);	
+		for (i=0;i<10;i++) displayLcd("FIRMWARE UPGRADE",0);	
 		if (br == 0) break; /* error or eof */
 		for (loop=0;loop<sizeof(buffer);loop++) 
 		{
       		for (i=0;i<10;i++) aisPtr[index] = buffer[loop];
-	    	for (i=0;i<5;i++) sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+	    	for (i=0;i<5;i++) System_sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 			index++;
    		}
 
 		/// watchdog timer reactive
 		TimerWatchdogReactivate(CSL_TMR_1_REGS);
 
-	    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+	    System_sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 		displayLcd(lcdLine1,1);	
     }
 
 	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
 
-	sprintf(lcdLine1,"   Loading.... ");
+	System_sprintf(lcdLine1,"   Loading.... ");
 	displayLcd(lcdLine1,1);	
 
 	/// close
