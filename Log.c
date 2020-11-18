@@ -321,7 +321,7 @@ void loadUsbDriver(void)
     // Open an instance of the mass storage class driver.
     g_ulMSCInstance = USBHMSCDriveOpen(usb_host_params.instanceNo, 0, MSCCallback);
 
-    usb_osalDelayMs(500);
+    usb_osalDelayMs(200);
 }
 
 
@@ -566,7 +566,7 @@ void logData(void)
 		return;
 	}
 
-	/// check max_buf_size = 4096
+	/// check remaining space
 	if (MAX_BUF_SIZE > (strlen(LOG_BUF) + strlen(DATA_BUF))) 
 	{
 		TimerWatchdogReactivate(CSL_TMR_1_REGS);
