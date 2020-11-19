@@ -463,6 +463,7 @@ void upgradeFirmware(void)
 	for (;;) {
 		for (i=0;i<5;i++) buffer[0] = '\0';
      	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;
+		//for (i=0;i<20;i++) displayLcd("FIRMWARE UPGRADE",0);	
 		for (i=0;i<10;i++) displayLcd("FIRMWARE UPGRADE",0);	
 		if (br == 0) break; /* error or eof */
 		for (loop=0;loop<sizeof(buffer);loop++) 
@@ -512,8 +513,8 @@ void upgradeFirmware(void)
 
 	/// success. force to trigger watchdog enabling uploadProfile()
     isUpdateDisplay=TRUE;
-    updateDisplay("FIRMWARE UPGRADE","  Rebooting...  ");
+    updateDisplay("FIRMWARE UPGRADE","     Wait...    ");
 
 	/// change firmware name not to redo upgrade
-    while (1) displayLcd("  Rebooting...  ",1);
+    while (1) displayLcd("     Wait...    ",1);
 }

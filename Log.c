@@ -1,30 +1,3 @@
-/*------------------------------------------------------------------------
-* This Information is proprietary to Phase Dynamics Inc, Richardson, Texas
-* and MAY NOT be copied by any method or incorporated into another program
-* without the express written consent of Phase Dynamics Inc. This information
-* or any portion thereof remains the property of Phase Dynamics Inc.
-* The information contained herein is believed to be accurate and Phase
-* Dynamics Inc assumes no responsibility or liability for its use in any way
-* and conveys no license or title under any patent or copyright and makes
-* no representation or warranty that this Information is free from patent
-* or copyright infringement.
-*
-* Copyright (c) 2018 Phase Dynamics Inc. ALL RIGHTS RESERVED.
-*------------------------------------------------------------------------*/
-
-/*------------------------------------------------------------------------
-* Log.c 
-*-------------------------------------------------------------------------
-* Covers all usb activities including data logging, csv file uploading and 
-* downloading.
-* We were having a nightmare to figure out the proper heap/stack/task memory size.
-* It is extremely important to assign exact amount of memore size to 
-* either a heap or a task stack memory. If the stack memory is too large, 
-* then it will take too long to iniialize the memory, and then Watchdog timer will 
-* expire because the wathchdog timer can't hold that long.
-* If the memory is too small, then upgradeFirmware will fail to read and write
-* to the flash meory because the upgrade process requires lots of stack memory.
-*-------------------------------------------------------------------------*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -66,7 +39,7 @@
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
-#define MAX_BUF_SIZE	512
+#define MAX_BUF_SIZE	4096
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
@@ -348,13 +321,26 @@ void loadUsbDriver(void)
     // Open an instance of the mass storage class driver.
     g_ulMSCInstance = USBHMSCDriveOpen(usb_host_params.instanceNo, 0, MSCCallback);
 
-    usb_osalDelayMs(200);
+    usb_osalDelayMs(500);
 }
-
 
 void resetUsbDriver(void)
 {
-   USBHCDReset(g_ulMSCInstance);
+   unloadUsbDriver();
+   loadUsbDriver();
+}
+
+
+void 
+unloadUsbDriver(void)
+{
+    USBHCDReset(USB_INSTANCE);
+    USBHMSCDriveClose(g_ulMSCInstance);
+    usb_handle->isOpened = 0;
+    g_fsHasOpened = 0;
+    if (g_fsHasOpened) FATFS_close(fatfsHandle);
+
+    usb_osalDelayMs(500);
 }
 
 
@@ -593,7 +579,7 @@ void logData(void)
 		return;
 	}
 
-	/// check remaining space
+	/// check max_buf_size = 4096
 	if (MAX_BUF_SIZE > (strlen(LOG_BUF) + strlen(DATA_BUF))) 
 	{
 		TimerWatchdogReactivate(CSL_TMR_1_REGS);
