@@ -177,6 +177,7 @@ Process_Menu(void)
 		resetCsvStaticVars();
     	resetUsbStaticVars();
 		resetUsbDriver();
+        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	}
 
 	char 	prevButtons[4];

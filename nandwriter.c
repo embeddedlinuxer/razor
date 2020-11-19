@@ -380,9 +380,6 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
    			for(i=0;i<ACCESS_DELAY;i++);
    		}
 
-		/// watchdog timer reactive
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
-
    	} while (pageCnt < totalPageCnt);
 
    	NAND_protectBlocks(hNandInfo);
@@ -473,9 +470,6 @@ void upgradeFirmware(void)
 			index++;
    		}
 
-		/// watchdog timer reactive
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
-
 	    System_sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 		displayLcd(lcdLine1,1);	
     }
@@ -510,6 +504,8 @@ void upgradeFirmware(void)
 
 	/// re-enable interrupts
     Swi_enable();
+
+    setupWatchDog();
 
 	/// success. force to trigger watchdog enabling uploadProfile()
     isUpdateDisplay=TRUE;

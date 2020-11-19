@@ -80,7 +80,7 @@ int main (void)
 	enableUpgradeMode();
 	
     /// SETUP WATCHDOG
-    setupWatchDog();
+    //setupWatchDog();
 	
     /// START TI-RTOS KERNEL
 	BIOS_start();
