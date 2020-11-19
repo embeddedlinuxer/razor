@@ -380,6 +380,9 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
    			for(i=0;i<ACCESS_DELAY;i++);
    		}
 
+		/// watchdog timer reactive
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
    	} while (pageCnt < totalPageCnt);
 
    	NAND_protectBlocks(hNandInfo);
@@ -460,23 +463,25 @@ void upgradeFirmware(void)
 	for (;;) {
 		for (i=0;i<5;i++) buffer[0] = '\0';
      	if (f_read(&fPtr, buffer, sizeof(buffer), &br) != FR_OK) return;
-		//for (i=0;i<20;i++) displayLcd("FIRMWARE UPGRADE",0);	
-		for (i=0;i<10;i++) displayLcd("FIRMWARE UPGRADE",0);	
+		for (i=0;i<20;i++) displayLcd("FIRMWARE UPGRADE",0);	
 		if (br == 0) break; /* error or eof */
 		for (loop=0;loop<sizeof(buffer);loop++) 
 		{
       		for (i=0;i<10;i++) aisPtr[index] = buffer[loop];
-	    	for (i=0;i<5;i++) System_sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+	    	for (i=0;i<5;i++) sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 			index++;
    		}
 
-	    System_sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
+		/// watchdog timer reactive
+		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
+	    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 		displayLcd(lcdLine1,1);	
     }
 
 	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
 
-	System_sprintf(lcdLine1,"   Loading.... ");
+	sprintf(lcdLine1,"   Loading.... ");
 	displayLcd(lcdLine1,1);	
 
 	/// close
@@ -504,8 +509,6 @@ void upgradeFirmware(void)
 
 	/// re-enable interrupts
     Swi_enable();
-
-    setupWatchDog();
 
 	/// success. force to trigger watchdog enabling uploadProfile()
     isUpdateDisplay=TRUE;
