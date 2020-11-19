@@ -39,7 +39,7 @@
 #define USB_INSTANCE    0
 #define MAX_HEADER_SIZE 110 
 #define MAX_DATA_SIZE  	256
-#define MAX_BUF_SIZE	4096
+#define MAX_BUF_SIZE	512
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_HEADER[MAX_HEADER_SIZE];
@@ -496,7 +496,7 @@ void logData(void)
        	}
 
        	/// write header1
-		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
+		System_sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
@@ -512,7 +512,7 @@ void logData(void)
        	}
 
        	/// write header2
-       	sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
+       	System_sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
@@ -528,7 +528,7 @@ void logData(void)
        	}
 
        	/// write header3
-       	sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
+       	System_sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
 
        	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
        	{
