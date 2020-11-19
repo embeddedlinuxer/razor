@@ -37,13 +37,13 @@
 #define NANDWIDTH_16
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
-#define MAX_HEADER_SIZE 110 
+#define MAX_HEAD_SIZE   110 
 #define MAX_DATA_SIZE  	256
 #define MAX_BUF_SIZE	4096
 #define MAX_CSV_SIZE   	4096*3
 
-static char LOG_HEADER[MAX_HEADER_SIZE];
-static char LOG_BUF[4096];
+static char LOG_HEADER[MAX_HEAD_SIZE];
+static char LOG_BUF[MAX_BUF_SIZE];
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static USB_Handle usb_handle;
 static USB_Params usb_host_params;
