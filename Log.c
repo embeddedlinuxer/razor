@@ -42,7 +42,7 @@
 #define MAX_BUF_SIZE	4096
 #define MAX_CSV_SIZE   	4096*3
 
-static char LOG_HEADER[MAX_HEAD_SIZE];
+static char LOG_HEAD[MAX_HEAD_SIZE];
 static char LOG_BUF[MAX_BUF_SIZE];
 static char logFile[] = "0:PDI/LOG_01_01_2019.csv";
 static USB_Handle usb_handle;
@@ -499,9 +499,9 @@ void logData(void)
        	}
 
        	/// write header1
-		sprintf(LOG_HEADER,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
+		sprintf(LOG_HEAD,"\nFirmware:,%5s\nSerial Number:,%5d\n\nDate,Time,Alarm,Stream,Watercut,Watercut_Raw,", FIRMWARE_VERSION, REG_SN_PIPE);
 
-       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
+       	if (f_puts(LOG_HEAD,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
@@ -515,9 +515,9 @@ void logData(void)
        	}
 
        	/// write header2
-       	sprintf(LOG_HEADER,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
+       	sprintf(LOG_HEAD,"Temp(C),Avg_Temp(C),Temp_Adj,Freq(Mhz),Oil_Index,RP(V),Oil_PT,Oil_P0,Oil_P1,");
 
-       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
+       	if (f_puts(LOG_HEAD,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
@@ -531,9 +531,9 @@ void logData(void)
        	}
 
        	/// write header3
-       	sprintf(LOG_HEADER,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
+       	sprintf(LOG_HEAD,"Density,Oil_Freq_Low,Oil_Freq_Hi,AO_LRV,AO_URV,AO_MANUAL_VAL,Relay_Setpoint\n");
 
-       	if (f_puts(LOG_HEADER,&logWriteObject) == EOF) 
+       	if (f_puts(LOG_HEAD,&logWriteObject) == EOF) 
        	{
            	stopAccessingUsb(FR_DISK_ERR);
            	return;
@@ -572,7 +572,7 @@ void logData(void)
 	/// get modbus data
 	Swi_disable();
 
-	i = System_snprintf(DATA_BUF,MAX_DATA_SIZE,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
+	i = snprintf(DATA_BUF,MAX_DATA_SIZE,"%02d-%02d-20%02d,%02d:%02d:%02d,%10d,%2.0f,%6.2f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%6.3f,%5.1f,%5.1f,%5.1f,%5.1f,%6.3f,%6.3f,%5.1f,%5.1f,%5.2f,%8.1f,\n",USB_RTC_MON,USB_RTC_DAY,USB_RTC_YR,USB_RTC_HR,USB_RTC_MIN,USB_RTC_SEC,DIAGNOSTICS,REG_STREAM.calc_val,REG_WATERCUT.calc_val,REG_WATERCUT_RAW,REG_TEMP_USER.calc_val,REG_TEMP_AVG.calc_val,REG_TEMP_ADJUST.calc_val,REG_FREQ.calc_val,REG_OIL_INDEX.calc_val,REG_OIL_RP,REG_OIL_PT,REG_OIL_P0.calc_val,REG_OIL_P1.calc_val, REG_OIL_DENSITY.calc_val, REG_OIL_FREQ_LOW.calc_val, REG_OIL_FREQ_HIGH.calc_val, REG_AO_LRV.calc_val, REG_AO_URV.calc_val, REG_AO_MANUAL_VAL,REG_RELAY_SETPOINT.calc_val);
 
    	Swi_enable();
 
