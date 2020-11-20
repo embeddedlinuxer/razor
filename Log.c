@@ -39,7 +39,7 @@
 #define USB_INSTANCE    0
 #define MAX_HEAD_SIZE   110 
 #define MAX_DATA_SIZE  	256
-#define MAX_BUF_SIZE	4096
+#define MAX_BUF_SIZE	1024
 #define MAX_CSV_SIZE   	4096*3
 
 static char LOG_HEAD[MAX_HEAD_SIZE];
@@ -559,8 +559,8 @@ void logData(void)
    	}   
 
 	/// checking highspeed mode for debugging purpose only
-    //if (CSL_FEXT(usbRegs->POWER, USB_OTG_POWER_HSMODE)) System_printf ("USB HIGH SPEED ENABLED\n");
-    //else System_printf ("USB HIGH SPEED NOT ENABLED\n");
+    //if (CSL_FEXT(usbRegs->POWER, USB_OTG_POWER_HSMODE)) printf ("USB HIGH SPEED ENABLED\n");
+    //else printf ("USB HIGH SPEED NOT ENABLED\n");
         
 	/// new DATA_BUF
 	char *DATA_BUF;
@@ -788,7 +788,7 @@ void scanCsvFiles(void)
 
 	/// disable all interrupts
 	Swi_disable();
-	for (i=0;i<10;i++) System_printf("Swi_disable...");
+	for (i=0;i<10;i++) printf("Swi_disable...");
 
 	/// opendir
 	if (f_opendir(&dir, path) != FR_OK) 
@@ -796,7 +796,7 @@ void scanCsvFiles(void)
 		Swi_enable();
 		return;
 	}
-	for (i=0;i<10;i++) System_printf("f_opendir...");
+	for (i=0;i<10;i++) printf("f_opendir...");
 
 	/// read file names
     for (;;) {
@@ -814,15 +814,15 @@ void scanCsvFiles(void)
         }
 		TimerWatchdogReactivate(CSL_TMR_1_REGS);
     }
-	for (i=0;i<10;i++) System_printf("read files...");
+	for (i=0;i<10;i++) printf("read files...");
 
 	/// close dir
 	f_closedir(&dir);
-	for (i=0;i<10;i++) System_printf("Closing dir...");
+	for (i=0;i<10;i++) printf("Closing dir...");
 
 	/// enable all interrupts back
 	Swi_enable();
-	for (i=0;i<10;i++) System_printf("Swi_enable...");
+	for (i=0;i<10;i++) printf("Swi_enable...");
 
     return;
 }
@@ -1074,17 +1074,17 @@ BOOL uploadCsv(void)
 
 	/// close file
 	f_close(&fil);
-	for (i=0;i<10;i++) System_printf("Closing%d...\n",i);
+	for (i=0;i<10;i++) printf("Closing%d...\n",i);
 
 	Swi_enable();
-	for (i=0;i<10;i++) System_printf("Swi_enable%d\n",i);
+	for (i=0;i<10;i++) printf("Swi_enable%d\n",i);
 
 	/// update FACTORY DEFAULT
    	storeUserDataToFactoryDefault();
 	Swi_post(Swi_writeNand);	
 	isCsvUploadSuccess = TRUE;
     isCsvDownloadSuccess = FALSE;
-	for (i=0;i<10;i++) System_printf("Swi_post%d\n",i);
+	for (i=0;i<10;i++) printf("Swi_post%d\n",i);
 
 	/// delete PDI_RAZOR_PROFILE
 	if (isPdiUpgradeMode) 
