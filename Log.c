@@ -656,66 +656,66 @@ BOOL downloadCsv(void)
 	}
 
 	/// integer
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d,\n",REG_SN_PIPE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d,\n",REG_AO_DAMPEN); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Slave Address,,204,int,1,RW,1,%d,\n",REG_SLAVE_ADDRESS); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Stop Bits,,205,int,1,RW,1,%d,\n",REG_STOP_BITS); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Mode,,206,int,1,RW,1,%d,\n",REG_DENSITY_MODE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 0,,219,int,1,RW,1,%d,\n",REG_MODEL_CODE[0]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 1,,220,int,1,RW,1,%d,\n",REG_MODEL_CODE[1]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 2,,221,int,1,RW,1,%d,\n",REG_MODEL_CODE[2]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 3,,222,int,1,RW,1,%d,\n",REG_MODEL_CODE[3]); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Logging Period,,223,int,1,RW,1,%d,\n",REG_LOGGING_PERIOD); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Alarm Mode,,227,int,1,RW,1,%d,\n",REG_AO_ALARM_MODE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Phase Hold Over,,228,int,1,RW,1,%d,\n",REG_PHASE_HOLD_CYCLES); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Delay,,229,int,1,RW,1,%d,\n",REG_RELAY_DELAY); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Mode,,230,int,1,RW,1,%d,\n",REG_AO_MODE); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Correction Mode,,231,int,1,RW,1,%d,\n",REG_OIL_DENS_CORR_MODE);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Mode,,232,int,1,RW,1,%d,\n",REG_RELAY_MODE); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d\n",REG_SN_PIPE); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d\n",REG_AO_DAMPEN); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Slave Address,,204,int,1,RW,1,%d\n",REG_SLAVE_ADDRESS); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Stop Bits,,205,int,1,RW,1,%d\n",REG_STOP_BITS); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Mode,,206,int,1,RW,1,%d\n",REG_DENSITY_MODE); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 0,,219,int,1,RW,1,%d\n",REG_MODEL_CODE[0]); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 1,,220,int,1,RW,1,%d\n",REG_MODEL_CODE[1]); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 2,,221,int,1,RW,1,%d\n",REG_MODEL_CODE[2]); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Model Code 3,,222,int,1,RW,1,%d\n",REG_MODEL_CODE[3]); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Logging Period,,223,int,1,RW,1,%d\n",REG_LOGGING_PERIOD); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Alarm Mode,,227,int,1,RW,1,%d\n",REG_AO_ALARM_MODE); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Phase Hold Over,,228,int,1,RW,1,%d\n",REG_PHASE_HOLD_CYCLES); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Delay,,229,int,1,RW,1,%d\n",REG_RELAY_DELAY); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Mode,,230,int,1,RW,1,%d\n",REG_AO_MODE); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Correction Mode,,231,int,1,RW,1,%d\n",REG_OIL_DENS_CORR_MODE);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Mode,,232,int,1,RW,1,%d\n",REG_RELAY_MODE); 
 
 	/// float or double
-	sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Adjust,,15,float,1,RW,1,%15.7f\n",REG_OIL_ADJUST.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Temp Adjust,,31,float,1,RW,1,%15.7f\n",REG_TEMP_ADJUST.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Proc Avg,,35,float,1,RW,1,%15.7f\n",REG_PROC_AVGING.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Index,,37,float,1,RW,1,%15.7f\n",REG_OIL_INDEX.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P0,,39,float,1,RW,1,%15.7f\n",REG_OIL_P0.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P1,,41,float,1,RW,1,%15.7f\n",REG_OIL_P1.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Low,,43,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_LOW.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil High,,45,float,1,RW,1,%15.7f\n",REG_OIL_FREQ_HIGH.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Sample Period,,47,float,1,RW,1,%5.1f,\n",REG_SAMPLE_PERIOD.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO LRV,,49,float,1,RW,1,%15.7f\n",REG_AO_LRV.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO URV,,51,float,1,RW,1,%15.7f\n",REG_AO_URV.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Baud Rate,,55,float,1,RW,1,%10.1f,\n",REG_BAUD_RATE.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Calc Max,,67,float,1,RW,1,%15.7f,\n",REG_OIL_CALC_MAX); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Dual Curve Cutoff,,69,float,1,RW,1,%15.7f\n",REG_OIL_PHASE_CUTOFF);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Stream,,73,float,1,RW,1,%10.1f,\n",REG_STREAM.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim Low,,107,float,1,RW,1,%15.7f\n",REG_AO_TRIMLO); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim High,,109,float,1,RW,1,%15.7f\n",REG_AO_TRIMHI); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Adj,,111,float,1,RW,1,%15.7f\n",REG_DENSITY_ADJ);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Unit,,113,float,1,RW,1,%10.0f,\n",REG_DENSITY_UNIT.val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D3,,117,float,1,RW,1,%15.7f\n",REG_DENSITY_D3.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D2,,119,float,1,RW,1,%15.7f\n",REG_DENSITY_D2.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D1,,121,float,1,RW,1,%15.7f\n",REG_DENSITY_D1.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"D0,,123,float,1,RW,1,%15.7f\n",REG_DENSITY_D0.calc_val);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Dens Calibration Val,,125,float,1,RW,1,%15.7f,\n",REG_DENSITY_CAL_VAL.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Setpoint,,151,float,1,RW,1,%15.7f,\n",REG_RELAY_SETPOINT.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density Manual,,161,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_MANUAL); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI LRV,,163,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_LRV.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI URV,,165,float,1,RW,1,%15.7f,\n",REG_OIL_DENSITY_AI_URV.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim Low,,169,float,1,RW,1,%15.7f\n",REG_AI_TRIMLO); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim High,,171,float,1,RW,1,%15.7f\n",REG_AI_TRIMHI); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T0,,179,float,1,RW,1,%15.7f\n",REG_OIL_T0.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T1,,181,float,1,RW,1,%15.7f\n",REG_OIL_T1.calc_val); 
-    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Temp Adj,,781,float,1,RW,1,%15.7f\n",PDI_TEMP_ADJ);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F0,,783,float,1,RW,1,%15.7f\n",PDI_FREQ_F0);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F1,,785,float,1,RW,1,%15.7f\n",PDI_FREQ_F1);
+	sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Adjust,,15,float,1,RW,1,%015.7f\n",REG_OIL_ADJUST.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Temp Adjust,,31,float,1,RW,1,%015.7f\n",REG_TEMP_ADJUST.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Proc Avg,,35,float,1,RW,1,%015.7f\n",REG_PROC_AVGING.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Index,,37,float,1,RW,1,%015.7f\n",REG_OIL_INDEX.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P0,,39,float,1,RW,1,%015.7f\n",REG_OIL_P0.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil P1,,41,float,1,RW,1,%015.7f\n",REG_OIL_P1.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Low,,43,float,1,RW,1,%015.7f\n",REG_OIL_FREQ_LOW.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil High,,45,float,1,RW,1,%015.7f\n",REG_OIL_FREQ_HIGH.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Sample Period,,47,float,1,RW,1,%05.1f\n",REG_SAMPLE_PERIOD.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO LRV,,49,float,1,RW,1,%015.7f\n",REG_AO_LRV.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO URV,,51,float,1,RW,1,%015.7f\n",REG_AO_URV.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Baud Rate,,55,float,1,RW,1,%010.1f\n",REG_BAUD_RATE.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Calc Max,,67,float,1,RW,1,%015.7f\n",REG_OIL_CALC_MAX); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Dual Curve Cutoff,,69,float,1,RW,1,%015.7f\n",REG_OIL_PHASE_CUTOFF);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Stream,,73,float,1,RW,1,%010.1f\n",REG_STREAM.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim Low,,107,float,1,RW,1,%015.7f\n",REG_AO_TRIMLO); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AO Trim High,,109,float,1,RW,1,%015.7f\n",REG_AO_TRIMHI); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Adj,,111,float,1,RW,1,%015.7f\n",REG_DENSITY_ADJ);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Density Unit,,113,float,1,RW,1,%010.0f\n",REG_DENSITY_UNIT.val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D3,,117,float,1,RW,1,%015.7f\n",REG_DENSITY_D3.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D2,,119,float,1,RW,1,%015.7f\n",REG_DENSITY_D2.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D1,,121,float,1,RW,1,%015.7f\n",REG_DENSITY_D1.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"D0,,123,float,1,RW,1,%015.7f\n",REG_DENSITY_D0.calc_val);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Dens Calibration Val,,125,float,1,RW,1,%015.7f\n",REG_DENSITY_CAL_VAL.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Relay Setpoint,,151,float,1,RW,1,%015.7f\n",REG_RELAY_SETPOINT.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density Manual,,161,float,1,RW,1,%015.7f\n",REG_OIL_DENSITY_MANUAL); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI LRV,,163,float,1,RW,1,%015.7f\n",REG_OIL_DENSITY_AI_LRV.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Density AI URV,,165,float,1,RW,1,%015.7f\n",REG_OIL_DENSITY_AI_URV.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim Low,,169,float,1,RW,1,%015.7f\n",REG_AI_TRIMLO); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"AI Trim High,,171,float,1,RW,1,%015.7f\n",REG_AI_TRIMHI); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T0,,179,float,1,RW,1,%015.7f\n",REG_OIL_T0.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil T1,,181,float,1,RW,1,%015.7f\n",REG_OIL_T1.calc_val); 
+    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Temp Adj,,781,float,1,RW,1,%015.7f\n",PDI_TEMP_ADJ);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F0,,783,float,1,RW,1,%015.7f\n",PDI_FREQ_F0);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"PDI Freq F1,,785,float,1,RW,1,%015.7f\n",PDI_FREQ_F1);
 
 	/// extended 60K
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Number of Oil Temperature Curves,,60001,float,1,RW,1,%15.7f\n",REG_TEMP_OIL_NUM_CURVES);
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Temperature List,,60003,float,1,RW,10,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f,%15.7f\n",REG_TEMPS_OIL[0],REG_TEMPS_OIL[1],REG_TEMPS_OIL[2],REG_TEMPS_OIL[3],REG_TEMPS_OIL[4],REG_TEMPS_OIL[5],REG_TEMPS_OIL[6],REG_TEMPS_OIL[7],REG_TEMPS_OIL[8],REG_TEMPS_OIL[9]);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Number of Oil Temperature Curves,,60001,float,1,RW,1,%015.7f\n",REG_TEMP_OIL_NUM_CURVES);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Temperature List,,60003,float,1,RW,10,%015.7f,%015.7f,%015.7f,%015.7f,%015.7f,%015.7f,%015.7f,%015.7f,%015.7f,%015.7f\n",REG_TEMPS_OIL[0],REG_TEMPS_OIL[1],REG_TEMPS_OIL[2],REG_TEMPS_OIL[3],REG_TEMPS_OIL[4],REG_TEMPS_OIL[5],REG_TEMPS_OIL[6],REG_TEMPS_OIL[7],REG_TEMPS_OIL[8],REG_TEMPS_OIL[9]);
 
 	for (data_index=0;data_index<10;data_index++)
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve %d,,%d,float,1,RW,4,%15.7f,%15.7f,%15.7f,%15.7f\n",data_index,60023+data_index*8,REG_COEFFS_TEMP_OIL[data_index][0],REG_COEFFS_TEMP_OIL[data_index][1],REG_COEFFS_TEMP_OIL[data_index][2],REG_COEFFS_TEMP_OIL[data_index][3]);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Oil Curve %d,,%d,float,1,RW,4,%015.7f,%015.7f,%015.7f,%015.7f\n",data_index,60023+data_index*8,REG_COEFFS_TEMP_OIL[data_index][0],REG_COEFFS_TEMP_OIL[data_index][1],REG_COEFFS_TEMP_OIL[data_index][2],REG_COEFFS_TEMP_OIL[data_index][3]);
 
 	/// long int	
     sprintf(CSV_BUF+strlen(CSV_BUF),"SN - Measurement Section,,301,long,1,RW,1,%d\n",REG_MEASSECTION_SN);
@@ -733,7 +733,7 @@ BOOL downloadCsv(void)
 
 	/// stream dependent data
 	for (data_index=0;data_index<60;data_index++)
-    sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%15.7f\n",data_index,63647+4*data_index,STREAM_OIL_ADJUST[data_index]);
+    sprintf(CSV_BUF+strlen(CSV_BUF),"Stream Oil Adjust %d,,%d,float,1,RW,1,%015.7f\n",data_index,63647+4*data_index,STREAM_OIL_ADJUST[data_index]);
 
 	/// write
 	fr = f_puts(CSV_BUF,&csvWriteObject);
