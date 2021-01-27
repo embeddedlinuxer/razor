@@ -1832,7 +1832,7 @@ void I2C_DS1340_Write(int RTC_ADDR, int RTC_DATA)
 }
 
 ///////////////////////////////////////////////////////////////////////////// 
-#define R       12                    // 12 KOhm (origianl value)
+#define R       10                    // 12 KOhm (origianl value)
 #define VREF    2.5                   // Reference Voltage
 #define BIN16   65536                 // 16 bit DAC multiplier 
 #define CMIN    0.04                  // 4 mA min target current
@@ -1991,7 +1991,6 @@ void I2C_Update_AO(void)
 
     // send start condition to LCD expander
     I2C_START_SET;
-
 }
 
 
