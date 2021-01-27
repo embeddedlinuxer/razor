@@ -21,9 +21,6 @@
 * Currently, we cycle through the mnu
 * code with a maximum frequency of about 6.67 times per second
 * (minimum period = 0.15 seconds).
-*-------------------------------------------------------------------------
-* HISTORY:
-*       Aug-20-2019 : Daniel Koh : Created Ver 1.0.0 
 *------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
