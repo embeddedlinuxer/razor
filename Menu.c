@@ -170,8 +170,6 @@ Process_Menu(void)
 		/// upgrade firmware if exists
 		while (isUpgradeFirmware) Swi_post(Swi_upgradeFirmware);
 
-     	TimerWatchdogReactivate(CSL_TMR_1_REGS);
-
 		/// disable upgrade mode 
 		isPdiUpgradeMode = FALSE;
 
@@ -337,7 +335,7 @@ Process_Menu(void)
         blinkMenu();
 
 		/// Reset watchdog timer. Otherwise, resets the system. 
-     	TimerWatchdogReactivate(CSL_TMR_1_REGS);
+     	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	}
 }
 
@@ -657,6 +655,7 @@ mnuHomescreenWaterCut(const Uint16 input)
 	    updateDisplay(lcdLine0, lcdLine1);
         x++;
 		if (x>20) isDisplayLogo = FALSE;
+        if (!isWatchDogEnabled) setupWatchDog();
         return MNU_HOMESCREEN_WTC;
     }
 

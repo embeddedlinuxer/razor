@@ -322,7 +322,7 @@ void loadUsbDriver(void)
     g_ulMSCInstance = USBHMSCDriveOpen(usb_host_params.instanceNo, 0, MSCCallback);
 
     // watchdog timer reset
-    TimerWatchdogReactivate(CSL_TMR_1_REGS);
+    if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 
     usb_osalDelayMs(500);
 }
@@ -464,7 +464,7 @@ void logData(void)
 	/// check usb driver
 	if (!isUsbActive()) 
 	{
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		return;
 	}
 
@@ -554,7 +554,7 @@ void logData(void)
            	return;
        	}
 
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		return;
    	}   
 
@@ -585,7 +585,7 @@ void logData(void)
 	/// check max_buf_size = 4096
 	if (MAX_BUF_SIZE > (strlen(LOG_BUF) + strlen(DATA_BUF))) 
 	{
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		strcat(LOG_BUF,DATA_BUF);
 		free(DATA_BUF);
 		return;
@@ -626,7 +626,7 @@ void logData(void)
    		return;
    	} 
 
-	TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	LOG_BUF[0] = '\0';
    	return;
 }
@@ -751,7 +751,7 @@ BOOL downloadCsv(void)
 		stopAccessingUsb(fr);
 		return FALSE;
 	}
-	for (i=0;i<1000;i++) displayLcd("    Loading...  ",LCD1);
+	for (i=0;i<1000;i++) displayLcd("     LOADING    ",LCD1);
 
 	/// close file
 	fr = f_close(&csvWriteObject);
@@ -768,7 +768,7 @@ BOOL downloadCsv(void)
     isCsvDownloadSuccess = TRUE;
     isCsvUploadSuccess = FALSE;
     
-	TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
     return TRUE;
 }
 
@@ -812,7 +812,7 @@ void scanCsvFiles(void)
 				isScanSuccess = TRUE;
 			}
         }
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
     }
 	for (i=0;i<10;i++) printf("read files...");
 
@@ -910,7 +910,7 @@ BOOL uploadCsv(void)
 		else if (strcmp(regid, "60001") == 0) REG_TEMP_OIL_NUM_CURVES = fvalue; 
 		else if (strcmp(regid, "60003") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_TEMPS_OIL[0] = fvalue;
 			REG_TEMPS_OIL[1] = fvalue1;
 			REG_TEMPS_OIL[2] = fvalue2;
@@ -924,7 +924,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60023") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[0][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[0][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[0][2] = fvalue2;
@@ -932,7 +932,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60031") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[1][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[1][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[1][2] = fvalue2;
@@ -940,7 +940,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60039") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[2][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[2][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[2][2] = fvalue2;
@@ -948,7 +948,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60047") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[3][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[3][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[3][2] = fvalue2;
@@ -956,7 +956,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60055") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[4][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[4][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[4][2] = fvalue2;
@@ -964,7 +964,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60063") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[5][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[5][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[5][2] = fvalue2;
@@ -972,7 +972,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60071") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[6][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[6][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[6][2] = fvalue2;
@@ -980,7 +980,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60079") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[7][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[7][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[7][2] = fvalue2;
@@ -988,7 +988,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60087") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[8][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[8][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[8][2] = fvalue2;
@@ -996,7 +996,7 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60095") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	        if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[9][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[9][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[9][2] = fvalue2;
@@ -1064,7 +1064,7 @@ BOOL uploadCsv(void)
 		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = fvalue;
 		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = fvalue;
 
-	    TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	    if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		for (i=0;i<10;i++) line[0] = '\0';
 
 		/// print status -- we use print as an intended "delay"
@@ -1074,8 +1074,8 @@ BOOL uploadCsv(void)
 			displayLcd(" PROFILE UPLOAD ",0);
 		}
 
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
-		displayLcd("    Loading...  ",1);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		displayLcd("     LOADING    ",1);
 	}	
 
 	/// close file
@@ -1091,14 +1091,14 @@ BOOL uploadCsv(void)
 	/// delete PDI_RAZOR_PROFILE
 	if (isPdiUpgradeMode) 
 	{
-	    TimerWatchdogReactivate(CSL_TMR_1_REGS);
+	    if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		displayLcd("PROFILE UPLOADED",0);
 		f_unlink(csvFileName);
 	}
 
     while (1) 
 	{
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		displayLcd("   REMOVE USB   ", 1);
 	}
 

@@ -381,7 +381,7 @@ static Uint32 USB_writeData(NAND_InfoHandle hNandInfo, Uint8 *srcBuf, Uint32 tot
    		}
 
 		/// watchdog timer reactive
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 
    	} while (pageCnt < totalPageCnt);
 
@@ -473,7 +473,7 @@ void upgradeFirmware(void)
    		}
 
 		/// watchdog timer reactive
-		TimerWatchdogReactivate(CSL_TMR_1_REGS);
+		if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 
 	    sprintf(lcdLine1,"      %3d%%    ",index*100/aisAllocSize);
 		displayLcd(lcdLine1,1);	
@@ -481,7 +481,7 @@ void upgradeFirmware(void)
 
 	for (i=0;i<1000;i++) displayLcd("FIRMWARE UPGRADE",0);	
 
-	sprintf(lcdLine1,"   Loading.... ");
+	sprintf(lcdLine1,"     LOADING    ");
 	displayLcd(lcdLine1,1);	
 
 	/// close
@@ -510,10 +510,13 @@ void upgradeFirmware(void)
 	/// re-enable interrupts
     Swi_enable();
 
+    /// let the watchdog restart the system
+    setupWatchDog();
+
 	/// success. force to trigger watchdog enabling uploadProfile()
     isUpdateDisplay=TRUE;
-    updateDisplay("FIRMWARE UPGRADE","     Wait...    ");
+    updateDisplay("FIRMWARE UPGRADE","   RESTARTING   ");
 
 	/// change firmware name not to redo upgrade
-    while (1) displayLcd("     Wait...    ",1);
+    while (1) displayLcd("   RESTARTING   ",1);
 }

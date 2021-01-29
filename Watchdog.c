@@ -20,6 +20,7 @@
 *------------------------------------------------------------------------*/
 
 #include "Watchdog.h"
+#include "Globals.h"
 
 void TimerWatchdogReactivate(unsigned int baseAddr)
 {
@@ -77,4 +78,7 @@ void setupWatchDog(void)
 
     /* Activate Watchdog */
     TimerWatchdogActivate(CSL_TMR_1_REGS);
+
+    /// enable watchdog timer trigger
+    isWatchDogEnabled = TRUE;
 }

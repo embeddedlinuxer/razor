@@ -28,6 +28,7 @@ void resetGlobalVars(void)
 {
     CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 
+    isWatchDogEnabled = FALSE;
     isWriteRTC = FALSE;
     isLogData = FALSE;
 	isTechMode = FALSE;
