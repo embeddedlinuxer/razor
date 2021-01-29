@@ -1831,22 +1831,10 @@ void I2C_DS1340_Write(int RTC_ADDR, int RTC_DATA)
 	setStop(); 
 }
 
-///////////////////////////////////////////////////////////////////////////// 
-#define R       10                    // 12 KOhm (origianl value)
-#define VREF    2.5                   // Reference Voltage
-#define BIN16   65536                 // 16 bit DAC multiplier 
-#define CMIN    0.04                  // 4 mA min target current
-#define CMAX    0.2                   // 20 mA max target current
-#define VMIN    (R * CMIN)            // Min voltage
-#define VMAX    (R * CMAX)            // Max voltage
-#define DMIN    (VMIN * BIN16 / VREF) // Dmin
-#define DMAX    (VMAX * BIN16 / VREF) // Dmax
-#define ALM_HI  20.5                  // Alarm Hi
-#define ALM_LO  3.8                   // Alarm Lo
-///////////////////////////////////////////////////////////////////////////// 
 
 void I2C_Update_AO(void)
 {
+
 	if(I2C_TXBUF.n > 0)
     {
         Clock_start(I2C_Update_AO_Clock_Retry);
@@ -1867,6 +1855,20 @@ void I2C_Update_AO(void)
     I2C_Wait_For_Stop();
     key = Swi_disable();
 
+///////////////////////////////////////////////////////////////////////////// 
+#define R       10                    // 12 KOhm (origianl value)
+#define VREF    2.5                   // Reference Voltage
+#define BIN16   65536                 // 16 bit DAC multiplier 
+#define CMIN    0.04                  // 4 mA min target current
+#define CMAX    0.2                   // 20 mA max target current
+#define VMIN    (R * CMIN)            // Min voltage
+#define VMAX    (R * CMAX)            // Max voltage
+#define DMIN    (VMIN * BIN16 / VREF) // Dmin
+#define DMAX    (VMAX * BIN16 / VREF) // Dmax
+#define ALM_HI  20.5                  // Alarm Hi
+#define ALM_LO  3.8                   // Alarm Lo
+///////////////////////////////////////////////////////////////////////////// 
+
     // is trimming mode?
     if (COIL_AO_TRIM_MODE.val)
     {
@@ -1879,7 +1881,7 @@ void I2C_Update_AO(void)
         dmin = (4-REG_AO_TRIMLO)*(DMAX-DMIN)/(20.0-REG_AO_TRIMLO) + DMIN;
     }
 
-    // is active error && alarm notificaion enabled?
+// is active error && alarm notificaion enabled?
     if ((DIAGNOSTICS > 0) && (REG_AO_ALARM_MODE > 0))
     {
         if (REG_AO_ALARM_MODE == 1)
@@ -1900,7 +1902,7 @@ void I2C_Update_AO(void)
         out_data = ((dmax-dmin)*(1.0-percent_val)) + dmin;
     else
         out_data = ((dmax-dmin)*percent_val) + dmin;
-   
+
     /// set Slave Address ////////////////////////////////////////
     i2cRegs->ICSAR = CSL_FMK(I2C_ICSAR_SADDR,I2C_SLAVE_ADDR_DAC);
     //////////////////////////////////////////////////////////////  
@@ -1919,7 +1921,7 @@ void I2C_Update_AO(void)
         return;
     }
 
-    while (CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
+while(CSL_FEXT(i2cRegs->ICIVR, I2C_ICIVR_INTCODE) != CSL_I2C_ICIVR_INTCODE_NONE); //read ICIVR until it's cleared of all flags
     I2C_START_SET;  // initiate sequence
     is_missing_DAC = TRUE;
 
@@ -1933,13 +1935,11 @@ void I2C_Update_AO(void)
             if (!I2C_Wait_To_Send())
             {
                 i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, ((out_data >> 8) & 0xFF) ); //MSB
-		        (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryAo = 0);
 
                 if (!I2C_Wait_For_Ack())
                 {
                     I2C_Wait_To_Send();
                     i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, (out_data & 0xFF)); //LSB
-		            (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryAo = 0);
                     is_missing_DAC = FALSE;
                 }
             }
@@ -1993,6 +1993,7 @@ void I2C_Update_AO(void)
 
     // send start condition to LCD expander
     I2C_START_SET;
+
 }
 
 

@@ -21,6 +21,9 @@
 * Currently, we cycle through the mnu
 * code with a maximum frequency of about 6.67 times per second
 * (minimum period = 0.15 seconds).
+*-------------------------------------------------------------------------
+* HISTORY:
+*       Aug-20-2019 : Daniel Koh : Created Ver 1.0.0 
 *------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdio.h>
@@ -1933,8 +1936,6 @@ mnuConfig_AO_TrimLo(const Uint16 input)
 	if (I2C_TXBUF.n > 0) return MNU_CFG_AO_TRIMLO;
 
     static double manualValLoPrev = 0;      // holds current manual output value
-    static double regAoTrimLoPrev = 0;      // holds current manual output value
-    static double regAoTrimHiPrev = 0;      // holds current manual output value
 	static Uint8 aoModeLoPrev 	= 0;        // holds current MANUAL mode status
 	static BOOL isSaveValue 		= TRUE;
     COIL_AO_TRIM_MODE.val = FALSE;
@@ -1942,8 +1943,6 @@ mnuConfig_AO_TrimLo(const Uint16 input)
     // SAVE CURRENT AO SETTINGS
     if (isSaveValue)
     {
-        regAoTrimLoPrev = REG_AO_TRIMLO;
-        regAoTrimHiPrev = REG_AO_TRIMHI;
         aoModeLoPrev = REG_AO_MODE;
         manualValLoPrev = REG_AO_MANUAL_VAL;
         isSaveValue = FALSE;
@@ -1961,8 +1960,6 @@ mnuConfig_AO_TrimLo(const Uint16 input)
             isSaveValue = TRUE;
             REG_AO_MODE = aoModeLoPrev;
 			REG_AO_MANUAL_VAL = manualValLoPrev; 
-			REG_AO_TRIMLO = regAoTrimLoPrev; 
-			REG_AO_TRIMHI = regAoTrimHiPrev; 
    	        Swi_post(Swi_writeNand);
             return onNextPressed(MNU_CFG_AO_TRIMHI);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_CFG_AO_TRIMLO,MNU_CFG_AO_TRIMLO,CFG_AO_TRIMLO);
@@ -1994,8 +1991,6 @@ fxnConfig_AO_TrimLo(const Uint16 input)
 
 	if (isInitTrim)
 	{
-		REG_AO_TRIMLO = 1; 
-		REG_AO_TRIMHI = 1; 
 		aoModeLoFxnPrev = REG_AO_MODE; 			// save current AO mode
 		manualValLoFxnPrev = REG_AO_MANUAL_VAL; // save current AO manual val
 		REG_AO_MODE = 2;                        // MANUAL

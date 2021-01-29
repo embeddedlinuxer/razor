@@ -778,7 +778,7 @@ void initializeAllRegisters(void)
 
     VAR_Initialize(&FCT_AO_URV, c_analytical, u_ana_percent, 100.0, 10000.0, var_no_alarm);
     VAR_Setup_Unit(&FCT_AO_URV, u_ana_percent, 100.0, 0, 100.0, 0);
-    VAR_Update(&FCT_AO_URV,100.0, CALC_UNIT);
+    VAR_Update(&FCT_AO_URV, 100.0, CALC_UNIT);
 
 	//////////////////////////////////////
 	/// Modbus Baud Rate - 9600 Bps

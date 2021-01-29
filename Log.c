@@ -843,13 +843,16 @@ BOOL uploadCsv(void)
 
 	/// open file
 	if (f_open(&fil, csvFileName, FA_READ) != FR_OK) return FALSE;
+	printf("Open file...");
 
-	///Swi_disable();
+	Swi_disable();
+	printf("Swi_disable...");
 
 	/// do not upgrade firmware after profiling
 	isUpgradeFirmware = FALSE;
 
 	/// read line
+	printf("f_get looping starts...");
     while (f_gets(line, sizeof(line), &fil)) 
 	{
 		int i = 0; 
@@ -890,6 +893,8 @@ BOOL uploadCsv(void)
             i++; 
         } 
 
+		printf("updating register %s\n", regid);
+
 		int ivalue = atoi(regval);
 		float fvalue = atof(regval);
 		float fvalue1 = atof(regval1);
@@ -902,6 +907,7 @@ BOOL uploadCsv(void)
 		float fvalue8 = atof(regval8);
 		float fvalue9 = atof(regval9);
 
+
 		/// 1-dimensional array
 		id = atoi(regid);
 		if ((id>0) && (id<1000)) updateVars(id,fvalue);
@@ -910,7 +916,6 @@ BOOL uploadCsv(void)
 		else if (strcmp(regid, "60001") == 0) REG_TEMP_OIL_NUM_CURVES = fvalue; 
 		else if (strcmp(regid, "60003") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_TEMPS_OIL[0] = fvalue;
 			REG_TEMPS_OIL[1] = fvalue1;
 			REG_TEMPS_OIL[2] = fvalue2;
@@ -924,7 +929,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60023") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[0][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[0][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[0][2] = fvalue2;
@@ -932,7 +936,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60031") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[1][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[1][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[1][2] = fvalue2;
@@ -940,7 +943,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60039") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[2][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[2][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[2][2] = fvalue2;
@@ -948,7 +950,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60047") == 0) 
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[3][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[3][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[3][2] = fvalue2;
@@ -956,7 +957,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60055") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[4][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[4][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[4][2] = fvalue2;
@@ -964,7 +964,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60063") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[5][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[5][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[5][2] = fvalue2;
@@ -972,7 +971,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60071") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[6][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[6][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[6][2] = fvalue2;
@@ -980,7 +978,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60079") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[7][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[7][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[7][2] = fvalue2;
@@ -988,7 +985,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60087") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[8][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[8][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[8][2] = fvalue2;
@@ -996,7 +992,6 @@ BOOL uploadCsv(void)
 		}
 		else if (strcmp(regid, "60095") == 0)
 		{
-	        TimerWatchdogReactivate(CSL_TMR_1_REGS);
 			REG_COEFFS_TEMP_OIL[9][0] = fvalue;
 			REG_COEFFS_TEMP_OIL[9][1] = fvalue1;
 			REG_COEFFS_TEMP_OIL[9][2] = fvalue2;
@@ -1064,7 +1059,6 @@ BOOL uploadCsv(void)
 		else if (strcmp(regid, "63763") == 0) STREAM_OIL_ADJUST[58] = fvalue;
 		else if (strcmp(regid, "63765") == 0) STREAM_OIL_ADJUST[59] = fvalue;
 
-	    TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		for (i=0;i<10;i++) line[0] = '\0';
 
 		/// print status -- we use print as an intended "delay"
@@ -1080,18 +1074,20 @@ BOOL uploadCsv(void)
 
 	/// close file
 	f_close(&fil);
+	for (i=0;i<10;i++) printf("Closing%d...\n",i);
+
+	Swi_enable();
+	for (i=0;i<10;i++) printf("Swi_enable%d\n",i);
 
 	/// update FACTORY DEFAULT
    	storeUserDataToFactoryDefault();
-
-    /// reset CSV triggers
 	isCsvUploadSuccess = TRUE;
     isCsvDownloadSuccess = FALSE;
+	for (i=0;i<10;i++) printf("Swi_post%d\n",i);
 
 	/// delete PDI_RAZOR_PROFILE
 	if (isPdiUpgradeMode) 
 	{
-	    TimerWatchdogReactivate(CSL_TMR_1_REGS);
 		displayLcd("PROFILE UPLOADED",0);
 		f_unlink(csvFileName);
 	}

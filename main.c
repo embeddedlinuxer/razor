@@ -16,7 +16,6 @@
 *-------------------------------------------------------------------------
 * HISTORY:
 *      1.01.00 : Jun-24-2020 : Daniel Koh : Added usb logging error checking 
-*      2.01.09 : Jan-27-2021 : Daniel Koh : Changed memeory size (stack, heap, task1) 
 *------------------------------------------------------------------------*/
 
 #undef MENU_H_
