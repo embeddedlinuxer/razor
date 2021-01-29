@@ -1933,11 +1933,13 @@ void I2C_Update_AO(void)
             if (!I2C_Wait_To_Send())
             {
                 i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, ((out_data >> 8) & 0xFF) ); //MSB
+		        (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryAo = 0);
 
                 if (!I2C_Wait_For_Ack())
                 {
                     I2C_Wait_To_Send();
                     i2cRegs->ICDXR = CSL_FMK(I2C_ICDXR_D, (out_data & 0xFF)); //LSB
+		            (I2C_Wait_To_Receive()) ? errorCounter(I2C_AO, key) : (tryAo = 0);
                     is_missing_DAC = FALSE;
                 }
             }
