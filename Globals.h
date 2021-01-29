@@ -29,6 +29,13 @@
 * FORCE_INIT_GLOBALS and run the software with the debugger. 
 * DO NOT create a boot image from the software if it has FORCE_INIT_GLOBALS defined!
 *-------------------------------------------------------------------------*/
+///////////////////////////////////////////////////////////////////////////
+// HISTORY  
+///////////////////////////////////////////////////////////////////////////
+// 
+// ver 1.2.9 | Jan-29-2021 | Daniel Koh | SHIPPED 8843, 8844, 8845, 8846
+//
+//
 
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
