@@ -33,7 +33,8 @@
 // HISTORY  
 ///////////////////////////////////////////////////////////////////////////
 // 
-// ver 1.2.9 | Jan-29-2021 | Daniel Koh | SHIPPED 8843, 8844, 8845, 8846
+// ver 1.02.09 | Jan-29-2021 | Daniel Koh | SHIPPED 8843, 8844, 8845, 8846
+// ver 1.02.10 | Mar-03-2021 | Daniel Koh | Changed logData, REG_STREAM upload fix 
 //
 //
 
@@ -41,7 +42,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.2.9"
+#define FIRMWARE_VERSION 		"1.02.10"
 
 #define BOOL Uint8
 #define DEMO_MODE
@@ -93,7 +94,7 @@
 ///// MAKE SURE TO CHANGE VERSION UPON NEW RELEASE
 ////////////////////////////////////////////////////
 
-#define DEFAULT_MODEL_CODE 			"RI1R20202RX35B25"
+#define DEFAULT_MODEL_CODE 			"PHASEDYNAMICSINC"
 
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////

@@ -83,6 +83,7 @@ static char prg14[] = "[##############]";
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char * USB_CODE[17] = {DISABLED,ENABLED,USB_ERROR2,USB_ERROR3,USB_ERROR4,USB_ERROR5,USB_ERROR6,USB_ERROR7,USB_ERROR8,USB_ERROR9,USB_ERROR10,USB_ERROR11,USB_ERROR12,USB_ERROR13,USB_ERROR14,USB_ERROR15,USB_ERROR16,USB_ERROR17};
 static const char * statusMode[2]    = {RELAY_OFF, RELAY_ON}; 
 static const char * phaseMode[2]     = {WATER_PHASE, OIL_PHASE}; 
 static const char * relayMode[4]     = {WATERCUT, PHASE, ERROR, MANUAL}; 
@@ -651,7 +652,7 @@ mnuHomescreenWaterCut(const Uint16 input)
     {
         static int x = 0;
         sprintf(lcdLine0, "%16s",  " PHASE DYNAMICS ");
-        (x < 10) ? sprintf(lcdLine1, "  Razor V%5s", FIRMWARE_VERSION) : sprintf(lcdLine1, "   SN: %06d", REG_SN_PIPE);
+        (x < 10) ? sprintf(lcdLine1, " Razor V%5s", FIRMWARE_VERSION) : sprintf(lcdLine1, "   SN: %06d", REG_SN_PIPE);
 	    updateDisplay(lcdLine0, lcdLine1);
         x++;
 		if (x>20) isDisplayLogo = FALSE;
@@ -1650,24 +1651,8 @@ mnuConfig_DataLogger_EnableLogger(const Uint16 input)
 	if (I2C_TXBUF.n > 0) return MNU_CFG_DATALOGGER_ENABLELOGGER;
 	if (isUpdateDisplay) (isLogData) ? updateDisplay(CFG_DATALOGGER_ENABLELOGGER, ENABLED) : updateDisplay(CFG_DATALOGGER_ENABLELOGGER, DISABLED);
 
-    if (usbStatus == 0) displayLcd(DISABLED, LCD1);
-    else if (usbStatus == 1) displayLcd(ENABLED, LCD1);
-    else if (usbStatus == 2) displayLcd(USB_ERROR2,LCD1);
-    else if (usbStatus == 3) displayLcd(USB_ERROR3,LCD1);
-    else if (usbStatus == 4) displayLcd(USB_ERROR4,LCD1);
-    else if (usbStatus == 5) displayLcd(USB_ERROR5,LCD1);
-    else if (usbStatus == 6) displayLcd(USB_ERROR6,LCD1);
-    else if (usbStatus == 7) displayLcd(USB_ERROR7,LCD1);
-    else if (usbStatus == 8) displayLcd(USB_ERROR8,LCD1);
-    else if (usbStatus == 9) displayLcd(USB_ERROR9,LCD1);
-    else if (usbStatus == 10) displayLcd(USB_ERROR10,LCD1);
-    else if (usbStatus == 11) displayLcd(USB_ERROR11,LCD1);
-    else if (usbStatus == 12) displayLcd(USB_ERROR12,LCD1);
-    else if (usbStatus == 13) displayLcd(USB_ERROR13,LCD1);
-    else if (usbStatus == 14) displayLcd(USB_ERROR14,LCD1);
-    else if (usbStatus == 15) displayLcd(USB_ERROR15,LCD1);
-    else if (usbStatus == 16) displayLcd(USB_ERROR16,LCD1);
-    else displayLcd("USB Malfunction", LCD1);
+    /// update status
+    displayLcd(USB_CODE[usbStatus], LCD1);
 
 	switch (input)	
 	{
@@ -3291,7 +3276,7 @@ fxnSecurityInfo_MC(const Uint16 input)
 	if (isUpdateDisplay)
 	{
 		Uint8 i;
-	    char lcdModelCode[20];
+	    char lcdModelCode[] = "INCDYNAMICSPHASE";
 
 		for (i=0;i<4;i++)
         {
@@ -3300,7 +3285,7 @@ fxnSecurityInfo_MC(const Uint16 input)
             lcdModelCode[i*4+1] = (REG_MODEL_CODE[i] >> 8)  & 0xFF;
             lcdModelCode[i*4+0] = (REG_MODEL_CODE[i] >> 0)  & 0xFF;
         }
-        
+       
         sprintf(lcdLine1,"%16s",lcdModelCode);
         updateDisplay(SECURITYINFO_INFO_MC, lcdLine1);
 	}
@@ -3754,7 +3739,6 @@ mnuSecurityInfo_Profile(const Uint16 input)
 
 	switch (input)	
 	{
-        //case BTN_VALUE 	: return onNextPressed(MNU_SECURITYINFO_TECHMODE);
         case BTN_VALUE 	: return (isTechMode) ? onNextPressed(MNU_SECURITYINFO_TECHMODE) : onNextPressed(MNU_SECURITYINFO_INFO);
 		case BTN_STEP 	: return onMnuStepPressed(FXN_SECURITYINFO_PROFILE,MNU_SECURITYINFO_PROFILE,SECURITYINFO_PROFILE);
 		case BTN_BACK 	: return onNextPressed(MNU_SECURITYINFO);
@@ -3790,27 +3774,17 @@ fxnSecurityInfo_Profile(const Uint16 input)
 
 	if (isDownload)
 	{
-		 if (isCsvDownloadSuccess) blinkLcdLine1(LOAD_SUCCESS,BLANK);
-		 else if (isDownloadCsv)
-		 {
-		 	if (usbStatus == 2) blinkLcdLine1(USB_ERROR2,BLANK);
-    		else if (usbStatus == 3) blinkLcdLine1(USB_ERROR3,BLANK);
-    		else if (usbStatus == 4) blinkLcdLine1(USB_ERROR4,BLANK);
-    		else if (usbStatus == 5) blinkLcdLine1(USB_ERROR5,BLANK);
-    		else if (usbStatus == 6) blinkLcdLine1(USB_ERROR6,BLANK);
-    		else if (usbStatus == 7) blinkLcdLine1(USB_ERROR7,BLANK);
-    		else if (usbStatus == 8) blinkLcdLine1(USB_ERROR8,BLANK);
-    		else if (usbStatus == 9) blinkLcdLine1(USB_ERROR9,BLANK);
-    		else if (usbStatus == 10) blinkLcdLine1(USB_ERROR10,BLANK);
-    		else if (usbStatus == 11) blinkLcdLine1(USB_ERROR11,BLANK);
-    		else if (usbStatus == 12) blinkLcdLine1(USB_ERROR12,BLANK);
-    		else if (usbStatus == 13) blinkLcdLine1(USB_ERROR13,BLANK);
-    		else if (usbStatus == 14) blinkLcdLine1(USB_ERROR14,BLANK);
-    		else if (usbStatus == 15) blinkLcdLine1(USB_ERROR15,BLANK);
-    		else if (usbStatus == 16) blinkLcdLine1(USB_ERROR16,BLANK);
+        if (isCsvDownloadSuccess) 
+        {
+            sprintf(lcdLine1,LOAD_SUCCESS);
+            return notifyMessageAndExit(FXN_SECURITYINFO_PROFILE,MNU_SECURITYINFO_PROFILE);
+        }
+		else if (isDownloadCsv)
+		{
+            if ((usbStatus > 1) && (usbStatus < 17)) blinkLcdLine1(USB_CODE[usbStatus], BLANK);
 			else blinkLcdLine1(LOADING,BLANK);
 		}
-		else blinkLcdLine1(DOWNLOAD, BLANK); 
+        else blinkLcdLine1(DOWNLOAD, BLANK); 
 	}
 	else
 	{
