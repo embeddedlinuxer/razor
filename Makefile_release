@@ -1,0 +1,95 @@
+VER = 1.2.10
+
+BUG_0 = "Fixed STREAM_OIL_ADJUST incorrect offset indexing\n"
+BUG_1 = "Fixed MODEL_CODE[]\n"
+BUG_2 = "Added header section to csv file\n"
+BUG_3 = "Added MODEL_CODE[] to csv file\n"
+BUG_4 = "Changed 3.8 profile with going back to MNU after downloading done\n"
+BUG_5 = ""
+BUG_6 = ""
+BUG_7 = ""
+BUG_8 = ""
+BUG_9 = ""
+
+##############################################
+##############################################
+### DO NOT CHANGE ANYTHING AFTER THIS LINE ###
+##############################################
+##############################################
+
+PRODUCT = RAZOR
+TIME_STAMP = `date +'%m%d%Y'`
+VER2 = $(subst .,_,$(VER))
+RELEASE_DATE = $(shell date --iso=seconds)
+MD5SUM = md5sum
+ZIP = zip
+MKDIR = mkdir
+ECHO = echo
+TAR = tar
+RM = rm
+CP = cp
+MV = mv
+CP_OPTIONS = -r
+RM_OPTIONS = -rf 
+TAR_OPTIONS = -zcvf 
+
+BUGS = $(BUG_0)$(BUG_1)$(BUG_2)$(BUG_3)$(BUG_4)$(BUG_5)$(BUG_6)$(BUG_7)$(BUG_8)$(BUG_9)
+RELEASE_FOLDER = $(PRODUCT)_$(VER2)_$(TIME_STAMP)
+ZIPPED_FOLDER = $(RELEASE_FOLDER).zip
+MD5_FILES = pdi_razor_firmware.ais PDI_Razor.out boot.cfg PDI_Razor.bin  PDI_Razor.map
+CUSTOMER_FILES = $(MD5_FILES) 
+RELEASE_NOTE_FILE= $(RELEASE_FOLDER)/RELEASE_NOTE.txt
+
+CLEAN_THESE = *.zip *.txt RAZOR_*
+
+LINE0 = "-----------------------------------------------------"
+LINE1 = "RELEASE SUMMARY"
+LINE2 = "-----------------------------------------------------"
+LINE3 = "PRODUCT      : $(PRODUCT)"
+LINE4 = "VERSION      : $(VER)"
+LINE5 = "RELEASE DATE : $(RELEASE_DATE)"
+LINE6 = "-----------------------------------------------------"
+LINE7 = "-----------------------------------------------------"
+LINE8 = "BUG FIX & CHANGES"
+LINE9 = "-----------------------------------------------------"
+LINE10 = "-----------------------------------------------------"
+LINE11 = "MD5 HASHES"
+LINE12 = "-----------------------------------------------------"
+
+all	: clean create_dirs md5hash copy_files compress 
+
+create_dirs:
+	$(MKDIR) $(RELEASE_FOLDER)
+
+copy_files:
+	$(CP) $(CUSTOMER_FILES) $(RELEASE_FOLDER)
+	
+compress:
+	$(ZIP) $(ZIPPED_FOLDER) $(RELEASE_FOLDER)
+	$(MV) $(ZIPPED_FOLDER) $(RELEASE_FOLDER)
+
+md5hash	:
+	@$(ECHO) $(LINE0) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE1) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE2) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE3) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE4) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE5) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE6) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) "" 		 >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) "" 		 >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) "" 		 >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE7) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE8) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE9) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(BUGS) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) "" 		 >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) "" 		 >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) "" 		 >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE10) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE11) >> $(RELEASE_NOTE_FILE)
+	@$(ECHO) $(LINE12) >> $(RELEASE_NOTE_FILE)
+	$(MD5SUM) $(MD5_FILES) >> $(RELEASE_NOTE_FILE)
+
+clean:
+	@$(RM) $(RM_OPTIONS) $(CLEAN_THESE)
