@@ -28,6 +28,7 @@ void resetGlobalVars(void)
 {
     CSL_FINS(gpioRegs->BANK[1].OUT_DATA,GPIO_OUT_DATA_OUT5,FALSE); //set GPIO pin as output
 
+    isUsbPipeBusy = FALSE;
     isWatchDogEnabled = FALSE;
     isWriteRTC = FALSE;
     isLogData = FALSE;
@@ -133,6 +134,7 @@ void storeUserDataToFactoryDefault(void)
 void reloadFactoryDefault(void)
 {
     isWriteRTC = FALSE;
+    isUsbPipeBusy = FALSE;
 	Uint16 i;
 	char model_code[MAX_LCD_WIDTH];
 	int* model_code_int;

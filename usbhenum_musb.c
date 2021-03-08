@@ -35,7 +35,7 @@
 */
 
 
-
+#include "Globals.h"
 #include "types.h"
 #include "hw_usb.h"
 #include "hw_types.h"
@@ -466,6 +466,7 @@ USBHCDPipeAllocSize(uint32_t ulIndex, uint32_t ulEndpointType,
 
                 /* Initialize the endpoint as idle. */
                 g_sUSBHCD[ulIndex].USBOUTPipes[iIdx].eState = PIPE_IDLE;
+                isUsbPipeBusy = FALSE;
 
                 /* Allocate space in the FIFO for this endpoint. */
                 if(FIFOAlloc(&g_sUSBHCD[ulIndex].USBOUTPipes[iIdx], ulSize) != 0)
@@ -520,6 +521,7 @@ USBHCDPipeAllocSize(uint32_t ulIndex, uint32_t ulEndpointType,
 
                 /* Reset the state of the pipe to idle. */
                 g_sUSBHCD[ulIndex].USBINPipes[iIdx].eState = PIPE_IDLE;
+                isUsbPipeBusy = FALSE;
 
                 break;
             }
@@ -782,6 +784,8 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
     /* Send all of the requested data. */
     while(ulRemainingBytes != 0)
     {
+        isUsbPipeBusy = TRUE;
+
         /* Start a write request. */
         g_sUSBHCD[ulIndex].USBOUTPipes[ulPipeIdx].eState = PIPE_WRITING;
         
@@ -955,6 +959,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
     if(!ulRemainingBytes)
     {
         g_sUSBHCD[ulIndex].USBOUTPipes[ulPipeIdx].eState = PIPE_IDLE;
+        isUsbPipeBusy = FALSE;
     }
 
     return(ulSize);
@@ -1044,6 +1049,7 @@ USBHCDPipeReadNonBlocking(uint32_t ulIndex, uint32_t ulPipe,
 
     /* Go Idle once this state has been reached. */
     g_sUSBHCD[ulIndex].USBINPipes[EP_PIPE_IDX_M & ulPipe].eState = PIPE_IDLE;
+    isUsbPipeBusy = FALSE;
 
     return(ulSize);
 }
@@ -1297,6 +1303,7 @@ USBHCDPipeRead(uint32_t ulIndex, uint32_t ulPipe,
     if(!ulRemainingBytes)
     {
         g_sUSBHCD[ulIndex].USBINPipes[ulPipeIdx].eState = PIPE_IDLE;
+        isUsbPipeBusy = FALSE;
     }
 
     return(ulSize);
@@ -2254,6 +2261,7 @@ USBHostCheckPipes(uint32_t ulIndex)
             if((g_sUSBHCD[ulIndex].USBINPipes[iIdx].eState == PIPE_IDLE) &&
                (g_sUSBHCD[ulIndex].USBINPipes[iIdx].pfnCallback))
             {
+                isUsbPipeBusy = FALSE;
                 g_sUSBHCD[ulIndex].USBINPipes[iIdx].pfnCallback(ulIndex, 
                                     IN_PIPE_HANDLE(ulIndex, iIdx),
                                     USB_EVENT_SCHEDULER);

@@ -1688,6 +1688,7 @@ fxnConfig_DataLogger_EnableLogger(const Uint16 input)
             return FXN_CFG_DATALOGGER_ENABLELOGGER;
         case BTN_ENTER  : 
 			isLogData = isEnabled;
+            isUsbPipeBusy = FALSE;
 			if (isLogData) 
 			{
 				resetUsbDriver();

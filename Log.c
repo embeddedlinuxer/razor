@@ -433,6 +433,8 @@ BOOL isUsbActive(void)
 
 void logData(void)
 {
+    if (isUsbPipeBusy) return;
+
     static FRESULT fresult;
 	static int time_counter = 1;
 	static int prev_sec = 0;
