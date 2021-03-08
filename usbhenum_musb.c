@@ -835,6 +835,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
            ulTimer = g_sUSBHCD[ulIndex].USBHTimeOut.Value.slNonEP0;
            usb_osalStartTimerMs(ulTimer);
         }
+
         while(g_sUSBHCD[ulIndex].USBOUTPipes[ulPipeIdx].eState == PIPE_WRITING)
         {
             /* Exit the loop for any of the event(s): Disconnect. */
@@ -877,6 +878,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
                 }
             }
         }
+
         if(USB_TIMEOUT_DISABLE!=g_sUSBHCD[ulIndex].USBHTimeOut.Value.slNonEP0)
         {
             usb_osalStopTimer();
@@ -909,6 +911,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
             /* This is the actual endpoint number. */
             USBHCDClearFeature(ulIndex, 1, ulPipe, USB_FEATURE_EP_HALT);
 
+            isUsbPipeBusy = FALSE;
             /* If there was a stall, then no more data is coming so break out. */
             break;
         }
@@ -927,6 +930,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
                     {
                        if(USBHCDRetryConnect(ulIndex))
                        {
+                          isUsbPipeBusy = FALSE;
                           break;
                        }
                     }
@@ -935,6 +939,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
                     {
                        /* Set the size to 0 to indicate Error. */
                        ulSize = 0;
+                       isUsbPipeBusy = FALSE;
                        break;
                     }
                 }
@@ -943,6 +948,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
             {
                /* Set the size to 0 to indicate Error. */
                ulSize = 0;
+               isUsbPipeBusy = FALSE;
                break;
             }
         }
@@ -960,6 +966,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
     {
         g_sUSBHCD[ulIndex].USBOUTPipes[ulPipeIdx].eState = PIPE_IDLE;
         isUsbPipeBusy = FALSE;
+        usb_osalDelayMs(10);
     }
 
     return(ulSize);
@@ -1138,6 +1145,7 @@ USBHCDPipeRead(uint32_t ulIndex, uint32_t ulPipe,
            ulTimer = g_sUSBHCD[ulIndex].USBHTimeOut.Value.slNonEP0;
            usb_osalStartTimerMs(ulTimer);
         }
+
         while(g_sUSBHCD[ulIndex].USBINPipes[ulPipeIdx].eState == PIPE_READING)
         {
             /* Exit the loop for any of the event(s): Disconnect. */
@@ -1189,7 +1197,6 @@ USBHCDPipeRead(uint32_t ulIndex, uint32_t ulPipe,
         /* If data is ready then return it. */
         if(g_sUSBHCD[ulIndex].USBINPipes[ulPipeIdx].eState == PIPE_DATA_READY)
         {
-
 
 #ifdef DMA_MODE            
             disableCoreRxDMA(g_USBInstance[ulIndex].uiUSBInstance, ulEndpoint);

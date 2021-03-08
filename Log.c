@@ -433,7 +433,11 @@ BOOL isUsbActive(void)
 
 void logData(void)
 {
-    if (isUsbPipeBusy) return;
+    if (isUsbPipeBusy) 
+    {
+        usb_osalDelayMs(100);
+        return;
+    }
 
     static FRESULT fresult;
 	static int time_counter = 1;
