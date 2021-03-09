@@ -42,7 +42,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.02.09"
+#define FIRMWARE_VERSION 		"1.02.10"
 
 #define BOOL Uint8
 #define DEMO_MODE
