@@ -966,7 +966,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
     {
         g_sUSBHCD[ulIndex].USBOUTPipes[ulPipeIdx].eState = PIPE_IDLE;
         isUsbPipeBusy = FALSE;
-        usb_osalDelayMs(10);
+        usb_osalDelayMs(30);
     }
 
     return(ulSize);

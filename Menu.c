@@ -652,7 +652,7 @@ mnuHomescreenWaterCut(const Uint16 input)
     {
         static int x = 0;
         sprintf(lcdLine0, "%16s",  " PHASE DYNAMICS ");
-        (x < 10) ? sprintf(lcdLine1, " Razor V%5s", FIRMWARE_VERSION) : sprintf(lcdLine1, "   SN: %06d", REG_SN_PIPE);
+        (x < 10) ? sprintf(lcdLine1, " Razor V%5s ", FIRMWARE_VERSION) : sprintf(lcdLine1, "   SN: %06d", REG_SN_PIPE);
 	    updateDisplay(lcdLine0, lcdLine1);
         x++;
 		if (x>20) isDisplayLogo = FALSE;
