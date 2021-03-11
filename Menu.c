@@ -160,6 +160,8 @@ Process_Menu(void)
 {
 	if (isPowerCycled)
 	{
+     	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
 		isPowerCycled = FALSE;
 
 		/// Enable USB device

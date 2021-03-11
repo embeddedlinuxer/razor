@@ -911,8 +911,8 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
             /* This is the actual endpoint number. */
             USBHCDClearFeature(ulIndex, 1, ulPipe, USB_FEATURE_EP_HALT);
 
-            isUsbPipeBusy = FALSE;
             /* If there was a stall, then no more data is coming so break out. */
+            isUsbPipeBusy = FALSE;
             break;
         }
         else if(g_sUSBHCD[ulIndex].USBOUTPipes[ulPipeIdx].eState == PIPE_ERROR)
@@ -966,7 +966,7 @@ USBHCDPipeWrite(uint32_t ulIndex, uint32_t ulPipe,
     {
         g_sUSBHCD[ulIndex].USBOUTPipes[ulPipeIdx].eState = PIPE_IDLE;
         isUsbPipeBusy = FALSE;
-        usb_osalDelayMs(30);
+        usb_osalDelayMs(40);
     }
 
     return(ulSize);

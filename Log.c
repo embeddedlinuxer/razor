@@ -34,7 +34,6 @@
 #include "Menu.h"
 
 #define USB3SS_EN
-#define NANDWIDTH_16
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
 #define MAX_HEAD_SIZE   110 
@@ -374,6 +373,7 @@ void resetUsbStaticVars(void)
 
 void stopAccessingUsb(FRESULT fr)
 {
+	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	resetCsvStaticVars();
 	resetUsbStaticVars();
 
@@ -401,6 +401,7 @@ void stopAccessingUsb(FRESULT fr)
 
 BOOL isUsbActive(void)
 {
+	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	static int stop_usb = 0;
     if (stop_usb > REG_USB_TRY)
     {
@@ -655,6 +656,7 @@ void logData(void)
    	} 
 
 	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
+
 	free(DATA_BUF);
 
    	return;
