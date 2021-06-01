@@ -1088,7 +1088,8 @@ Modbus_RX(void)
 
 		case 0x10: //write to floating point OR multiple holding registers
 				   //(note: 40000 offset makes this an integer value)
-			num_data_bytes = uart_pkt_ptr[6];
+			//num_data_bytes = uart_pkt_ptr[6];
+			num_data_bytes = uart_pkt_ptr[6+la_offset]; /// DKOH
 			msg_num_bytes = 7 + num_data_bytes; // number of bytes in query (not counting CRC)
 
 			if(UART_RXBUF.n < msg_num_bytes + 2 + la_offset) // CRC -> add 2 bytes
@@ -1096,6 +1097,7 @@ Modbus_RX(void)
 				WDOG_BYTES_TO_REMOVE = UART_RXBUF.n;
 				Clock_start(MB_Watchdog_Timeout_Clock); //message incomplete, start watchdog
 				Hwi_restoreInterrupt(5,key);
+				printf ("message incomplete\n");
 				return;
 			}
 			else if (Clock_isActive(MB_Watchdog_Timeout_Clock))
@@ -1240,6 +1242,7 @@ Modbus_RX(void)
 				
 			Hwi_restoreInterrupt(5,key);
 	
+			printf ("message done\n");
 		    break;
 
 		/// calibrate functions (non-standard) ///
