@@ -35,7 +35,7 @@
 // 
 // ver 1.02.09 | Jan-29-2021 | Daniel Koh | SHIPPED 8843, 8844, 8845, 8846
 // ver 1.02.10 | Mar-03-2021 | Daniel Koh | Changed logData, REG_STREAM upload fix 
-// ver 1.02.11 | Jun-01-2021 | Daniel Koh | Allow writing registers with serial number during calibration 
+// ver 1.02.11 | JUN-03-2021 | Daniel Koh | added support for la_offset to ModbusRTU.c 
 //
 //
 

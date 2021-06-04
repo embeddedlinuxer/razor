@@ -34,6 +34,7 @@
 #include "Menu.h"
 
 #define USB3SS_EN
+#define NANDWIDTH_16
 #define OMAPL138_LCDK
 #define USB_INSTANCE    0
 #define MAX_HEAD_SIZE   110 
@@ -373,7 +374,6 @@ void resetUsbStaticVars(void)
 
 void stopAccessingUsb(FRESULT fr)
 {
-	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	resetCsvStaticVars();
 	resetUsbStaticVars();
 
@@ -401,7 +401,6 @@ void stopAccessingUsb(FRESULT fr)
 
 BOOL isUsbActive(void)
 {
-	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
 	static int stop_usb = 0;
     if (stop_usb > REG_USB_TRY)
     {
@@ -656,7 +655,6 @@ void logData(void)
    	} 
 
 	if (isWatchDogEnabled) TimerWatchdogReactivate(CSL_TMR_1_REGS);
-
 	free(DATA_BUF);
 
    	return;
@@ -696,14 +694,14 @@ BOOL downloadCsv(void)
         lcdModelCode[i*4+1] = (REG_MODEL_CODE[i] >> 8)  & 0xFF;
         lcdModelCode[i*4+0] = (REG_MODEL_CODE[i] >> 0)  & 0xFF;
     }
- 
+/* 
     /// status header
     sprintf(CSV_BUF+strlen(CSV_BUF),"# RAZOR CONFIGURATION FILE\n"); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"# FIRMWARE VERSION: %s\n",FIRMWARE_VERSION);
     sprintf(CSV_BUF+strlen(CSV_BUF),"# MODEL CODE: %s\n",lcdModelCode);
     sprintf(CSV_BUF+strlen(CSV_BUF),"# SERIAL NUMBER: %d\n",REG_SN_PIPE);
     sprintf(CSV_BUF+strlen(CSV_BUF),"# %02d:%02d %02d/%02d/20%02d\n\n",tmp_hr,tmp_min,tmp_mon,tmp_day,tmp_yr);
-
+*/
 	/// integer
     sprintf(CSV_BUF+strlen(CSV_BUF),"Serial,,201,int,1,RW,1,%d\n",REG_SN_PIPE); 
     sprintf(CSV_BUF+strlen(CSV_BUF),"AO Dampen,,203,int,1,RW,1,%d\n",REG_AO_DAMPEN); 
