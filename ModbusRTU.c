@@ -1364,7 +1364,7 @@ void MB_SendPacket_Int16(void)
 {
 	Uint32 	key,CRC, msg_num_bytes, wrap_count;
 	Uint16 	i, regs_written, start_reg_no_offset;
-	Uint8	data_type, prot; //protection status
+	Uint8	la_offset, data_type, prot; //protection status
 	Int8	rtn;
 	double* mbtable_ptr_dbl = NULL;
 	REGSWI* mbtable_ptr_rsw = NULL;
@@ -1645,15 +1645,19 @@ void MB_SendPacket_Int16(void)
 		Hwi_restoreInterrupt(5,key);
 		return;
 	}
+	
+	/// check if long_addr
+	if (mb_pkt_ptr->long_address) la_offset = LONG_OFFSET;
+	else la_offset = 0;
 
 	// calculate & send CRC
 	if (UART_TXBUF.tail < old_tail) // if there was a buffer wrap around
 	{
 		wrap_count = MAX_BFR_SIZE - UART_TXBUF.head;
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,wrap_count);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,wrap_count);
 	}
 	else
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,0);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,0);
 
 	BfrPut(&UART_TXBUF, CRC & 0xFF);	// LSB
 	BfrPut(&UART_TXBUF, CRC >> 8);		// MSB
@@ -1686,7 +1690,7 @@ MB_SendPacket_Coil(void)
 	Uint32 	key,CRC, msg_num_bytes, wrap_count;
 	Uint16 	data_byte, modulo_bits;
 	Uint16  i, j, offset_cnt;
-	Int8	rtn;
+	Int8	la_offset, rtn;
 	Uint8	coil_val, data_type, prot; //protection status
 	COIL* 	mbtable_ptr = NULL;
 	int		old_tail, old_n;
@@ -1867,14 +1871,18 @@ MB_SendPacket_Coil(void)
 		Hwi_restoreInterrupt(5,key);
 		return;
 	}
+	
+	/// check if long_addr
+	if (mb_pkt_ptr->long_address) la_offset = LONG_OFFSET;
+	else la_offset = 0;
 
 	if (UART_TXBUF.tail < old_tail) // if there was a buffer wrap around
 	{
 		wrap_count = MAX_BFR_SIZE - UART_TXBUF.head;
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,wrap_count);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,wrap_count);
 	}
 	else
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,0);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,0);
 
 
 	BfrPut(&UART_TXBUF, CRC & 0xFF);	// LSB
@@ -1909,7 +1917,7 @@ MB_SendPacket_LongInt(void)
 	Uint32 	key,CRC, msg_num_bytes, wrap_count, mbtable_val;
 	Uint16 	i, regs_written, st_reg;
 	Uint8	data_type, prot; //protection status
-	Int8	rtn;
+	Int8	la_offset, rtn;
 	double* mbtable_ptr_dbl = NULL;
 	REGSWI*	mbtable_ptr_rsw = NULL;
 	double	dbl_val;
@@ -2070,14 +2078,18 @@ MB_SendPacket_LongInt(void)
 
 		msg_num_bytes = 6; // slave byte + fxn byte + 2 address bytes + 2 data bytes
 	}
+	
+	/// check if long_addr
+	if (mb_pkt_ptr->long_address) la_offset = LONG_OFFSET;
+	else la_offset = 0;
 
 	if (UART_TXBUF.tail < old_tail) // if there was a buffer wrap around
 	{
 		wrap_count = MAX_BFR_SIZE - UART_TXBUF.head;
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,wrap_count);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,wrap_count);
 	}
 	else
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,0);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,0);
 
 	BfrPut(&UART_TXBUF, CRC & 0xFF);						// LSB
 	BfrPut(&UART_TXBUF, CRC >> 8);							// MSB
@@ -2109,7 +2121,7 @@ MB_SendPacket_Float(void)
 {
 	Uint32 	key,CRC, msg_num_bytes, wrap_count, mbtable_val;
 	Uint16 	i, regs_written, st_reg;
-	Uint8	data_type, prot; //protection status
+	Uint8	la_offset, data_type, prot; //protection status
 	Int8	rtn;
 	double* mbtable_ptr_dbl = NULL;
 	REGSWI*	mbtable_ptr_rsw = NULL;
@@ -2146,6 +2158,7 @@ MB_SendPacket_Float(void)
     {
 	    BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS);
     }
+
 	//BfrPut(&UART_TXBUF,REG_SLAVE_ADDRESS); // DKOH
 	BfrPut(&UART_TXBUF,mb_pkt_ptr->fxn);
 
@@ -2296,9 +2309,6 @@ MB_SendPacket_Float(void)
 				mbtable_val |= mb_pkt_ptr->data[i*4+2] << 8;
 				mbtable_val |= mb_pkt_ptr->data[i*4+3]; 		//LSB
 
-//				///// WRITE TO MODBUS TABLE /////
-//
-
 				///// WRITE TO MODBUS TABLE /////
 				/*NOTE:	Although the MB master is writing 16-bit integers, our actual	//
 				//		register variables are stored as a variety of data types.		//
@@ -2383,18 +2393,22 @@ MB_SendPacket_Float(void)
 		msg_num_bytes = 6; // slave byte + fxn byte + 2 address bytes + 2 data bytes
 	}
 
+	/// check if long offset
+	if (mb_pkt_ptr->long_address) la_offset = LONG_OFFSET;
+	else la_offset = 0;
+
 	if (UART_TXBUF.tail < old_tail) // if there was a buffer wrap around
 	{
 		wrap_count = MAX_BFR_SIZE - UART_TXBUF.head;
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,wrap_count);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,wrap_count);
 	}
 	else
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,0);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,0);
 
 	BfrPut(&UART_TXBUF, CRC & 0xFF);						// LSB
 	BfrPut(&UART_TXBUF, CRC >> 8);							// MSB
 	Discard_MB_Pkt_Head(&MB_PKT_LIST); 						// discard the packet at the head of the list
-
+	
 	if (mb_pkt_ptr->is_broadcast == TRUE) 					// don't respond to broadcasts
 	{
 		//remove everything we just added to the TX buffer
@@ -2422,7 +2436,7 @@ MB_SendPacket_Sample(void)
 	Uint32 	key,CRC, msg_num_bytes, wrap_count, mbtable_val;
 	Uint16 	i, reg;
 	Uint8	vtune;
-	Uint8	data_type, prot; //protection status
+	Uint8	la_offset, data_type, prot; //protection status
 	Int8	rtn;
 	double* mbtable_ptr_dbl = NULL;
 	REGSWI*	mbtable_ptr_rsw = NULL;
@@ -2541,13 +2555,17 @@ MB_SendPacket_Sample(void)
 
 	msg_num_bytes = 3 + (34 * 4); // address byte + fxn byte + vtune byte + (34 registers * 4 bytes per reg)
 
+	/// check if long_addr
+	if (mb_pkt_ptr->long_address) la_offset = LONG_OFFSET;
+	else la_offset = 0;
+
 	if (UART_TXBUF.tail < old_tail) // Calc_CRC() needs to know if there was a buffer wrap-around
 	{
 		wrap_count = MAX_BFR_SIZE - UART_TXBUF.head;
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,wrap_count);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,wrap_count);
 	}
 	else
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,0);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,0);
 
 	BfrPut(&UART_TXBUF, CRC & 0xFF);	// LSB
 	BfrPut(&UART_TXBUF, CRC >> 8);		// MSB
@@ -2569,7 +2587,7 @@ void
 MB_SendPacket_ForceSlaveAddr(void)
 {
 	Uint32 	key,CRC, msg_num_bytes, wrap_count;
-	Uint8	new_slave_addr;
+	Uint8	la_offset, new_slave_addr;
 	int		old_tail;
 	MB_PKT*	mb_pkt_ptr;
 
@@ -2613,13 +2631,17 @@ MB_SendPacket_ForceSlaveAddr(void)
 
 	msg_num_bytes = 3 + 4; // address byte + fxn byte + new slave addr byte + SN bytes (4)
 
+	/// check if long_addr
+	if (mb_pkt_ptr->long_address) la_offset = LONG_OFFSET;
+	else la_offset = 0;
+
 	if (UART_TXBUF.tail < old_tail) // if there was a buffer wrap around
 	{
 		wrap_count = MAX_BFR_SIZE - UART_TXBUF.head;
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,wrap_count);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,wrap_count);
 	}
 	else
-		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes,0);
+		CRC = Calc_CRC(&UART_TXBUF.buff[UART_TXBUF.head],msg_num_bytes+la_offset,0);
 
 	BfrPut(&UART_TXBUF, CRC & 0xFF);	// LSB
 	BfrPut(&UART_TXBUF, CRC >> 8);		// MSB

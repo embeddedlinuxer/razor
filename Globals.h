@@ -36,6 +36,7 @@
 // ver 1.02.09 | Jan-29-2021 | Daniel Koh | SHIPPED 8843, 8844, 8845, 8846
 // ver 1.02.10 | Mar-03-2021 | Daniel Koh | Changed logData, REG_STREAM upload fix 
 // ver 1.02.11 | JUN-03-2021 | Daniel Koh | added support for la_offset to ModbusRTU.c 
+// ver 1.02.12 | JUN-09-2021 | Daniel Koh | Bug#108: Incorrect CRC calculation due to missing la_offset (serial number)
 //
 //
 
@@ -43,7 +44,7 @@
 #define GLOBALS_H_
 
 #define HARDWARE_VERSION		"1.1.1"
-#define FIRMWARE_VERSION 		"1.02.11"
+#define FIRMWARE_VERSION 		"1.02.12"
 
 #define BOOL Uint8
 #define DEMO_MODE
